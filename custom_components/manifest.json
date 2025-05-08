@@ -1,0 +1,15 @@
+{
+  "domain": "pid_controller",
+  "name": "PID Controller",
+  "codeowners": ["@bvweerd"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.github.com/bvweerd/PID_controller",
+  "homekit": {},
+  "iot_class": "calculated",
+  "quality_scale": "bronze",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "version": 0.0.1
+}
