@@ -8,10 +8,10 @@ from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
 
-_PLATFORMS: list[Platform] = [Platform.sensor, Platform.number]
+_PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.NUMBER]
 
 # TODO Update entry annotation
-async def async_setup_entry(hass: HomeAssistant, entry: AdvancedPIDControllerConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up PID Controller from a config entry."""
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
@@ -20,6 +20,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdvancedPIDControllerCon
 
 
 # TODO Update entry annotation
-async def async_unload_entry(hass: HomeAssistant, entry: AdvancedPIDControllerConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
