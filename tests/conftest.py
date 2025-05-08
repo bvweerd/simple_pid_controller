@@ -10,6 +10,6 @@ import pytest
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.pid_controller.async_setup_entry", return_value=True
+        "homeassistant.components.advanced_pid_controller.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry

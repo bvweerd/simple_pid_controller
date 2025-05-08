@@ -1,1 +1,1 @@
-"""Tests for the PID Controller integration."""
+"""Tests for the Advanced PID Controller integration."""

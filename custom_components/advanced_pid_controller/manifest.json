@@ -1,5 +1,5 @@
 {
-  "domain": "pid_controller",
+  "domain": "advanced_pid_controller",
   "name": "PID Controller",
   "codeowners": ["@bvweerd"],
   "config_flow": true,
