@@ -12,7 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
+from .const import DOMAIN, CONF_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
