@@ -23,7 +23,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-class AdvancedPIDControllerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AdvancedPIDControllerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Advanced PID Controller."""
 
     VERSION = 1
