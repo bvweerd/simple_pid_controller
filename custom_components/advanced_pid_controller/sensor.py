@@ -57,7 +57,7 @@ async def async_setup_entry(
 
         output = pid(input_value)
 
-        # Bereken bijdragen
+        # Calculate component contributions
         p_contrib = kp * (pid.setpoint - input_value) if not p_on_m else -kp * input_value
         i_contrib = pid._integral * ki
         d_contrib = pid._last_output - output if pid._last_output is not None else 0.0
@@ -79,6 +79,17 @@ async def async_setup_entry(
         PIDContributionSensor(entry.entry_id, name, "i", handle),
         PIDContributionSensor(entry.entry_id, name, "d", handle),
     ])
+
+    # 🔁 Register entity listeners to refresh on input_number change
+    def make_listener(target_entity_id: str):
+        def _listener(event):
+            if event.data.get("entity_id") == target_entity_id:
+                coordinator.async_request_refresh()
+        return _listener
+
+    for key in ["kp", "ki", "kd", "setpoint", "output_min", "output_max", "sample_time"]:
+        entity_id = f"number.{entry.entry_id}_{key}"
+        hass.bus.async_listen("state_changed", make_listener(entity_id))
 
 
 class PIDOutputSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
