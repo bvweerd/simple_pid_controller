@@ -1,4 +1,4 @@
-"""The Advanced PID Controller integration."""
+"""Advanced PID Controller integration."""
 
 from __future__ import annotations
 
@@ -9,33 +9,62 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN, CONF_SENSOR_ENTITY_ID
+from .const import DOMAIN, CONF_NAME, CONF_SENSOR_ENTITY_ID
 
 _LOGGER = logging.getLogger(__name__)
 
-_PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.NUMBER]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.NUMBER]
+
+
+class PIDDeviceHandle:
+    """Handle storing configuration and exposing state for this PID controller instance."""
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+        self.hass = hass
+        self.entry = entry
+        self.name = entry.data.get(CONF_NAME)
+        self.sensor_entity_id = entry.options.get(CONF_SENSOR_ENTITY_ID, entry.data.get(CONF_SENSOR_ENTITY_ID))
+
+    def get_number(self, key: str) -> float | None:
+        """Retrieve the latest value of a NumberEntity by key (e.g., 'kp', 'setpoint')."""
+        entity_id = f"number.{self.entry.entry_id}_{key}"
+        state = self.hass.states.get(entity_id)
+        if state and state.state not in ("unknown", "unavailable"):
+            try:
+                return float(state.state)
+            except ValueError:
+                pass
+        return None
+
+    def get_input_sensor_value(self) -> float | None:
+        """Get the current value of the input sensor."""
+        state = self.hass.states.get(self.sensor_entity_id)
+        if state and state.state not in ("unknown", "unavailable"):
+            try:
+                return float(state.state)
+            except ValueError:
+                pass
+        return None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Advanced PID Controller from a config entry."""
 
-    # Zorg dat de sensor beschikbaar is voordat we de platforms opstarten
     sensor_entity_id = entry.options.get(CONF_SENSOR_ENTITY_ID, entry.data.get(CONF_SENSOR_ENTITY_ID))
-    if sensor_entity_id is None:
-        _LOGGER.error("Sensor entity ID not configured")
-        raise ConfigEntryNotReady("Sensor entity_id missing in config")
+    state = hass.states.get(sensor_entity_id)
+    if state is None or state.state in ("unknown", "unavailable"):
+        _LOGGER.warning("Sensor %s not ready; delaying setup", sensor_entity_id)
+        raise ConfigEntryNotReady(f"Sensor {sensor_entity_id} not ready")
 
-    sensor_state = hass.states.get(sensor_entity_id)
-    if sensor_state is None or sensor_state.state in ("unknown", "unavailable"):
-        _LOGGER.warning("Input sensor %s not ready, deferring setup", sensor_entity_id)
-        raise ConfigEntryNotReady(f"Input sensor {sensor_entity_id} not available")
+    handle = PIDDeviceHandle(hass, entry)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = handle
 
-    # Setup platforms
-    await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
-
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    if DOMAIN in hass.data and entry.entry_id in hass.data[DOMAIN]:
+        hass.data[DOMAIN].pop(entry.entry_id)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

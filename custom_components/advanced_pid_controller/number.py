@@ -1,4 +1,4 @@
-# custom_components/advanced_pid_controller/number.py
+"""Number platform for Advanced PID Controller."""
 
 from __future__ import annotations
 
@@ -10,7 +10,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, CONF_SENSOR_ENTITY_ID
+from . import PIDDeviceHandle
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,12 +65,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up number entities from config entry."""
-
-    sensor_entity_id = entry.options.get(CONF_SENSOR_ENTITY_ID, entry.data.get(CONF_SENSOR_ENTITY_ID))
+    handle: PIDDeviceHandle = hass.data[DOMAIN][entry.entry_id]
+    name = handle.name
 
     entities = []
     for desc in PID_NUMBER_ENTITIES:
-        entities.append(PIDParameterNumber(entry.entry_id, desc))
+        entities.append(PIDParameterNumber(entry.entry_id, name, desc))
 
     async_add_entities(entities)
 
@@ -77,10 +78,11 @@ async def async_setup_entry(
 class PIDParameterNumber(RestoreNumber):
     """Number entity for PID parameter."""
 
-    def __init__(self, entry_id: str, description: dict[str, Any]) -> None:
+    def __init__(self, entry_id: str, device_name: str, description: dict[str, Any]) -> None:
         """Initialize a PID number entity."""
         self._entry_id = entry_id
-        self._attr_name = f"{entry_id} {description['name']}"
+        self._device_name = device_name
+        self._attr_name = f"{device_name} {description['name']}"
         self._attr_unique_id = f"{entry_id}_{description['key']}"
         self._attr_icon = description["icon"]
         self._attr_native_unit_of_measurement = description["unit"]
@@ -105,3 +107,13 @@ class PIDParameterNumber(RestoreNumber):
         """Set a new value."""
         self._attr_native_value = value
         self.async_write_ha_state()
+
+    @property
+    def device_info(self):
+        """Return device information for grouping entities."""
+        return {
+            "identifiers": {(DOMAIN, self._entry_id)},
+            "name": self._device_name,
+            "manufacturer": "Custom",
+            "model": "Advanced PID Controller",
+        }

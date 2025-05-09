@@ -1,18 +1,19 @@
-# custom_components/advanced_pid_controller/sensor.py
+"""Sensor platform for Advanced PID Controller."""
 
 from __future__ import annotations
 
 import logging
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from simple_pid import PID
 
-from .const import DOMAIN, CONF_SENSOR_ENTITY_ID
+from . import PIDDeviceHandle
+from .const import DOMAIN
 from .coordinator import PIDDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,48 +25,32 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the PID output sensor."""
+    handle: PIDDeviceHandle = hass.data[DOMAIN][entry.entry_id]
+    name = handle.name
 
-    name = entry.data.get("name", "PID Controller")
-    sensor_entity_id = entry.options.get(CONF_SENSOR_ENTITY_ID, entry.data.get(CONF_SENSOR_ENTITY_ID))
-
-    """
-    # Entity IDs van bijbehorende number sliders
-    kp_id = f"number.{entry.entry_id}_kp"
-    ki_id = f"number.{entry.entry_id}_ki"
-    kd_id = f"number.{entry.entry_id}_kd"
-    setpoint_id = f"number.{entry.entry_id}_setpoint"
-    """
-    
-    # Placeholder PID-configuratie (kan later dynamisch worden)
     pid = PID(1.0, 0.1, 0.05, setpoint=50)
-    pid.output_limits = (-100, 100)
+    pid.output_limits = (0, 100)
 
     async def update_pid():
-        state = hass.states.get(sensor_entity_id)
-        if state is None or state.state in ("unknown", "unavailable"):
-            raise ValueError(f"Sensor {sensor_entity_id} state is not available")
-        input_value = float(state.state)
+        input_value = handle.get_input_sensor_value()
+        if input_value is None:
+            raise ValueError("Input sensor not available")
 
-        """
-        # Waarden uit number sliders
-        kp = float(hass.states.get(kp_id).state or 1)
-        ki = float(hass.states.get(ki_id).state or 0)
-        kd = float(hass.states.get(kd_id).state or 0)
-        setpoint = float(hass.states.get(setpoint_id).state or 50)
-        
+        kp = handle.get_number("kp") or 1.0
+        ki = handle.get_number("ki") or 0.1
+        kd = handle.get_number("kd") or 0.05
+        setpoint = handle.get_number("setpoint") or 50.0
+
         pid.tunings = (kp, ki, kd)
         pid.setpoint = setpoint
-        """
-        
+
         output = pid(input_value)
-        """
         _LOGGER.debug(
             "PID: input=%.2f setpoint=%.2f kp=%.2f ki=%.2f kd=%.2f -> output=%.2f",
             input_value, setpoint, kp, ki, kd, output
         )
-        """
         return output
-        
+
     coordinator = PIDDataCoordinator(hass, name, update_pid, interval=10)
     await coordinator.async_config_entry_first_refresh()
 
@@ -73,7 +58,7 @@ async def async_setup_entry(
 
 
 class PIDOutputSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
-    """Sensor that represents the PID output."""
+    """Sensor representing the PID output."""
 
     def __init__(self, entry_id: str, name: str, coordinator: PIDDataCoordinator):
         """Initialize the sensor."""
@@ -82,8 +67,20 @@ class PIDOutputSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
         self._attr_name = f"{name} PID Output"
         self._attr_native_unit_of_measurement = "%"
         self._attr_device_class = None
+        self._entry_id = entry_id
+        self._device_name = name
 
     @property
     def native_value(self) -> float:
         """Return the current PID output."""
         return round(self.coordinator.data, 2)
+
+    @property
+    def device_info(self):
+        """Return device information for grouping entities."""
+        return {
+            "identifiers": {(DOMAIN, self._entry_id)},
+            "name": self._device_name,
+            "manufacturer": "Custom",
+            "model": "Advanced PID Controller",
+        }
