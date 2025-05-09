@@ -1,18 +1,16 @@
+
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
-from homeassistant.helpers.selector import selector
 from homeassistant.helpers import config_validation as cv
 import voluptuous as vol
 
 from .const import DOMAIN, CONF_SENSOR_ENTITY_ID
 
-
 STEP_USER_DATA_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_SENSOR_ENTITY_ID): selector({"entity": {"domain": "sensor"}}),
+    vol.Required(CONF_SENSOR_ENTITY_ID): cv.entity_id,
 })
-
 
 @config_entries.HANDLERS.register(DOMAIN)
 class SimplePIDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -21,7 +19,6 @@ class SimplePIDConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     async def async_step_user(self, user_input=None):
-        """Handle the initial step."""
         if user_input is not None:
             return self.async_create_entry(
                 title=user_input[CONF_NAME],

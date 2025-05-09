@@ -34,6 +34,19 @@ async def async_setup_entry(
 
     sample_time = handle.get_number("sample_time") or 10.0
 
+    def make_listener(entity_id: str):
+        def listener(event):
+            if event.data.get("entity_id") == entity_id:
+                coordinator.async_request_refresh()
+        return listener
+
+    for key in ["kp", "ki", "kd", "setpoint", "output_min", "output_max", "sample_time"]:
+        hass.bus.async_listen("state_changed", make_listener(f"number.{entry.entry_id}_{key}"))
+
+    for key in ["auto_mode", "proportional_on_measurement"]:
+        hass.bus.async_listen("state_changed", make_listener(f"switch.{entry.entry_id}_{key}"))
+
+
     async def update_pid():
         input_value = handle.get_input_sensor_value()
         if input_value is None:

@@ -1,4 +1,3 @@
-"""Constants for Simple PID Controller integration."""
 
 DOMAIN = "simple_pid_controller"
 CONF_NAME = "name"
