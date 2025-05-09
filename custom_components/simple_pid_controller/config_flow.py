@@ -2,13 +2,14 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.selector import selector
+from homeassistant.helpers import config_validation as cv
 import voluptuous as vol
 
 from .const import DOMAIN, CONF_SENSOR_ENTITY_ID
 
 
 STEP_USER_DATA_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAME): str,
+    vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_SENSOR_ENTITY_ID): selector({"entity": {"domain": "sensor"}}),
 })
 
