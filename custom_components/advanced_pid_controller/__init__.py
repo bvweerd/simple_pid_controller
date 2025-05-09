@@ -26,25 +26,36 @@ class PIDDeviceHandle:
         self.sensor_entity_id = entry.options.get(CONF_SENSOR_ENTITY_ID, entry.data.get(CONF_SENSOR_ENTITY_ID))
         self.last_contributions = (None, None, None)  # (P, I, D)
 
+    def _get_entity_id(self, platform: str, key: str) -> str | None:
+        """Lookup the real entity_id in the registry by unique_id == '<entry_id>_<key>'."""
+        registry = er.async_get(self.hass)
+        unique = f"{self.entry.entry_id}_{key}"
+        entity_id = registry.async_get_entity_id(platform, DOMAIN, unique)
+        if not entity_id:
+            _LOGGER.debug("No %s entity found for unique_id '%s'", platform, unique)
+        return entity_id
+
     def get_number(self, key: str) -> float | None:
-        """Get value from number entity by key, using the registry lookup."""
+        """Return the current value of the number entity, or None."""
         entity_id = self._get_entity_id("number", key)
         if not entity_id:
             return None
         state = self.hass.states.get(entity_id)
+        _LOGGER.debug("get_number(%s) → %s = %s", key, entity_id, state and state.state)
         if state and state.state not in ("unknown", "unavailable"):
             try:
                 return float(state.state)
             except ValueError:
-                pass
+                _LOGGER.error("Could not parse state '%s' of %s as float", state.state, entity_id)
         return None
 
     def get_switch(self, key: str) -> bool:
-        """Get boolean from switch entity by key, using the registry lookup."""
+        """Return True/False of switch entity, default True if missing."""
         entity_id = self._get_entity_id("switch", key)
         if not entity_id:
-            return True  # default on
+            return True
         state = self.hass.states.get(entity_id)
+        _LOGGER.debug("get_switch(%s) → %s = %s", key, entity_id, state and state.state)
         if state and state.state not in ("unknown", "unavailable"):
             return state.state == "on"
         return True
@@ -58,13 +69,6 @@ class PIDDeviceHandle:
             except ValueError:
                 _LOGGER.warning(f"Sensor {self.sensor_entity_id} heeft geen geldige waarde. PID-berekening wordt overgeslagen.")
         return None
-
-    def _get_entity_id(self, platform: str, key: str) -> str | None:
-        """Return the actual entity_id for this entry and parameter key."""
-        reg = er.async_get(self.hass)
-
-        desired = f"{self.entry.entry_id}_{key}"
-        return reg.async_get_entity_id(platform, DOMAIN, desired)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Advanced PID Controller from a config entry."""
