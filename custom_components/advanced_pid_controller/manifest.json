@@ -8,7 +8,7 @@
   "homekit": {},
   "iot_class": "calculated",
   "quality_scale": "bronze",
-  "requirements": [],
+  "requirements": ["simple-pid==1.0.1"],
   "ssdp": [],
   "zeroconf": [],
   "version": "0.0.1"

@@ -11,17 +11,20 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.selector import selector
 
 from .const import DOMAIN, CONF_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
-# TODO adjust the data schema to the data that you need
-STEP_USER_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_NAME): str,
-    }
-)
+STEP_USER_DATA_SCHEMA = vol.Schema({
+    vol.Required(CONF_NAME): str,
+    vol.Required(CONF_SENSOR_ENTITY_ID): selector({
+        "entity": {
+            "domain": "sensor"
+        }
+    }),
+})
 
 class AdvancedPIDControllerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Advanced PID Controller."""
