@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components.number import NumberEntity, RestoreNumber
+from homeassistant.components.number import RestoreNumber
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -85,7 +85,7 @@ PID_NUMBER_ENTITIES = [
         "max": 60.0,
         "step": 0.01,
         "default": 10.0,
-    },  
+    },
 ]
 
 
@@ -106,24 +106,25 @@ async def async_setup_entry(
 
 
 class PIDParameterNumber(RestoreNumber):
-    """Number entity for PID parameter."""
+    """Number entity for a PID parameter."""
 
     def __init__(self, entry_id: str, device_name: str, description: dict[str, Any]) -> None:
-        """Initialize a PID number entity."""
+        """Initialize a PID parameter number entity."""
         self._entry_id = entry_id
         self._device_name = device_name
-        self._attr_name = f"{device_name} {description['name']}"
-        self._attr_unique_id = f"{entry_id}_{description['key']}"
-        self._attr_icon = description["icon"]
-        self._attr_native_unit_of_measurement = description["unit"]
-        self._attr_native_value = description["default"]
-        self._attr_min_value = description["min"]
-        self._attr_max_value = description["max"]
-        self._attr_step = description["step"]
         self._key = description["key"]
 
+        self._attr_name = f"{device_name} {description['name']}"
+        self._attr_unique_id = f"{entry_id}_{self._key}"
+        self._attr_icon = description["icon"]
+        self._attr_native_unit_of_measurement = description["unit"]
+        self._attr_native_min_value = description["min"]
+        self._attr_native_max_value = description["max"]
+        self._attr_native_step = description["step"]
+        self._attr_native_value = description["default"]
+
     async def async_added_to_hass(self) -> None:
-        """Restore last value if available."""
+        """Restore the last state on startup."""
         await super().async_added_to_hass()
         if (last_val := await self.async_get_last_number_data()) is not None:
             self._attr_native_value = last_val.native_value
@@ -140,7 +141,7 @@ class PIDParameterNumber(RestoreNumber):
 
     @property
     def device_info(self):
-        """Return device information for grouping entities."""
+        """Return device information for entity grouping."""
         return {
             "identifiers": {(DOMAIN, self._entry_id)},
             "name": self._device_name,
