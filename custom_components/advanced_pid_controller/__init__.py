@@ -51,7 +51,7 @@ class PIDDeviceHandle:
             try:
                 return float(state.state)
             except ValueError:
-                pass
+                _LOGGER.warning(f"Sensor {self.sensor_entity_id} heeft geen geldige waarde. PID-berekening wordt overgeslagen.")
         return None
 
 
