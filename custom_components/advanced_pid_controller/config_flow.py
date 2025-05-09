@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import selector
 
-from .const import DOMAIN, CONF_NAME
+from .const import DOMAIN, CONF_NAME, CONF_SENSOR_ENTITY_ID
 
 _LOGGER = logging.getLogger(__name__)
 
