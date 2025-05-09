@@ -69,7 +69,7 @@ async def async_setup_entry(
     coordinator = PIDDataCoordinator(hass, name, update_pid, interval=10)
     await coordinator.async_config_entry_first_refresh()
 
-    async_add_entities([PIDOutputSensor(entry, name, coordinator)])
+    async_add_entities([PIDOutputSensor(entry.entry_id, name, coordinator)])
 
 
 class PIDOutputSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
