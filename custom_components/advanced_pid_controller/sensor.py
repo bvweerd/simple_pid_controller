@@ -29,25 +29,31 @@ async def async_setup_entry(
     handle: PIDDeviceHandle = hass.data[DOMAIN][entry.entry_id]
     name = handle.name
 
+    # Initialiseer de PID-regelaar met standaardwaarden (worden later live aangepast)
+    pid = PID(1.0, 0.1, 0.05, setpoint=50)
+    pid.sample_time = 10.0
+    pid.output_limits = (-10.0, 10.0)
+
     async def update_pid():
-        """Recalculate the PID output using the latest values."""
+        """Update the PID output using current sensor and parameter values."""
         input_value = handle.get_input_sensor_value()
         if input_value is None:
             raise ValueError("Input sensor not available")
 
-        # Get current parameters from entities
+        # Lees parameters uit de UI
         kp = handle.get_number("kp") or 1.0
         ki = handle.get_number("ki") or 0.1
         kd = handle.get_number("kd") or 0.05
         setpoint = handle.get_number("setpoint") or 50.0
+        sample_time = handle.get_number("sample_time") or 10.0
         out_min = handle.get_number("output_min") or -10.0
         out_max = handle.get_number("output_max") or 10.0
-        sample_time = handle.get_number("sample_time") or 10.0
         auto_mode = handle.get_switch("auto_mode")
         p_on_m = handle.get_switch("proportional_on_measurement")
 
-        # Create new PID controller with updated values
-        pid = PID(kp, ki, kd, setpoint=setpoint)
+        # Pas live de PID-instellingen aan
+        pid.tunings = (kp, ki, kd)
+        pid.setpoint = setpoint
         pid.sample_time = sample_time
         pid.output_limits = (out_min, out_max)
         pid.auto_mode = auto_mode
@@ -55,7 +61,7 @@ async def async_setup_entry(
 
         output = pid(input_value)
 
-        # Calculate contributions
+        # Bereken bijdragen
         p_contrib = kp * (setpoint - input_value) if not p_on_m else -kp * input_value
         i_contrib = pid._integral * ki
         d_contrib = pid._last_output - output if pid._last_output is not None else 0.0
@@ -63,13 +69,13 @@ async def async_setup_entry(
         handle.last_contributions = (p_contrib, i_contrib, d_contrib)
 
         _LOGGER.debug(
-            "PID: input=%.2f setpoint=%.2f kp=%.2f ki=%.2f kd=%.2f -> output=%.2f (P=%.2f, I=%.2f, D=%.2f)",
+            "PID input=%.2f setpoint=%.2f kp=%.2f ki=%.2f kd=%.2f => output=%.2f [P=%.2f, I=%.2f, D=%.2f]",
             input_value, setpoint, kp, ki, kd, output, p_contrib, i_contrib, d_contrib
         )
 
         return output
 
-    # Initialize coordinator with default interval, but actual value used per call
+    # Coordinator instellen
     coordinator = PIDDataCoordinator(hass, name, update_pid, interval=10)
     await coordinator.async_config_entry_first_refresh()
 
@@ -80,11 +86,11 @@ async def async_setup_entry(
         PIDContributionSensor(entry.entry_id, name, "d", handle, coordinator),
     ])
 
-    # Watch for changes in number and switch entities
+    # Zet listeners op input_number en switch wijzigingen
     def make_listener(entity_id: str):
         def _listener(event):
             if event.data.get("entity_id") == entity_id:
-                _LOGGER.debug("Detected update to %s, refreshing PID", entity_id)
+                _LOGGER.debug("Update detected on %s", entity_id)
                 coordinator.async_request_refresh()
         return _listener
 
