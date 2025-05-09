@@ -1,0 +1,8 @@
+{
+  "domain": "simple_pid_controller",
+  "name": "Simple PID Controller",
+  "version": "1.0.0",
+  "requirements": ["simple-pid==1.0.1"],
+  "dependencies": [],
+  "codeowners": ["@bvweerd"]
+}

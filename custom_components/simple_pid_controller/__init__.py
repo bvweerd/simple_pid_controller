@@ -1,4 +1,4 @@
-"""Advanced PID Controller integration."""
+"""Simple PID Controller integration."""
 
 from __future__ import annotations
 
@@ -22,8 +22,10 @@ class PIDDeviceHandle:
         self.hass = hass
         self.entry = entry
         self.name = entry.data.get(CONF_NAME)
-        self.sensor_entity_id = entry.options.get(CONF_SENSOR_ENTITY_ID, entry.data.get(CONF_SENSOR_ENTITY_ID))
-        self.last_contributions = (None, None, None)  # (P, I, D)
+        self.sensor_entity_id = entry.options.get(
+            CONF_SENSOR_ENTITY_ID, entry.data.get(CONF_SENSOR_ENTITY_ID)
+        )
+        self.last_contributions: tuple[float, float, float] = (None, None, None)
 
     def get_number(self, key: str) -> float | None:
         """Get value from number entity by key."""
@@ -37,12 +39,12 @@ class PIDDeviceHandle:
         return None
 
     def get_switch(self, key: str) -> bool:
-        """Get boolean from switch entity."""
+        """Get boolean state from switch entity."""
         entity_id = f"switch.{self.entry.entry_id}_{key}"
         state = self.hass.states.get(entity_id)
         if state and state.state not in ("unknown", "unavailable"):
             return state.state == "on"
-        return True  # default
+        return True
 
     def get_input_sensor_value(self) -> float | None:
         """Return the input value from configured sensor."""
@@ -51,17 +53,18 @@ class PIDDeviceHandle:
             try:
                 return float(state.state)
             except ValueError:
-                _LOGGER.warning(f"Sensor {self.sensor_entity_id} heeft geen geldige waarde. PID-berekening wordt overgeslagen.")
+                pass
         return None
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Advanced PID Controller from a config entry."""
-
-    sensor_entity_id = entry.options.get(CONF_SENSOR_ENTITY_ID, entry.data.get(CONF_SENSOR_ENTITY_ID))
+    """Set up Simple PID Controller from a config entry."""
+    sensor_entity_id = entry.options.get(
+        CONF_SENSOR_ENTITY_ID, entry.data.get(CONF_SENSOR_ENTITY_ID)
+    )
     state = hass.states.get(sensor_entity_id)
     if state is None or state.state in ("unknown", "unavailable"):
-        _LOGGER.warning("Sensor %s not ready; delaying setup", sensor_entity_id)
+        _LOGGER.warning("Input sensor %s not ready; deferring setup", sensor_entity_id)
         raise ConfigEntryNotReady(f"Sensor {sensor_entity_id} not ready")
 
     handle = PIDDeviceHandle(hass, entry)
@@ -72,7 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload PID Controller entry."""
+    """Unload a config entry."""
     if DOMAIN in hass.data and entry.entry_id in hass.data[DOMAIN]:
         hass.data[DOMAIN].pop(entry.entry_id)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

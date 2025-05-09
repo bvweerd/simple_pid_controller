@@ -1,4 +1,4 @@
-"""Sensor platform for Advanced PID Controller."""
+"""Sensor platform for Simple PID Controller."""
 
 from __future__ import annotations
 
@@ -13,8 +13,8 @@ from homeassistant.helpers.entity import EntityCategory
 
 from simple_pid import PID
 
-from . import PIDDeviceHandle
 from .const import DOMAIN
+from . import PIDDeviceHandle
 from .coordinator import PIDDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,17 +57,11 @@ async def async_setup_entry(
 
         output = pid(input_value)
 
-        # Calculate component contributions
         p_contrib = kp * (pid.setpoint - input_value) if not p_on_m else -kp * input_value
         i_contrib = pid._integral * ki
         d_contrib = pid._last_output - output if pid._last_output is not None else 0.0
 
         handle.last_contributions = (p_contrib, i_contrib, d_contrib)
-
-        _LOGGER.debug(
-            "PID: input=%.2f setpoint=%.2f kp=%.2f ki=%.2f kd=%.2f -> output=%.2f (P=%.2f, I=%.2f, D=%.2f)",
-            input_value, setpoint, kp, ki, kd, output, p_contrib, i_contrib, d_contrib
-        )
         return output
 
     coordinator = PIDDataCoordinator(hass, name, update_pid, interval=sample_time)
@@ -75,25 +69,26 @@ async def async_setup_entry(
 
     async_add_entities([
         PIDOutputSensor(entry.entry_id, name, coordinator),
-        PIDContributionSensor(entry.entry_id, name, "p", handle),
-        PIDContributionSensor(entry.entry_id, name, "i", handle),
-        PIDContributionSensor(entry.entry_id, name, "d", handle),
+        PIDContributionSensor(entry.entry_id, name, "p", handle, coordinator),
+        PIDContributionSensor(entry.entry_id, name, "i", handle, coordinator),
+        PIDContributionSensor(entry.entry_id, name, "d", handle, coordinator),
     ])
 
-    # 🔁 Register entity listeners to refresh on input_number change
-    def make_listener(target_entity_id: str):
+    def make_listener(target_id: str):
         def _listener(event):
-            if event.data.get("entity_id") == target_entity_id:
+            if event.data.get("entity_id") == target_id:
                 coordinator.async_request_refresh()
         return _listener
 
-    for key in ["kp", "ki", "kd", "setpoint", "output_min", "output_max", "sample_time"]:
-        entity_id = f"number.{entry.entry_id}_{key}"
-        hass.bus.async_listen("state_changed", make_listener(entity_id))
+    # Monitor numeric and switch parameter changes
+    for key in ["kp","ki","kd","setpoint","output_min","output_max","sample_time"]:
+        hass.bus.async_listen("state_changed", make_listener(f"number.{entry.entry_id}_{key}"))
+    for key in ["auto_mode","proportional_on_measurement"]:
+        hass.bus.async_listen("state_changed", make_listener(f"switch.{entry.entry_id}_{key}"))
 
 
 class PIDOutputSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
-    """Sensor that represents the PID output."""
+    """Sensor representing the PID output."""
 
     def __init__(self, entry_id: str, name: str, coordinator: PIDDataCoordinator):
         super().__init__(coordinator)
@@ -113,36 +108,34 @@ class PIDOutputSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
             "identifiers": {(DOMAIN, self._entry_id)},
             "name": self._device_name,
             "manufacturer": "Custom",
-            "model": "Advanced PID Controller",
+            "model": "Simple PID Controller",
         }
 
 
-class PIDContributionSensor(SensorEntity):
+class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
     """Sensor representing the P, I, or D contribution of the PID controller."""
 
-    def __init__(self, entry_id: str, name: str, component: str, handle: PIDDeviceHandle):
-        self._entry_id = entry_id
-        self._name = name
-        self._component = component  # "p", "i", or "d"
-        self._handle = handle
-        self._attr_unique_id = f"{entry_id}_pid_{component}"
+    def __init__(self, entry_id: str, name: str, component: str, handle: PIDDeviceHandle, coordinator: PIDDataCoordinator):
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{entry_id}_pid_{component}_contrib"
         self._attr_name = f"{name} PID {component.upper()} Contribution"
-        self._attr_native_unit_of_measurement = "%"
-        self._attr_device_class = None
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._handle = handle
+        self._component = component
+        self._device_name = name
+        self._entry_id = entry_id
 
     @property
     def native_value(self):
-        contributions = self._handle.last_contributions
-        index = {"p": 0, "i": 1, "d": 2}[self._component]
-        value = contributions[index]
-        return round(value, 2) if value is not None else None
+        p, i, d = self._handle.last_contributions
+        val = {"p": p, "i": i, "d": d}[self._component]
+        return round(val, 2) if val is not None else None
 
     @property
     def device_info(self):
         return {
             "identifiers": {(DOMAIN, self._entry_id)},
-            "name": self._name,
+            "name": self._device_name,
             "manufacturer": "Custom",
-            "model": "Advanced PID Controller",
+            "model": "Simple PID Controller",
         }
