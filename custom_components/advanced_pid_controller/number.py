@@ -67,12 +67,6 @@ async def async_setup_entry(
 
     sensor_entity_id = entry.options.get(CONF_SENSOR_ENTITY_ID, entry.data.get(CONF_SENSOR_ENTITY_ID))
 
-    # Check if the sensor exists and is available
-    state = hass.states.get(sensor_entity_id)
-    if state is None or state.state in ("unknown", "unavailable"):
-        from homeassistant.exceptions import ConfigEntryNotReady
-        raise ConfigEntryNotReady(f"Sensor {sensor_entity_id} not ready")
-
     entities = []
     for desc in PID_NUMBER_ENTITIES:
         entities.append(PIDParameterNumber(entry.entry_id, desc))
