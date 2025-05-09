@@ -31,7 +31,7 @@ async def async_setup_entry(
 
     # Placeholder PID-configuratie (kan later dynamisch worden)
     pid = PID(1.0, 0.1, 0.05, setpoint=50)
-    pid.output_limits = (0, 100)
+    pid.output_limits = (-100, 100)
 
     async def update_pid():
         state = hass.states.get(sensor_entity_id)
