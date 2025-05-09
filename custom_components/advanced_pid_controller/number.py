@@ -56,6 +56,36 @@ PID_NUMBER_ENTITIES = [
         "step": 1.0,
         "default": 50.0,
     },
+    {
+        "name": "Output Min",
+        "key": "output_min",
+        "icon": "mdi:arrow-down-bold",
+        "unit": "",
+        "min": -100.0,
+        "max": 0.0,
+        "step": 1.0,
+        "default": -10.0,
+    },
+    {
+        "name": "Output Max",
+        "key": "output_max",
+        "icon": "mdi:arrow-up-bold",
+        "unit": "",
+        "min": 0.0,
+        "max": 100.0,
+        "step": 1.0,
+        "default": 10.0,
+    },
+    {
+        "name": "Sample Time",
+        "key": "sample_time",
+        "icon": "mdi:timer-outline",
+        "unit": "s",
+        "min": 0.01,
+        "max": 60.0,
+        "step": 0.01,
+        "default": 10.0,
+    },  
 ]
 
 
