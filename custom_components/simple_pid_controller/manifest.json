@@ -1,8 +1,15 @@
 {
   "domain": "simple_pid_controller",
   "name": "Simple PID Controller",
-  "version": "1.0.0",
-  "requirements": ["simple-pid==1.0.1"],
+  "codeowners": ["@bvweerd"],
+  "config_flow": true,
   "dependencies": [],
-  "codeowners": ["@bvweerd"]
+  "documentation": "https://www.github.com/bvweerd/advanced_pid_controller",
+  "homekit": {},
+  "iot_class": "calculated",
+  "quality_scale": "bronze",
+  "requirements": ["simple-pid==1.0.1"],
+  "ssdp": [],
+  "zeroconf": [],
+  "version": "0.0.1"
 }
