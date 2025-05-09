@@ -1,6 +1,6 @@
 {
-  "domain": "simple_pid_controller",
-  "name": "Simple PID Controller",
+  "domain": "advanced_pid_controller",
+  "name": "Advanced PID Controller",
   "codeowners": ["@bvweerd"],
   "config_flow": true,
   "dependencies": [],

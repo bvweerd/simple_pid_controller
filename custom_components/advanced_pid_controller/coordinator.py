@@ -1,4 +1,4 @@
-"""Coordinator for Simple PID Controller."""
+"""Coordinator for Advanced PID Controller."""
 
 from datetime import timedelta
 import logging
@@ -12,9 +12,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class PIDDataCoordinator(DataUpdateCoordinator[float]):
-    """Coordinator scheduling PID updates."""
+    """Coordinator responsible for scheduling PID controller updates."""
 
     def __init__(self, hass: HomeAssistant, name: str, update_method, interval: float = 10):
+        """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
@@ -24,7 +25,9 @@ class PIDDataCoordinator(DataUpdateCoordinator[float]):
         self.update_method = update_method
 
     async def _async_update_data(self) -> float:
+        """Perform the PID calculation and return the new output value."""
         try:
             return await self.update_method()
         except Exception as err:
             raise UpdateFailed(f"PID update failed: {err}") from err
+
