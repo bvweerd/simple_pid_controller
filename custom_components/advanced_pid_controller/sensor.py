@@ -29,15 +29,13 @@ async def async_setup_entry(
     handle: PIDDeviceHandle = hass.data[DOMAIN][entry.entry_id]
     name = handle.name
 
-    pid = PID(1.0, 0.1, 0.05, setpoint=50)
-    pid.output_limits = (-10.0, 10.0)
-
     async def update_pid():
         """Recalculate the PID output using the latest values."""
         input_value = handle.get_input_sensor_value()
         if input_value is None:
             raise ValueError("Input sensor not available")
 
+        # Get current parameters from entities
         kp = handle.get_number("kp") or 1.0
         ki = handle.get_number("ki") or 0.1
         kd = handle.get_number("kd") or 0.05
@@ -48,8 +46,8 @@ async def async_setup_entry(
         auto_mode = handle.get_switch("auto_mode")
         p_on_m = handle.get_switch("proportional_on_measurement")
 
-        pid.tunings = (kp, ki, kd)
-        pid.setpoint = setpoint
+        # Create new PID controller with updated values
+        pid = PID(kp, ki, kd, setpoint=setpoint)
         pid.sample_time = sample_time
         pid.output_limits = (out_min, out_max)
         pid.auto_mode = auto_mode
@@ -57,8 +55,8 @@ async def async_setup_entry(
 
         output = pid(input_value)
 
-        # Bereken bijdrages
-        p_contrib = kp * (pid.setpoint - input_value) if not p_on_m else -kp * input_value
+        # Calculate contributions
+        p_contrib = kp * (setpoint - input_value) if not p_on_m else -kp * input_value
         i_contrib = pid._integral * ki
         d_contrib = pid._last_output - output if pid._last_output is not None else 0.0
 
@@ -71,8 +69,8 @@ async def async_setup_entry(
 
         return output
 
-    # Start coordinator met de opgegeven sample_time
-    coordinator = PIDDataCoordinator(hass, name, update_pid, interval=handle.get_number("sample_time") or 10.0)
+    # Initialize coordinator with default interval, but actual value used per call
+    coordinator = PIDDataCoordinator(hass, name, update_pid, interval=10)
     await coordinator.async_config_entry_first_refresh()
 
     async_add_entities([
@@ -82,7 +80,7 @@ async def async_setup_entry(
         PIDContributionSensor(entry.entry_id, name, "d", handle, coordinator),
     ])
 
-    # Luister naar veranderingen in relevante entities
+    # Watch for changes in number and switch entities
     def make_listener(entity_id: str):
         def _listener(event):
             if event.data.get("entity_id") == entity_id:
