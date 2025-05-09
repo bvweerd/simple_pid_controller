@@ -31,7 +31,6 @@ async def async_setup_entry(
     pid = PID(1.0, 0.1, 0.05, setpoint=50)
     pid.output_limits = (-10.0, 10.0)
 
-    # ✅ sample_time ophalen vóór de update function
     sample_time = handle.get_number("sample_time") or 10.0
 
     async def update_pid():
