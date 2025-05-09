@@ -1,123 +1,113 @@
-from homeassistant.components.number import RestoreNumber
+# custom_components/advanced_pid_controller/number.py
+
+from __future__ import annotations
+
+import logging
+from typing import Any
+
+from homeassistant.components.number import NumberEntity, RestoreNumber
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN
+from .const import DOMAIN, CONF_SENSOR_ENTITY_ID
 
-PID_NUMBER_SETTINGS = [
-    {
-        "name": "Setpoint",
-        "key": "setpoint",
-        "icon": "mdi:target-variant",
-        "unit": "units",  # pas aan op je toepassing
-        "precision": 0.1,
-        "min": 0.0,
-        "max": 100.0,
-        "default": 20.0,
-    },
+_LOGGER = logging.getLogger(__name__)
+
+PID_NUMBER_ENTITIES = [
     {
         "name": "Kp",
         "key": "kp",
-        "icon": "mdi:alpha-k-box",
+        "icon": "mdi:alpha-k-circle-outline",
         "unit": "",
-        "precision": 0.01,
         "min": 0.0,
         "max": 10.0,
+        "step": 0.01,
         "default": 1.0,
     },
     {
         "name": "Ki",
         "key": "ki",
-        "icon": "mdi:alpha-i-box",
+        "icon": "mdi:alpha-i-circle-outline",
         "unit": "",
-        "precision": 0.01,
         "min": 0.0,
         "max": 10.0,
-        "default": 0.0,
+        "step": 0.01,
+        "default": 0.1,
     },
     {
         "name": "Kd",
         "key": "kd",
-        "icon": "mdi:alpha-d-box",
+        "icon": "mdi:alpha-d-circle-outline",
         "unit": "",
-        "precision": 0.01,
         "min": 0.0,
         "max": 10.0,
-        "default": 0.0,
+        "step": 0.01,
+        "default": 0.05,
     },
     {
-        "name": "Output Min",
-        "key": "output_min",
-        "icon": "mdi:arrow-down",
-        "unit": "",
-        "precision": 0.1,
-        "min": -100.0,
-        "max": 0.0,
-        "default": -10.0,
-    },
-    {
-        "name": "Output Max",
-        "key": "output_max",
-        "icon": "mdi:arrow-up",
-        "unit": "",
-        "precision": 0.1,
+        "name": "Setpoint",
+        "key": "setpoint",
+        "icon": "mdi:target-variant",
+        "unit": "%",
         "min": 0.0,
         "max": 100.0,
-        "default": 10.0,
-    },
-    {
-        "name": "Sample Time",
-        "key": "sample_time",
-        "icon": "mdi:clock-outline",
-        "unit": "s",
-        "precision": 0.1,
-        "min": 0.1,
-        "max": 60.0,
-        "default": 1.0,
+        "step": 1.0,
+        "default": 50.0,
     },
 ]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up number entities for PID controller settings."""
-    name = entry.data.get("name", "PID Controller")
-    entities = [
-        PIDNumberEntity(entry.entry_id, name, setting)
-        for setting in PID_NUMBER_SETTINGS
-    ]
+    """Set up number entities from config entry."""
+
+    sensor_entity_id = entry.options.get(CONF_SENSOR_ENTITY_ID, entry.data.get(CONF_SENSOR_ENTITY_ID))
+
+    # Check if the sensor exists and is available
+    state = hass.states.get(sensor_entity_id)
+    if state is None or state.state in ("unknown", "unavailable"):
+        from homeassistant.exceptions import ConfigEntryNotReady
+        raise ConfigEntryNotReady(f"Sensor {sensor_entity_id} not ready")
+
+    entities = []
+    for desc in PID_NUMBER_ENTITIES:
+        entities.append(PIDParameterNumber(entry.entry_id, desc))
+
     async_add_entities(entities)
 
 
-class PIDNumberEntity(RestoreNumber):
-    """A PID controller setting represented as a number entity."""
+class PIDParameterNumber(RestoreNumber):
+    """Number entity for PID parameter."""
 
-    def __init__(self, entry_id: str, base_name: str, setting: dict) -> None:
+    def __init__(self, entry_id: str, description: dict[str, Any]) -> None:
+        """Initialize a PID number entity."""
         self._entry_id = entry_id
-        self._key = setting["key"]
-        self._attr_name = f"{base_name} {setting['name']}"
-        self._attr_unique_id = f"{entry_id}_{self._key}"
-        self._attr_icon = setting.get("icon")
-        self._attr_native_unit_of_measurement = setting.get("unit")
-        self._attr_native_min_value = setting.get("min")
-        self._attr_native_max_value = setting.get("max")
-        self._attr_native_step = setting.get("precision")
-        self._value = setting.get("default")
+        self._attr_name = f"{entry_id} {description['name']}"
+        self._attr_unique_id = f"{entry_id}_{description['key']}"
+        self._attr_icon = description["icon"]
+        self._attr_native_unit_of_measurement = description["unit"]
+        self._attr_native_value = description["default"]
+        self._attr_min_value = description["min"]
+        self._attr_max_value = description["max"]
+        self._attr_step = description["step"]
+        self._key = description["key"]
+
+    async def async_added_to_hass(self) -> None:
+        """Restore last value if available."""
+        await super().async_added_to_hass()
+        if (last_val := await self.async_get_last_number_data()) is not None:
+            self._attr_native_value = last_val.native_value
 
     @property
     def native_value(self) -> float:
-        return self._value
+        """Return the current value."""
+        return self._attr_native_value
 
     async def async_set_native_value(self, value: float) -> None:
-        self._value = value
+        """Set a new value."""
+        self._attr_native_value = value
         self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Restore previous value if available."""
-        await super().async_added_to_hass()
-        if (last := await self.async_get_last_number_data()) is not None:
-            self._value = last.native_value
