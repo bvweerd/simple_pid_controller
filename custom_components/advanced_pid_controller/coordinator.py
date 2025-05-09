@@ -30,3 +30,4 @@ class PIDDataCoordinator(DataUpdateCoordinator[float]):
             return await self.update_method()
         except Exception as err:
             raise UpdateFailed(f"PID update failed: {err}") from err
+
