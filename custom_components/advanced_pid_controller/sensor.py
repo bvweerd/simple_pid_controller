@@ -31,6 +31,9 @@ async def async_setup_entry(
     pid = PID(1.0, 0.1, 0.05, setpoint=50)
     pid.output_limits = (-10.0, 10.0)
 
+    # ✅ sample_time ophalen vóór de update function
+    sample_time = handle.get_number("sample_time") or 10.0
+
     async def update_pid():
         input_value = handle.get_input_sensor_value()
         if input_value is None:
@@ -40,7 +43,6 @@ async def async_setup_entry(
         ki = handle.get_number("ki") or 0.1
         kd = handle.get_number("kd") or 0.05
         setpoint = handle.get_number("setpoint") or 50.0
-        sample_time = handle.get_number("sample_time") or 10.0
         out_min = handle.get_number("output_min") or -10.0
         out_max = handle.get_number("output_max") or 10.0
         auto_mode = handle.get_switch("auto_mode")
@@ -54,6 +56,8 @@ async def async_setup_entry(
         pid.proportional_on_measurement = p_on_m
 
         output = pid(input_value)
+
+        # Bereken bijdragen
         p_contrib = kp * (pid.setpoint - input_value) if not p_on_m else -kp * input_value
         i_contrib = pid._integral * ki
         d_contrib = pid._last_output - output if pid._last_output is not None else 0.0
