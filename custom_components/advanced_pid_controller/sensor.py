@@ -9,11 +9,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.const import UnitOfPower
 
 from simple_pid import PID
 
-from .const import DOMAIN, CONF_SENSOR_ENTITY_ID
+from .const import (
+    DOMAIN,
+    CONF_SENSOR_ENTITY_ID,
+)
+
 from .coordinator import PIDDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,16 +32,37 @@ async def async_setup_entry(
     name = entry.data.get("name", "PID Controller")
     sensor_entity_id = entry.options.get(CONF_SENSOR_ENTITY_ID, entry.data.get(CONF_SENSOR_ENTITY_ID))
 
-    # Placeholder PID-configuratie (kan later dynamisch worden)
-    pid = PID(1.0, 0.1, 0.05, setpoint=50)
+    # Entity IDs van bijbehorende number sliders
+    kp_id = f"number.{entry.entry_id}_kp"
+    ki_id = f"number.{entry.entry_id}_ki"
+    kd_id = f"number.{entry.entry_id}_kd"
+    setpoint_id = f"number.{entry.entry_id}_setpoint"
+
+    pid = PID(1.0, 0.1, 0.05, setpoint=50)  # initiële waardes
     pid.output_limits = (-100, 100)
 
     async def update_pid():
-        state = hass.states.get(sensor_entity_id)
-        if state is None or state.state in ("unknown", "unavailable"):
+        # PID input
+        sensor_state = hass.states.get(sensor_entity_id)
+        if sensor_state is None or sensor_state.state in ("unknown", "unavailable"):
             raise ValueError(f"Sensor {sensor_entity_id} state is not available")
-        value = float(state.state)
-        return pid(value)
+        input_value = float(sensor_state.state)
+
+        # Waarden uit number sliders
+        kp = float(hass.states.get(kp_id).state or 1)
+        ki = float(hass.states.get(ki_id).state or 0)
+        kd = float(hass.states.get(kd_id).state or 0)
+        setpoint = float(hass.states.get(setpoint_id).state or 50)
+
+        pid.tunings = (kp, ki, kd)
+        pid.setpoint = setpoint
+
+        output = pid(input_value)
+        _LOGGER.debug(
+            "PID: input=%.2f setpoint=%.2f kp=%.2f ki=%.2f kd=%.2f -> output=%.2f",
+            input_value, setpoint, kp, ki, kd, output
+        )
+        return output
 
     coordinator = PIDDataCoordinator(hass, name, update_pid, interval=10)
     await coordinator.async_config_entry_first_refresh()
