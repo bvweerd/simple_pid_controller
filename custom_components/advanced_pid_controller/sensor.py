@@ -9,6 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.entity import EntityCategory
 
 from simple_pid import PID
 
@@ -117,6 +118,7 @@ class PIDContributionSensor(SensorEntity):
         self._attr_name = f"{name} PID {component.upper()} Contribution"
         self._attr_native_unit_of_measurement = "%"
         self._attr_device_class = None
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def native_value(self):
