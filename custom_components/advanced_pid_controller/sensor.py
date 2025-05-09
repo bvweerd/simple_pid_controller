@@ -75,10 +75,10 @@ async def async_setup_entry(
 class PIDOutputSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
     """Sensor that represents the PID output."""
 
-    def __init__(self, entry: ConfigEntry, name: str, coordinator: PIDDataCoordinator):
+    def __init__(self, entry_id: str, name: str, coordinator: PIDDataCoordinator):
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._config_entry = entry.entry_id
+        self._config_entry = entry_id
         self._attr_unique_id = f"{entry_id}_pid_output"
         self._attr_name = f"{name} PID Output"
         self._attr_native_unit_of_measurement = "%"
@@ -89,7 +89,6 @@ class PIDOutputSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
         """Return the current PID output."""
         return round(self.coordinator.data, 2)
 
-
     @property
     def device_info(self):
         return {
@@ -97,4 +96,5 @@ class PIDOutputSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
             "name": "Advanced PID Controller",
             "manufacturer": "bvweerd",
             "model": "PID Controller",
+            "entry_type": "service",  # Optional
         }
