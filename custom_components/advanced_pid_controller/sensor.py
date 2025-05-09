@@ -2,10 +2,12 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.entity import Entity
 
 from .pid_controller import PIDControllerWrapper
+from .coordinator import PIDDataCoordinator
 from .const import DOMAIN, CONF_SENSOR_ENTITY_ID
 
 import logging
@@ -13,44 +15,45 @@ import logging
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the PID output sensor."""
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
+    """Set up PID output sensor."""
     name = entry.data.get("name", "PID Controller")
- 
-    sensor_entity_id = entry.options.get(
-        CONF_SENSOR_ENTITY_ID, entry.data.get(CONF_SENSOR_ENTITY_ID)
-    )
+    sensor_entity_id = entry.options.get(CONF_SENSOR_ENTITY_ID, entry.data.get(CONF_SENSOR_ENTITY_ID))
 
-    entity = PIDOutputSensor(
-        name=name,
-        entry_id=entry.entry_id,
-        hass=hass,
-        sensor_entity_id=sensor_entity_id,
-    )
+    async def update_pid():
+        state = hass.states.get(sensor_entity_id)
+        if state is None or state.state in ("unknown", "unavailable"):
+            raise ValueError(f"Input sensor {sensor_entity_id} not available")
 
-    async_add_entities([entity], update_before_add=True)
+        current_input = float(state.state)
+        # zelfde code om PID-parameters op te halen
+        # ...
+        pid = PIDControllerWrapper()
+        pid.update_parameters(values)
+        return pid.compute(current_input)
+
+    coordinator = PIDDataCoordinator(hass, name, update_interval=10, update_method=update_pid)
+    await coordinator.async_config_entry_first_refresh()
+
+    sensor = PIDOutputSensor(entry.entry_id, name, coordinator)
+    async_add_entities([sensor])
 
 
 class PIDOutputSensor(SensorEntity):
     """Sensor that shows the output of the PID controller."""
 
-    def __init__(self, name: str, entry_id: str, hass: HomeAssistant, sensor_entity_id: str) -> None:
-        self._attr_name = f"{name} PID Output"
+    """PID output sensor."""
+
+    def __init__(self, entry_id: str, name: str, coordinator: PIDDataCoordinator):
+        super().__init__(coordinator)
         self._attr_unique_id = f"{entry_id}_pid_output"
+        self._attr_name = f"{name} PID Output"
         self._attr_native_unit_of_measurement = "%"
-        self._state: float = 0.0
-        self._entry_id = entry_id
-        self.hass = hass
-        self._pid = PIDControllerWrapper()
-        self._sensor_entity_id = sensor_entity_id
+        self._attr_device_class = None
 
     @property
-    def native_value(self) -> StateType:
-        return round(self._state, 2)
+    def native_value(self) -> float:
+        return round(self.coordinator.data, 2)
 
     async def async_update(self) -> None:
         """Update the PID output based on the input sensor."""
