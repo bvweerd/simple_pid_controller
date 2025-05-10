@@ -10,8 +10,8 @@ A Home Assistant integration that provides a simple, live-tunable PID (Proportio
 ## Features
 
 * **PID Output Sensor**: Reports the current controller output as a percentage.
-* **Diagnostic Sensors**: Separate sensors for the P, I, and D contributions (EntityCategory.DIAGNOSTIC, disabled by default).
-* **Number Entities (EntityCategory.CONFIG)** for:
+* **Diagnostic Sensors**: Separate sensors for the P, I, and D contributions (disabled by default).
+* **Number Entities** for:
 
   * **Kp** (Proportional gain)
   * **Ki** (Integral gain)
@@ -20,7 +20,7 @@ A Home Assistant integration that provides a simple, live-tunable PID (Proportio
   * **Output Min** (Minimum controller output)
   * **Output Max** (Maximum controller output)
   * **Sample Time** (Interval between PID calculations)
-* **Switch Entities (EntityCategory.CONFIG)** for:
+* **Switch Entities** for:
 
   * **Auto Mode**: Enable/disable automatic PID control.
   * **Proportional on Measurement**: Toggle whether the proportional term acts on measurement rather than error.
