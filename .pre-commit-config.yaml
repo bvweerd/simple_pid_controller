@@ -32,6 +32,9 @@ repos:
     hooks:
       - id: mypy
         args:
+          - --namespace-packages
+          - --explicit-package-bases
           - --pretty
           - --show-error-codes
           - --show-error-context
+        files: ^custom_components/simple_pid_controller/.*\\.py$
