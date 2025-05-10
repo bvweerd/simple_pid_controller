@@ -14,7 +14,9 @@ _LOGGER = logging.getLogger(__name__)
 class PIDDataCoordinator(DataUpdateCoordinator[float]):
     """Coordinator responsible for scheduling PID controller updates."""
 
-    def __init__(self, hass: HomeAssistant, name: str, update_method, interval: float = 10):
+    def __init__(
+        self, hass: HomeAssistant, name: str, update_method, interval: float = 10
+    ):
         """Initialize the coordinator."""
         super().__init__(
             hass,
@@ -30,4 +32,3 @@ class PIDDataCoordinator(DataUpdateCoordinator[float]):
             return await self.update_method()
         except Exception as err:
             raise UpdateFailed(f"PID update failed: {err}") from err
-

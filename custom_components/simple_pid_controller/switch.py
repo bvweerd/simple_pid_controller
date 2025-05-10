@@ -14,12 +14,16 @@ SWITCH_ENTITIES = [
     {"key": "proportional_on_measurement", "name": "Proportional on Measurement"},
 ]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     handle: PIDDeviceHandle = hass.data[DOMAIN][entry.entry_id]
     name = handle.name
-    async_add_entities([
-        PIDOptionSwitch(entry.entry_id, name, desc) for desc in SWITCH_ENTITIES
-    ])
+    async_add_entities(
+        [PIDOptionSwitch(entry.entry_id, name, desc) for desc in SWITCH_ENTITIES]
+    )
+
 
 class PIDOptionSwitch(SwitchEntity):
     def __init__(self, entry_id: str, device_name: str, desc: dict) -> None:

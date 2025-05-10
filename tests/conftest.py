@@ -6,6 +6,7 @@ from homeassistant.core import HomeAssistant
 
 from custom_components.simple_pid_controller.const import DOMAIN, CONF_SENSOR_ENTITY_ID
 
+
 @pytest.fixture
 def config_entry(hass: HomeAssistant):
     """Create a mock config entry."""

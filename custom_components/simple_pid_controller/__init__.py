@@ -23,7 +23,9 @@ class PIDDeviceHandle:
         self.hass = hass
         self.entry = entry
         self.name = entry.data.get(CONF_NAME)
-        self.sensor_entity_id = entry.options.get(CONF_SENSOR_ENTITY_ID, entry.data.get(CONF_SENSOR_ENTITY_ID))
+        self.sensor_entity_id = entry.options.get(
+            CONF_SENSOR_ENTITY_ID, entry.data.get(CONF_SENSOR_ENTITY_ID)
+        )
         self.last_contributions = (None, None, None)  # (P, I, D)
 
     def _get_entity_id(self, platform: str, key: str) -> str | None:
@@ -46,7 +48,9 @@ class PIDDeviceHandle:
             try:
                 return float(state.state)
             except ValueError:
-                _LOGGER.error("Could not parse state '%s' of %s as float", state.state, entity_id)
+                _LOGGER.error(
+                    "Could not parse state '%s' of %s as float", state.state, entity_id
+                )
         return None
 
     def get_switch(self, key: str) -> bool:
@@ -67,13 +71,18 @@ class PIDDeviceHandle:
             try:
                 return float(state.state)
             except ValueError:
-                _LOGGER.warning(f"Sensor {self.sensor_entity_id} heeft geen geldige waarde. PID-berekening wordt overgeslagen.")
+                _LOGGER.warning(
+                    f"Sensor {self.sensor_entity_id} heeft geen geldige waarde. PID-berekening wordt overgeslagen."
+                )
         return None
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Advanced PID Controller from a config entry."""
 
-    sensor_entity_id = entry.options.get(CONF_SENSOR_ENTITY_ID, entry.data.get(CONF_SENSOR_ENTITY_ID))
+    sensor_entity_id = entry.options.get(
+        CONF_SENSOR_ENTITY_ID, entry.data.get(CONF_SENSOR_ENTITY_ID)
+    )
     state = hass.states.get(sensor_entity_id)
     if state is None or state.state in ("unknown", "unavailable"):
         _LOGGER.warning("Sensor %s not ready; delaying setup", sensor_entity_id)

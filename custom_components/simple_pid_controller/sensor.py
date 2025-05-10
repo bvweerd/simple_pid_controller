@@ -70,7 +70,15 @@ async def async_setup_entry(
 
         _LOGGER.debug(
             "PID input=%.2f setpoint=%.2f kp=%.2f ki=%.2f kd=%.2f => output=%.2f [P=%.2f, I=%.2f, D=%.2f]",
-            input_value, setpoint, kp, ki, kd, output, p_contrib, i_contrib, d_contrib
+            input_value,
+            setpoint,
+            kp,
+            ki,
+            kd,
+            output,
+            p_contrib,
+            i_contrib,
+            d_contrib,
         )
 
         return output
@@ -79,12 +87,14 @@ async def async_setup_entry(
     coordinator = PIDDataCoordinator(hass, name, update_pid, interval=10)
     await coordinator.async_config_entry_first_refresh()
 
-    async_add_entities([
-        PIDOutputSensor(entry.entry_id, name, coordinator),
-        PIDContributionSensor(entry.entry_id, name, "p", handle, coordinator),
-        PIDContributionSensor(entry.entry_id, name, "i", handle, coordinator),
-        PIDContributionSensor(entry.entry_id, name, "d", handle, coordinator),
-    ])
+    async_add_entities(
+        [
+            PIDOutputSensor(entry.entry_id, name, coordinator),
+            PIDContributionSensor(entry.entry_id, name, "p", handle, coordinator),
+            PIDContributionSensor(entry.entry_id, name, "i", handle, coordinator),
+            PIDContributionSensor(entry.entry_id, name, "d", handle, coordinator),
+        ]
+    )
 
     # Zet listeners op input_number en switch wijzigingen
     def make_listener(entity_id: str):
@@ -92,13 +102,26 @@ async def async_setup_entry(
             if event.data.get("entity_id") == entity_id:
                 _LOGGER.debug("Update detected on %s", entity_id)
                 coordinator.async_request_refresh()
+
         return _listener
 
-    for key in ["kp", "ki", "kd", "setpoint", "output_min", "output_max", "sample_time"]:
-        hass.bus.async_listen("state_changed", make_listener(f"number.{entry.entry_id}_{key}"))
+    for key in [
+        "kp",
+        "ki",
+        "kd",
+        "setpoint",
+        "output_min",
+        "output_max",
+        "sample_time",
+    ]:
+        hass.bus.async_listen(
+            "state_changed", make_listener(f"number.{entry.entry_id}_{key}")
+        )
 
     for key in ["auto_mode", "proportional_on_measurement"]:
-        hass.bus.async_listen("state_changed", make_listener(f"switch.{entry.entry_id}_{key}"))
+        hass.bus.async_listen(
+            "state_changed", make_listener(f"switch.{entry.entry_id}_{key}")
+        )
 
 
 class PIDOutputSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
@@ -129,7 +152,14 @@ class PIDOutputSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
 class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
     """Sensor representing P, I or D contribution."""
 
-    def __init__(self, entry_id: str, name: str, component: str, handle: PIDDeviceHandle, coordinator: PIDDataCoordinator):
+    def __init__(
+        self,
+        entry_id: str,
+        name: str,
+        component: str,
+        handle: PIDDeviceHandle,
+        coordinator: PIDDataCoordinator,
+    ):
         super().__init__(coordinator)
         self._attr_unique_id = f"{entry_id}_pid_{component}_contrib"
         self._attr_name = f"{name} PID {component.upper()} Contribution"
@@ -143,7 +173,11 @@ class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity)
     @property
     def native_value(self):
         contributions = self._handle.last_contributions
-        value = {"p": contributions[0], "i": contributions[1], "d": contributions[2]}.get(self._component)
+        value = {
+            "p": contributions[0],
+            "i": contributions[1],
+            "d": contributions[2],
+        }.get(self._component)
         return round(value, 2) if value is not None else None
 
     @property

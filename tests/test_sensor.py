@@ -1,9 +1,11 @@
 """Test sensor platform for Simple PID Controller."""
+
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 
 from custom_components.simple_pid_controller.const import DOMAIN, CONF_SENSOR_ENTITY_ID
 from custom_components.simple_pid_controller import async_setup_entry
+
 
 async def test_sensor_platform(hass: HomeAssistant):
     """Test that sensor entities are created on setup."""

@@ -1,9 +1,14 @@
 """Test setup and unload entry for Simple PID Controller."""
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from custom_components.simple_pid_controller import async_setup_entry, async_unload_entry
+from custom_components.simple_pid_controller import (
+    async_setup_entry,
+    async_unload_entry,
+)
 from custom_components.simple_pid_controller.const import DOMAIN, CONF_SENSOR_ENTITY_ID
+
 
 async def test_setup_and_unload_entry(hass: HomeAssistant):
     """Test setting up and unloading the config entry."""

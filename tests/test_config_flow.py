@@ -1,11 +1,15 @@
 """Test the config flow for Simple PID Controller."""
-import pytest
+
 from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from custom_components.simple_pid_controller.config_flow import SimplePIDControllerConfigFlow
-from custom_components.simple_pid_controller.const import DOMAIN, CONF_NAME, CONF_SENSOR_ENTITY_ID
+from custom_components.simple_pid_controller.const import (
+    DOMAIN,
+    CONF_NAME,
+    CONF_SENSOR_ENTITY_ID,
+)
+
 
 async def test_show_form(hass: HomeAssistant):
     """Test that the config flow form is served."""
@@ -14,6 +18,7 @@ async def test_show_form(hass: HomeAssistant):
     )
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
+
 
 async def test_create_entry(hass: HomeAssistant):
     """Test creating an entry."""

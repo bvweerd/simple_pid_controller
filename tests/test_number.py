@@ -1,10 +1,12 @@
 """Test number platform for Simple PID Controller."""
+
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 
 from custom_components.simple_pid_controller.const import DOMAIN, CONF_SENSOR_ENTITY_ID
 from custom_components.simple_pid_controller.number import PID_NUMBER_ENTITIES
 from custom_components.simple_pid_controller import async_setup_entry
+
 
 async def test_number_platform(hass: HomeAssistant):
     """Test that number entities are created on setup."""
