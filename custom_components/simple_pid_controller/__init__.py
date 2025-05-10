@@ -59,7 +59,7 @@ class PIDDeviceHandle:
         if state and state.state not in ("unknown", "unavailable"):
             return state.state == "on"
         return True
-        
+
     def get_input_sensor_value(self) -> float | None:
         """Return the input value from configured sensor."""
         state = self.hass.states.get(self.sensor_entity_id)

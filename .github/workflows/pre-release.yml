@@ -24,13 +24,13 @@ jobs:
           pip install pre-commit
 
       - name: Install dependencies for pre-commit hooks
-        working-directory: ./
+        working-directory: custom_components/simple_pid_controller
         run: |
           pre-commit install
 
 
       - name: Run pre-commit hooks
-        working-directory: ./
+        working-directory: custom_components/simple_pid_controller
         run: |
           pre-commit run --all-files
 

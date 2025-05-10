@@ -1,6 +1,7 @@
 from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
+from homeassistant.helpers.selector import selector
 import voluptuous as vol
 
 from .const import DOMAIN, CONF_SENSOR_ENTITY_ID
