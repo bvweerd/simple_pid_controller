@@ -35,4 +35,3 @@ repos:
           - --pretty
           - --show-error-codes
           - --show-error-context
-          - --package-root custom_components/simple_pid_controller
