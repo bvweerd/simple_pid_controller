@@ -7,10 +7,10 @@
   "documentation": "https://www.github.com/bvweerd/simple_pid_controller",
   "homekit": {},
   "iot_class": "calculated",
+  "issue_tracker": "https://github.com/bvweerd/simple_pid_controller/issues",
   "quality_scale": "bronze",
   "requirements": ["simple-pid==1.0.1"],
   "ssdp": [],
-  "zeroconf": [],
   "version": "0.0.1",
-  "issue_tracker": "https://github.com/bvweerd/simple_pid_controller/issues"
+  "zeroconf": []
 }
