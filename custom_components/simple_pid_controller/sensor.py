@@ -134,7 +134,7 @@ class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity)
         self._attr_unique_id = f"{entry_id}_pid_{component}_contrib"
         self._attr_name = f"{name} PID {component.upper()} Contribution"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
-        self._attr_entity_registry_visible_default = False
+        self._attr_entity_registry_enabled_default = False
         self._handle = handle
         self._component = component
         self._entry_id = entry_id

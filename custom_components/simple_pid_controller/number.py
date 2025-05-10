@@ -34,6 +34,7 @@ class PIDParameterNumber(RestoreNumber):
         self._attr_name = f"{device_name} {desc['name']}"
         self._attr_unique_id = f"{entry_id}_{self._key}"
         self._attr_icon = "mdi:ray-vertex"
+        self._attr_mode = "box"
         self._attr_native_unit_of_measurement = desc["unit"]
         self._attr_native_min_value = desc["min"]
         self._attr_native_max_value = desc["max"]

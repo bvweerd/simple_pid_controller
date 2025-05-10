@@ -1,15 +1,20 @@
-"""Common fixtures for the PID Controller tests."""
-
-from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+"""Common fixtures for Simple PID Controller tests."""
 
 import pytest
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 
+from custom_components.simple_pid_controller.const import DOMAIN, CONF_SENSOR_ENTITY_ID
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock]:
-    """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.advanced_pid_controller.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        yield mock_setup_entry
+def config_entry(hass: HomeAssistant):
+    """Create a mock config entry."""
+    entry = ConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        title="Test PID",
+        data={CONF_SENSOR_ENTITY_ID: "sensor.test"},
+        options={},
+        entry_id="test_entry",
+    )
+    return entry

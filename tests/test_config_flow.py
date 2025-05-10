@@ -1,148 +1,31 @@
-"""Test the PID Controller config flow."""
-
-from unittest.mock import AsyncMock, patch
-
+"""Test the config flow for Simple PID Controller."""
+import pytest
 from homeassistant import config_entries
-from homeassistant.components.advanced_pid_controller.config_flow import (
-    CannotConnect,
-    InvalidAuth,
-)
-from homeassistant.components.advanced_pid_controller.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from custom_components.simple_pid_controller.config_flow import SimplePIDControllerConfigFlow
+from custom_components.simple_pid_controller.const import DOMAIN, CONF_NAME, CONF_SENSOR_ENTITY_ID
 
-async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test we get the form."""
+async def test_show_form(hass: HomeAssistant):
+    """Test that the config flow form is served."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.advanced_pid_controller.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Name of the device"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
+async def test_create_entry(hass: HomeAssistant):
+    """Test creating an entry."""
+    data = {
+        CONF_NAME: "Test PID",
+        CONF_SENSOR_ENTITY_ID: "sensor.test",
     }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_invalid_auth(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data=data,
     )
-
-    with patch(
-        "homeassistant.components.advanced_pid_controller.config_flow.PlaceholderHub.authenticate",
-        side_effect=InvalidAuth,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
-
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
-    with patch(
-        "homeassistant.components.advanced_pid_controller.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Name of the device"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.advanced_pid_controller.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-    # Make sure the config flow tests finish with either an
-    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
-    # we can show the config flow is able to recover from an error.
-
-    with patch(
-        "homeassistant.components.advanced_pid_controller.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Name of the device"
-    assert result["data"] == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == data[CONF_NAME]
+    assert result["data"] == data

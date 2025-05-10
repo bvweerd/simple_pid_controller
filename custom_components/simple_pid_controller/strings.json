@@ -1,21 +1,29 @@
 {
+  "title": "Simple PID Controller",
   "config": {
     "step": {
       "user": {
+        "title": "Configure Simple PID Controller",
+        "description": "Enter a name and choose the sensor to drive the PID loop.",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "name": "Name",
+          "sensor_entity_id": "Sensor Entity"
         }
       }
     },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "single_instance_allowed": "Only a single instance of Simple PID Controller is allowed."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Edit PID Controller Options",
+        "description": "Modify the sensor entity used by the controller.",
+        "data": {
+          "sensor_entity_id": "Sensor Entity"
+        }
+      }
     }
   }
 }
