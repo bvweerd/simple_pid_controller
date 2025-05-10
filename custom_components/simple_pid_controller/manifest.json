@@ -11,5 +11,6 @@
   "requirements": ["simple-pid==1.0.1"],
   "ssdp": [],
   "zeroconf": [],
-  "version": "0.0.1"
+  "version": "0.0.1",
+  "issue_tracker": "https://github.com/bvweerd/simple_pid_controller/issues"
 }
