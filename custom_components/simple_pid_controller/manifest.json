@@ -1,10 +1,10 @@
 {
-  "domain": "advanced_pid_controller",
-  "name": "Advanced PID Controller",
+  "domain": "simple_pid_controller",
+  "name": "Simple PID Controller",
   "codeowners": ["@bvweerd"],
   "config_flow": true,
   "dependencies": [],
-  "documentation": "https://www.github.com/bvweerd/advanced_pid_controller",
+  "documentation": "https://www.github.com/bvweerd/simple_pid_controller",
   "homekit": {},
   "iot_class": "calculated",
   "quality_scale": "bronze",
