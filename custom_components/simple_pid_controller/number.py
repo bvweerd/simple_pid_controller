@@ -91,18 +91,16 @@ async def async_setup_entry(
     handle: PIDDeviceHandle = hass.data[DOMAIN][entry.entry_id]
     name = handle.name
     entities = [
-        PIDParameterNumber(entry.entry_id, name, desc) for desc in PID_NUMBER_ENTITIES
+        PIDParameterNumber(entry, name, desc) for desc in PID_NUMBER_ENTITIES
     ]
     async_add_entities(entities)
 
 
 class PIDParameterNumber(RestoreNumber):
-    def __init__(self, entry_id: str, device_name: str, desc: dict) -> None:
-        self._entry_id = entry_id
-        self._key = desc["key"]
+    def __init__(self, entry: ConfigEntry, device_name: str, desc: dict) -> None:
         self._attr_name = f"{desc['name']}"
         self._attr_has_entity_name = True
-        self._attr_unique_id = f"{entry_id}_{self._key}"
+        self._attr_unique_id = f"{entry.entry_id}_{desc['key']}"
         self._attr_icon = "mdi:ray-vertex"
         self._attr_mode = "box"
         self._attr_native_unit_of_measurement = desc["unit"]
@@ -111,7 +109,14 @@ class PIDParameterNumber(RestoreNumber):
         self._attr_native_step = desc["step"]
         self._attr_native_value = desc["default"]
         self._attr_entity_category = desc["entity_category"]
-        self._device_name = device_name
+
+        # Device-info
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, entry.entry_id)},
+            "name": entry.entry_id,
+            "manufacturer": "PID",
+            "model": "Simple PID Controller",
+        }
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
@@ -125,12 +130,3 @@ class PIDParameterNumber(RestoreNumber):
     async def async_set_native_value(self, value: float) -> None:
         self._attr_native_value = value
         self.async_write_ha_state()
-
-    @property
-    def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self._entry_id)},
-            "name": self._device_name,
-            "manufacturer": "Custom",
-            "model": "Simple PID Controller",
-        }

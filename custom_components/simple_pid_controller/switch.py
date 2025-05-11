@@ -21,21 +21,27 @@ async def async_setup_entry(
     handle: PIDDeviceHandle = hass.data[DOMAIN][entry.entry_id]
     name = handle.name
     async_add_entities(
-        [PIDOptionSwitch(entry.entry_id, name, desc) for desc in SWITCH_ENTITIES]
+        [PIDOptionSwitch(entry, name, desc) for desc in SWITCH_ENTITIES]
     )
 
 
 class PIDOptionSwitch(SwitchEntity):
-    def __init__(self, entry_id: str, device_name: str, desc: dict) -> None:
-        self._entry_id = entry_id
-        self._key = desc["key"]
+    def __init__(self, entry: ConfigEntry, device_name: str, desc: dict) -> None:
+        self._entry = entry
         self._attr_name = f"{desc['name']}"
         self._attr_has_entity_name = True
-        self._attr_unique_id = f"{entry_id}_{self._key}"
+        self._attr_unique_id = f"{entry.entry_id}_{desc['key']}"
         self._attr_entity_category = EntityCategory.CONFIG
-        self._device_name = device_name
         self._state = True
 
+        # Device-info
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, entry.entry_id)},
+            "name": entry.entry_id,
+            "manufacturer": "PID",
+            "model": "Simple PID Controller",
+        }
+        
     @property
     def is_on(self) -> bool:
         return self._state
@@ -47,12 +53,3 @@ class PIDOptionSwitch(SwitchEntity):
     async def async_turn_off(self, **kwargs) -> None:
         self._state = False
         self.async_write_ha_state()
-
-    @property
-    def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self._entry_id)},
-            "name": self._device_name,
-            "manufacturer": "Custom",
-            "model": "Simple PID Controller",
-        }

@@ -89,10 +89,10 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            PIDOutputSensor(entry.entry_id, name, coordinator),
-            PIDContributionSensor(entry.entry_id, name, "p", handle, coordinator),
-            PIDContributionSensor(entry.entry_id, name, "i", handle, coordinator),
-            PIDContributionSensor(entry.entry_id, name, "d", handle, coordinator),
+            PIDOutputSensor(entry, name, coordinator),
+            PIDContributionSensor(entry, name, "p", handle, coordinator),
+            PIDContributionSensor(entry, name, "i", handle, coordinator),
+            PIDContributionSensor(entry, name, "d", handle, coordinator),
         ]
     )
 
@@ -127,27 +127,24 @@ async def async_setup_entry(
 class PIDOutputSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
     """Sensor representing the PID output."""
 
-    def __init__(self, entry_id: str, name: str, coordinator: PIDDataCoordinator):
+    def __init__(self, entry: ConfigEntry, name: str, coordinator: PIDDataCoordinator):
         super().__init__(coordinator)
-        self._attr_unique_id = f"{entry_id}_pid_output"
-        self._attr_name = f"{name} PID Output"
-        self._attr_has_entity_name = True
+        self._attr_unique_id = f"{entry.entry_id}_pid_output"
+        self._attr_name = f"PID Output"
+        self._attr_has_entity_name = False
         self._attr_native_unit_of_measurement = "%"
-        self._entry_id = entry_id
-        self._device_name = name
+
+        # Device-info
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, entry.entry_id)},
+            "name": entry.entry_id,
+            "manufacturer": "PID",
+            "model": "Simple PID Controller",
+        }
 
     @property
     def native_value(self) -> float:
         return round(self.coordinator.data, 2)
-
-    @property
-    def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self._entry_id)},
-            "name": self._device_name,
-            "manufacturer": "Custom",
-            "model": "Simple PID Controller",
-        }
 
 
 class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
@@ -155,22 +152,29 @@ class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity)
 
     def __init__(
         self,
-        entry_id: str,
+        entry: ConfigEntry,
         name: str,
         component: str,
         handle: PIDDeviceHandle,
         coordinator: PIDDataCoordinator,
     ):
         super().__init__(coordinator)
-        self._attr_unique_id = f"{entry_id}_pid_{component}_contrib"
+        self._attr_unique_id = f"{entry.entry_id}_pid_{component}_contrib"
         self._attr_name = f"PID {component.upper()} Contribution"
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
         self._attr_entity_registry_enabled_default = False
         self._attr_has_entity_name = True
         self._handle = handle
         self._component = component
-        self._entry_id = entry_id
-        self._device_name = name
+        self._entry_id = entry.entry_id
+
+        # Device-info
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, entry.entry_id)},
+            "name": entry.entry_id,
+            "manufacturer": "PID",
+            "model": "Simple PID Controller",
+        }
 
     @property
     def native_value(self):
@@ -181,12 +185,3 @@ class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity)
             "d": contributions[2],
         }.get(self._component)
         return round(value, 2) if value is not None else None
-
-    @property
-    def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self._entry_id)},
-            "name": self._device_name,
-            "manufacturer": "Custom",
-            "model": "Simple PID Controller",
-        }
