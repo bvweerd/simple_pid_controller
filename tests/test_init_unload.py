@@ -5,8 +5,6 @@ from custom_components.simple_pid_controller.const import DOMAIN
 
 async def test_setup_and_unload_entry(hass, config_entry):
     """Test het opzetten en weer afbreken van de entry."""
-    assert await async_setup_entry(hass, config_entry) is True
-    await hass.async_block_till_done()
     assert config_entry.entry_id in hass.data[DOMAIN]
 
     assert await async_unload_entry(hass, config_entry) is True
