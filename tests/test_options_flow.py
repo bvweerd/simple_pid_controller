@@ -13,12 +13,18 @@ async def test_update_existing_option(hass, config_entry):
     Test that submitting a new sensor option updates the config_entry.options correctly.
     """
     # Pre-set an initial option
-    config_entry.options = {CONF_SENSOR_ENTITY_ID: "sensor.old_value"}
+    new_options = config_entry.options.copy()
+    new_options[CONF_SENSOR_ENTITY_ID] = "sensor.old_value"
+
+    update = hass.config_entries.async_update_entry(config_entry, options=new_options)
+    assert update is True
+    await hass.async_block_till_done()
 
     flow = SimplePIDOptionsFlowHandler(config_entry)
 
-    user_input = {CONF_SENSOR_ENTITY_ID: "sensor.new_value"}
-    result = await flow.async_step_init(user_input)
+    new_options[CONF_SENSOR_ENTITY_ID] =  "sensor.new_value"
+
+    result = await flow.async_step_init(new_options)
 
     # Flow should create entry with new data
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
