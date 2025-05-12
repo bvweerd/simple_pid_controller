@@ -1,1 +1,1 @@
-""" Custom Component """
+"""Custom Component"""

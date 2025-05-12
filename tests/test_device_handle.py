@@ -1,7 +1,8 @@
 import pytest
 from homeassistant.helpers import entity_registry as er
 from custom_components.simple_pid_controller import PIDDeviceHandle
-from custom_components.simple_pid_controller.const import DOMAIN, CONF_SENSOR_ENTITY_ID
+from custom_components.simple_pid_controller.const import DOMAIN
+
 
 class DummyRegistry:
     def __init__(self, entity_id):
@@ -13,22 +14,25 @@ class DummyRegistry:
             return self._entity_id
         return None
 
+
 @pytest.mark.parametrize(
     "state_value, expected",
     [
-        ("12.34", 12.34),       # valid number
-        ("abc", None),          # no number → exception
-        ("unknown", None),      # unknown → skip
+        ("12.34", 12.34),  # valid number
+        ("abc", None),  # no number → exception
+        ("unknown", None),  # unknown → skip
         ("unavailable", None),  # unavailable → skip
     ],
 )
-def test_get_number_various_states(monkeypatch, hass, config_entry, state_value, expected):
+def test_get_number_various_states(
+    monkeypatch, hass, config_entry, state_value, expected
+):
     """Cover lines 45–54 of get_number."""
     # 1) Stel een fake entity in de state machine
     fake_eid = "number.pid_entry_test"
     hass.states.async_set(fake_eid, state_value)
 
-    # 2) Mock de registry so _get_entity_id gives fake_eid 
+    # 2) Mock de registry so _get_entity_id gives fake_eid
     monkeypatch.setattr(er, "async_get", lambda hass_: DummyRegistry(fake_eid))
 
     # 3) Create handle and call get_number
@@ -36,6 +40,7 @@ def test_get_number_various_states(monkeypatch, hass, config_entry, state_value,
     result = handle.get_number("test")
 
     assert result == expected
+
 
 def test_get_number_no_entity(monkeypatch, hass, config_entry):
     """If _get_entity_id is None, get_number should be None."""
@@ -60,6 +65,7 @@ def test_get_switch_on_off(monkeypatch, hass, config_entry):
     # Dan “off” → False
     hass.states.async_set(fake_entity, "off")
     assert handle.get_switch("any_key") is False
+
 
 def test_get_input_sensor_value_invalid(hass, config_entry):
     """Cover the ValueError branch in get_input_sensor_value (lines 73–77)."""

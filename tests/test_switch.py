@@ -1,6 +1,7 @@
 import pytest
 from custom_components.simple_pid_controller.switch import SWITCH_ENTITIES
 
+
 @pytest.mark.asyncio
 async def test_switch_operations(hass, config_entry):
     """Test that each switch entity is created and can be toggled on/off."""

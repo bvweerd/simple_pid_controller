@@ -90,9 +90,7 @@ async def async_setup_entry(
 ) -> None:
     handle: PIDDeviceHandle = hass.data[DOMAIN][entry.entry_id]
     name = handle.name
-    entities = [
-        PIDParameterNumber(entry, name, desc) for desc in PID_NUMBER_ENTITIES
-    ]
+    entities = [PIDParameterNumber(entry, name, desc) for desc in PID_NUMBER_ENTITIES]
     async_add_entities(entities)
 
 
