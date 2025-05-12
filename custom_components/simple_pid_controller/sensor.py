@@ -71,7 +71,7 @@ async def async_setup_entry(
         output = pid(input_value)
         
         if use_scaling:
-            output = (output * (scaling_output_max - scaling_output_min) + scaling_output_min) / 100        
+            output = (output * (scaling_input_max - scaling_input_min) + scaling_input_min) / 100        
 
         # Bereken bijdragen
         p_contrib = kp * (setpoint - input_value) if not p_on_m else -kp * input_value
