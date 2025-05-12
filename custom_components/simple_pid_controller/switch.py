@@ -13,7 +13,6 @@ from .const import DOMAIN
 SWITCH_ENTITIES = [
     {"key": "auto_mode", "name": "Auto Mode", "default_state" : True},
     {"key": "proportional_on_measurement", "name": "Proportional on Measurement", "default_state" : False},
-    {"key": "use_scaling", "name": "Use Input/Output scaling", "default_state" : False},
 ]
 
 
