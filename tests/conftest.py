@@ -14,13 +14,10 @@ async def setup_integration(hass, config_entry):
         
 @pytest.fixture
 def config_entry(hass):
-    """Create and add a MockConfigEntry for the Simple PID Controller integration,
-    inclusief een voorgeconfigureerde input‐sensor, zodat async_setup_entry niet misgaat."""
-    # 1) Maak vóór setup de input sensor aan die de integratie leest
+    """Create and add a MockConfigEntry for the Simple PID Controller integration."""
     input_sensor = "sensor.test_input"
     hass.states.async_set(input_sensor, "25.0")
 
-    # 2) Create the MockConfigEntry with that sensor
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Test PID Controller",

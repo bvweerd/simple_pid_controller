@@ -14,24 +14,15 @@ async def test_number_entity_attributes(hass, config_entry, desc):
 
     # Check that the entity exists
     state = hass.states.get(entity_id)
-    assert state is not None, f"{entity_id} bestaat niet"
+    assert state is not None, f"{entity_id} does not exist"
 
     attrs = state.attributes
 
-    # Verifieer de basis-attributen
+    # Verify base attributes 
     assert attrs["min"] == desc["min"]
     assert attrs["max"] == desc["max"]
     assert attrs["step"] == desc["step"]
     assert attrs.get("unit_of_measurement", "") == desc.get("unit", "")
-
-    # Entity category (optioneel!)
-    #expected_category = desc.get("entity_category", None)
-    #if expected_category:
-    #    assert attrs["entity_category"] == expected_category
-    #else:
-    #    # als de descriptor geen entity_category opgeeft,
-    #    # moet de attribuut ook écht niet aanwezig zijn
-    #    assert "entity_category" not in attrs
 
     # Default value in the state
     assert state.state == str(desc.get("default", 0))

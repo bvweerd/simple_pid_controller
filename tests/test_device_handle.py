@@ -8,7 +8,7 @@ class DummyRegistry:
         self._entity_id = entity_id
 
     def async_get_entity_id(self, platform, domain, unique_id):
-        # Retourneer het opgegeven entity_id of None
+        # Return entity_id or None
         if self._entity_id and domain == DOMAIN:
             return self._entity_id
         return None
@@ -16,29 +16,29 @@ class DummyRegistry:
 @pytest.mark.parametrize(
     "state_value, expected",
     [
-        ("12.34", 12.34),       # geldig getal
-        ("abc", None),          # niet-numeriek → except-pad
-        ("unknown", None),      # onbekend → skip-pad
-        ("unavailable", None),  # onbeschikbaar → skip-pad
+        ("12.34", 12.34),       # valid number
+        ("abc", None),          # no number → exception
+        ("unknown", None),      # unknown → skip
+        ("unavailable", None),  # unavailable → skip
     ],
 )
 def test_get_number_various_states(monkeypatch, hass, config_entry, state_value, expected):
-    """Cover lines 45–54 van get_number."""
+    """Cover lines 45–54 of get_number."""
     # 1) Stel een fake entity in de state machine
     fake_eid = "number.pid_entry_test"
     hass.states.async_set(fake_eid, state_value)
 
-    # 2) Mock de registry zodat _get_entity_id het fake_eid teruggeeft
+    # 2) Mock de registry so _get_entity_id gives fake_eid 
     monkeypatch.setattr(er, "async_get", lambda hass_: DummyRegistry(fake_eid))
 
-    # 3) Maak handle en roep get_number aan
+    # 3) Create handle and call get_number
     handle = PIDDeviceHandle(hass, config_entry)
     result = handle.get_number("test")
 
     assert result == expected
 
 def test_get_number_no_entity(monkeypatch, hass, config_entry):
-    """Als _get_entity_id None teruggeeft, moet get_number ook None teruggeven."""
+    """If _get_entity_id is None, get_number should be None."""
     # Mock registry zonder entity
     monkeypatch.setattr(er, "async_get", lambda hass_: DummyRegistry(None))
 
@@ -47,7 +47,7 @@ def test_get_number_no_entity(monkeypatch, hass, config_entry):
 
 
 def test_get_switch_on_off(monkeypatch, hass, config_entry):
-    """Cover de on/off-tak in get_switch (regels 61–65)."""
+    """Cover on/off in get_switch."""
     fake_entity = "switch.pid_entry_test"
     # Force _get_entity_id terug te geven
     handle = PIDDeviceHandle(hass, config_entry)
