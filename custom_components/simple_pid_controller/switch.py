@@ -11,8 +11,9 @@ from . import PIDDeviceHandle
 from .const import DOMAIN
 
 SWITCH_ENTITIES = [
-    {"key": "auto_mode", "name": "Auto Mode"},
-    {"key": "proportional_on_measurement", "name": "Proportional on Measurement"},
+    {"key": "auto_mode", "name": "Auto Mode", "default_state" : True},
+    {"key": "proportional_on_measurement", "name": "Proportional on Measurement", "default_state" : False},
+    {"key": "use_scaling", "name": "Use Input/Output scaling", "default_state" : False},
 ]
 
 
@@ -33,7 +34,7 @@ class PIDOptionSwitch(SwitchEntity, RestoreEntity):
         self._attr_has_entity_name = True
         self._attr_unique_id = f"{entry.entry_id}_{desc['key']}"
         self._attr_entity_category = EntityCategory.CONFIG
-        self._state = True
+        self._state = desc['default_state']
 
         # Device-info
         self._attr_device_info = {

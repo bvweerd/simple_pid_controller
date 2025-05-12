@@ -41,7 +41,7 @@ async def async_setup_entry(
         if input_value is None:
             raise ValueError("Input sensor not available")
 
-        # Lees parameters uit de UI
+        # Read parameters
         kp = handle.get_number("kp")
         ki = handle.get_number("ki")
         kd = handle.get_number("kd")
@@ -51,6 +51,13 @@ async def async_setup_entry(
         out_max = handle.get_number("output_max")
         auto_mode = handle.get_switch("auto_mode")
         p_on_m = handle.get_switch("proportional_on_measurement")
+        use_scaling = handle.get_switch("use_scaling")
+        scaling_input_min = handle.get_number("scaling_input_min")
+        scaling_input_max = handle.get_number("scaling_input_max")
+       
+        if use_scaling:
+            input_value = ((input_value - scaling_input_min) / (scaling_input_max - scaling_input_min)) * 100
+             
 
         # Pas live de PID-instellingen aan
         pid.tunings = (kp, ki, kd)
@@ -60,7 +67,11 @@ async def async_setup_entry(
         pid.auto_mode = auto_mode
         pid.proportional_on_measurement = p_on_m
 
+        
         output = pid(input_value)
+        
+        if use_scaling:
+            output = (output * (scaling_output_max - scaling_output_min) + scaling_output_min) / 100        
 
         # Bereken bijdragen
         p_contrib = kp * (setpoint - input_value) if not p_on_m else -kp * input_value

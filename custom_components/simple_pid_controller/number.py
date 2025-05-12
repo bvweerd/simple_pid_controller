@@ -82,6 +82,26 @@ PID_NUMBER_ENTITIES = [
         "default": 10.0,
         "entity_category": EntityCategory.CONFIG,
     },
+    {
+        "name": "Scaling Input Minimum",
+        "key": "scaling_input_min",
+        "unit": "",
+        "min": -1000000,
+        "max": 1000000,
+        "step": 0.01,
+        "default": 0.0,
+        "entity_category": EntityCategory.CONFIG,
+    },
+    {
+        "name": "Scaling Input Maximum",
+        "key": "scaling_input_max",
+        "unit": "",
+        "min": -1000000,
+        "max": 1000000,
+        "step": 0.01,
+        "default": 100.0,
+        "entity_category": EntityCategory.CONFIG,
+    },
 ]
 
 
