@@ -1,6 +1,7 @@
 """Switch platform for PID Controller."""
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -20,10 +21,12 @@ async def async_setup_entry(
 ) -> None:
     handle: PIDDeviceHandle = hass.data[DOMAIN][entry.entry_id]
     name = handle.name
-    async_add_entities([PIDOptionSwitch(entry, name, desc) for desc in SWITCH_ENTITIES])
+    async_add_entities(
+        [PIDOptionSwitch(entry, name, desc) for desc in SWITCH_ENTITIES]
+    )
 
 
-class PIDOptionSwitch(SwitchEntity):
+class PIDOptionSwitch(SwitchEntity, RestoreEntity):
     def __init__(self, entry: ConfigEntry, device_name: str, desc: dict) -> None:
         self._entry = entry
         self._attr_name = f"{desc['name']}"
@@ -39,6 +42,12 @@ class PIDOptionSwitch(SwitchEntity):
             "manufacturer": "PID",
             "model": "Simple PID Controller",
         }
+
+    async def async_added_to_hass(self) -> None:
+        """Restore previous state if available."""
+        await super().async_added_to_hass()
+        if (last_state := await self.async_get_last_state()) is not None:
+            self._state = last_state.state == "on"
 
     @property
     def is_on(self) -> bool:

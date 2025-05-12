@@ -11,6 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.entity import EntityCategory
 
+from datetime import timedelta
 from simple_pid import PID
 
 from . import PIDDeviceHandle
@@ -41,13 +42,13 @@ async def async_setup_entry(
             raise ValueError("Input sensor not available")
 
         # Lees parameters uit de UI
-        kp = handle.get_number("kp") or 1.0
-        ki = handle.get_number("ki") or 0.1
-        kd = handle.get_number("kd") or 0.05
-        setpoint = handle.get_number("setpoint") or 50.0
-        sample_time = handle.get_number("sample_time") or 10.0
-        out_min = handle.get_number("output_min") or -10.0
-        out_max = handle.get_number("output_max") or 10.0
+        kp = handle.get_number("kp")
+        ki = handle.get_number("ki")
+        kd = handle.get_number("kd")
+        setpoint = handle.get_number("setpoint")
+        sample_time = handle.get_number("sample_time")
+        out_min = handle.get_number("output_min")
+        out_max = handle.get_number("output_max")
         auto_mode = handle.get_switch("auto_mode")
         p_on_m = handle.get_switch("proportional_on_measurement")
 
@@ -81,11 +82,20 @@ async def async_setup_entry(
             d_contrib,
         )
 
+        if coordinator.update_interval.total_seconds() != pid.sample_time:
+            _LOGGER.debug("Updating coordinator interval to %.2f seconds", pid.sample_time)
+            coordinator.update_interval = timedelta(seconds=pid.sample_time)
+
         return output
 
     # Coordinator instellen
     coordinator = PIDDataCoordinator(hass, name, update_pid, interval=10)
-    await coordinator.async_config_entry_first_refresh()
+    # Wacht tot Home Assistant volledig opgestart is
+    async def start_refresh(_: Any) -> None:
+        _LOGGER.debug("Home Assistant gestart, eerste PID-refresh gestart")
+        await coordinator.async_request_refresh()
+
+    hass.bus.async_listen_once("homeassistant_started", start_refresh)
 
     async_add_entities(
         [
@@ -130,7 +140,7 @@ class PIDOutputSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
     def __init__(self, entry: ConfigEntry, name: str, coordinator: PIDDataCoordinator):
         super().__init__(coordinator)
         self._attr_unique_id = f"{entry.entry_id}_pid_output"
-        self._attr_name = "PID Output"
+        self._attr_name = f"PID Output"
         self._attr_has_entity_name = True
         self._attr_native_unit_of_measurement = "%"
 
@@ -143,7 +153,9 @@ class PIDOutputSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
         }
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
+        if self.coordinator.data is None:
+            return None
         return round(self.coordinator.data, 2)
 
 
