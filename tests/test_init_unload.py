@@ -1,7 +1,8 @@
-import pytest
-
-from custom_components.simple_pid_controller import async_setup_entry, async_unload_entry
+from custom_components.simple_pid_controller import (
+    async_unload_entry,
+)
 from custom_components.simple_pid_controller.const import DOMAIN
+
 
 async def test_setup_and_unload_entry(hass, config_entry):
     """Test setting up and tearing down the entry."""

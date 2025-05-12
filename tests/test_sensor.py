@@ -1,5 +1,3 @@
-import pytest
-
 async def test_sensor_platform(hass, config_entry):
     """At least one sensor must be created."""
 

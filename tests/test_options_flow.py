@@ -1,7 +1,9 @@
 import pytest
 from homeassistant import data_entry_flow
 
-from custom_components.simple_pid_controller.options_flow import SimplePIDOptionsFlowHandler
+from custom_components.simple_pid_controller.options_flow import (
+    SimplePIDOptionsFlowHandler,
+)
 from custom_components.simple_pid_controller.const import CONF_SENSOR_ENTITY_ID
 
 
@@ -23,13 +25,12 @@ async def test_update_existing_option(hass, config_entry):
     assert result["data"][CONF_SENSOR_ENTITY_ID] == "sensor.new_value"
 
     # Apply the new options to the config entry and allow HA to process it
-    hass.config_entries.async_update_entry(
-        config_entry, options=result["data"]
-    )
+    hass.config_entries.async_update_entry(config_entry, options=result["data"])
     await hass.async_block_till_done()
 
     # Ensure the config_entry options were updated
     assert config_entry.options[CONF_SENSOR_ENTITY_ID] == "sensor.new_value"
+
 
 @pytest.mark.asyncio
 async def test_init_form_default_to_data_when_no_option(hass, config_entry):
@@ -71,4 +72,3 @@ async def test_init_form_default_to_option_when_option_set(hass, config_entry):
     schema = result["data_schema"]
     validated = schema({})
     assert validated[CONF_SENSOR_ENTITY_ID] == "sensor.option_value"
-

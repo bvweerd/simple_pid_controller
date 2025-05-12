@@ -20,9 +20,7 @@ async def async_setup_entry(
 ) -> None:
     handle: PIDDeviceHandle = hass.data[DOMAIN][entry.entry_id]
     name = handle.name
-    async_add_entities(
-        [PIDOptionSwitch(entry, name, desc) for desc in SWITCH_ENTITIES]
-    )
+    async_add_entities([PIDOptionSwitch(entry, name, desc) for desc in SWITCH_ENTITIES])
 
 
 class PIDOptionSwitch(SwitchEntity):
@@ -41,7 +39,7 @@ class PIDOptionSwitch(SwitchEntity):
             "manufacturer": "PID",
             "model": "Simple PID Controller",
         }
-        
+
     @property
     def is_on(self) -> bool:
         return self._state
