@@ -62,13 +62,13 @@ def test_get_switch_on_off(monkeypatch, hass, config_entry):
     assert handle.get_switch("any_key") is False
 
 def test_get_input_sensor_value_invalid(hass, config_entry):
-    """Cover de ValueError-tak in get_input_sensor_value (regels 73–77)."""
+    """Cover the ValueError branch in get_input_sensor_value (lines 73–77)."""
     handle = PIDDeviceHandle(hass, config_entry)
-    # Stel de sensor_entity_id in
+    # Set the sensor_entity_id
     handle.sensor_entity_id = "sensor.pid_entry_test"
 
-    # Geef een niet-numerieke waarde
+    # Provide a non-numeric value
     hass.states.async_set(handle.sensor_entity_id, "not_a_number")
 
-    # Moet netjes opvangen en None teruggeven
+    # Should handle gracefully and return None
     assert handle.get_input_sensor_value() is None

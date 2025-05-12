@@ -7,7 +7,7 @@ from custom_components.simple_pid_controller.const import DOMAIN, CONF_SENSOR_EN
     (config_entries.SOURCE_USER, "user"),
 ])
 async def test_show_form(hass, source, step_id):
-    """When starting de flow, krijg je een form terug."""
+    """When starting the flow, you get a form back."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": source}
     )
@@ -15,7 +15,7 @@ async def test_show_form(hass, source, step_id):
     assert result["step_id"] == step_id
 
 async def test_create_entry(hass):
-    """Na invullen van de form wordt er een ConfigEntry aangemaakt."""
+    """After filling out the form, a ConfigEntry is created."""
     init = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

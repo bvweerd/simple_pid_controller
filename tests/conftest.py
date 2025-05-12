@@ -8,7 +8,7 @@ def _enable_custom_integrations(enable_custom_integrations):
 
 @pytest.fixture(autouse=True)
 async def setup_integration(hass, config_entry):
-    """Zet de integration automatisch op voor iedere test."""
+    """Set up the integration automatically for each test."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
         
@@ -20,7 +20,7 @@ def config_entry(hass):
     input_sensor = "sensor.test_input"
     hass.states.async_set(input_sensor, "25.0")
 
-    # 2) Maak de MockConfigEntry met die sensor
+    # 2) Create the MockConfigEntry with that sensor
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Test PID Controller",
