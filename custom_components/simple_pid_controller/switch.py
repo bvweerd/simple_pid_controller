@@ -39,8 +39,6 @@ class PIDOptionSwitch(SwitchEntity, RestoreEntity):
         self._attr_device_info = {
             "identifiers": {(DOMAIN, entry.entry_id)},
             "name": device_name,
-            "manufacturer": "PID",
-            "model": "Simple PID Controller",
         }
 
     async def async_added_to_hass(self) -> None:
