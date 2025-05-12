@@ -109,12 +109,11 @@ class PIDParameterNumber(RestoreNumber):
         self._attr_native_step = desc["step"]
         self._attr_native_value = desc["default"]
         self._attr_entity_category = desc["entity_category"]
-        self._device_name = entry.entry_id
 
         # Device-info
         self._attr_device_info = {
             "identifiers": {(DOMAIN, entry.entry_id)},
-            "name": entry.entry_id,
+            "name": device_name,
             "manufacturer": "PID",
             "model": "Simple PID Controller",
         }
@@ -131,12 +130,3 @@ class PIDParameterNumber(RestoreNumber):
     async def async_set_native_value(self, value: float) -> None:
         self._attr_native_value = value
         self.async_write_ha_state()
-
-    @property
-    def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self._entry_id)},
-            "name": self._device_name,
-            "manufacturer": "N/A",
-            "model": "Simple PID Controller",
-        }

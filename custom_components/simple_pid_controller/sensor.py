@@ -133,13 +133,11 @@ class PIDOutputSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
         self._attr_name = f"PID Output"
         self._attr_has_entity_name = False
         self._attr_native_unit_of_measurement = "%"
-        self._device_name = entry.entry_id
-
 
         # Device-info
         self._attr_device_info = {
             "identifiers": {(DOMAIN, entry.entry_id)},
-            "name": entry.entry_id,
+            "name": name,
             "manufacturer": "PID",
             "model": "Simple PID Controller",
         }
@@ -169,12 +167,11 @@ class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity)
         self._handle = handle
         self._component = component
         self._entry_id = entry.entry_id
-        self._device_name = entry.entry_id
 
         # Device-info
         self._attr_device_info = {
             "identifiers": {(DOMAIN, entry.entry_id)},
-            "name": entry.entry_id,
+            "name": name,
             "manufacturer": "PID",
             "model": "Simple PID Controller",
         }
@@ -188,12 +185,3 @@ class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity)
             "d": contributions[2],
         }.get(self._component)
         return round(value, 2) if value is not None else None
-
-    @property
-    def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self._entry_id)},
-            "name": self._device_name,
-            "manufacturer": "N/A",
-            "model": "Simple PID Controller",
-        }

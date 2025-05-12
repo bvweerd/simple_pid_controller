@@ -33,13 +33,12 @@ class PIDOptionSwitch(SwitchEntity):
         self._attr_unique_id = f"{entry.entry_id}_{desc['key']}"
         self._attr_entity_category = EntityCategory.CONFIG
         self._state = True
-        self._device_name = entry.entry_id
 
         # Device-info
         self._attr_device_info = {
             "identifiers": {(DOMAIN, entry.entry_id)},
-            "name": entry.entry_id,
-            "manufacturer": "N/A",
+            "name": device_name,
+            "manufacturer": "PID",
             "model": "Simple PID Controller",
         }
         
@@ -54,12 +53,3 @@ class PIDOptionSwitch(SwitchEntity):
     async def async_turn_off(self, **kwargs) -> None:
         self._state = False
         self.async_write_ha_state()
-
-    @property
-    def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self._entry_id)},
-            "name": self._device_name,
-            "manufacturer": "N/A",
-            "model": "Simple PID Controller",
-        }
