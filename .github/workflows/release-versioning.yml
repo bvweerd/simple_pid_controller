@@ -1,13 +1,13 @@
 name: Release versioning
 
 on:
-  push:
-    branches:
-      - main
+  #push:
+  #  branches:
+  #    - main
   # of: tags
-  # push:
-  #   tags:
-  #     - 'v*.*.*'
+  push:
+    tags:
+      - 'v*.*.*'
 
 jobs:
   create-release:
