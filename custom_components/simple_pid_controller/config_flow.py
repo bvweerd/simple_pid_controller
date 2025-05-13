@@ -38,3 +38,26 @@ class SimplePIDControllerConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry):
         return None
+
+
+class SimplePIDControllerOptionsFlow(OptionsFlow):
+    """Handle a config flow for updating PID options."""
+
+    async def async_step_init(self, user_input=None) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        current_sensor = self.config_entry.options.get(
+            CONF_SENSOR_ENTITY_ID, self.config_entry.data.get(CONF_SENSOR_ENTITY_ID, "")
+        )
+
+        options_schema = vol.Schema(
+            {
+                vol.Required(CONF_SENSOR_ENTITY_ID, default=current_sensor): selector(
+                    {"entity": {"domain": "sensor"}}
+                ),
+            }
+        )
+
+        return self.async_show_form(step_id="init", data_schema=options_schema)
