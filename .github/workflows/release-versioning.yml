@@ -1,0 +1,33 @@
+name: Release versioning
+
+on:
+  push:
+    branches:
+      - main
+  # of: tags
+  # push:
+  #   tags:
+  #     - 'v*.*.*'
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Bump version
+        run: |
+          # (voorbeeld met bump2version)
+          pip install bump2version
+          bump2version patch
+
+      - name: Push version tag
+        run: |
+          git push origin HEAD --tags
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.ref }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
