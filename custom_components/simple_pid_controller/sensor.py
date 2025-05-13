@@ -13,6 +13,7 @@ from homeassistant.helpers.entity import EntityCategory
 
 from datetime import timedelta
 from simple_pid import PID
+from typing import Any
 
 from . import PIDDeviceHandle
 from .const import DOMAIN
