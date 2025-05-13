@@ -84,13 +84,16 @@ async def async_setup_entry(
         )
 
         if coordinator.update_interval.total_seconds() != pid.sample_time:
-            _LOGGER.debug("Updating coordinator interval to %.2f seconds", pid.sample_time)
+            _LOGGER.debug(
+                "Updating coordinator interval to %.2f seconds", pid.sample_time
+            )
             coordinator.update_interval = timedelta(seconds=pid.sample_time)
 
         return output
 
-    # Setup Coordinator 
+    # Setup Coordinator
     coordinator = PIDDataCoordinator(hass, name, update_pid, interval=10)
+
     # Wait for HA to finish starting
     async def start_refresh(_: Any) -> None:
         _LOGGER.debug("Home Assistant started, first PID-refresh started")
@@ -138,10 +141,12 @@ async def async_setup_entry(
 class PIDOutputSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
     """Sensor representing the PID output."""
 
-    def __init__(self, entry: ConfigEntry, device_name: str, coordinator: PIDDataCoordinator):
+    def __init__(
+        self, entry: ConfigEntry, device_name: str, coordinator: PIDDataCoordinator
+    ):
         super().__init__(coordinator)
         self._attr_unique_id = f"{entry.entry_id}_pid_output"
-        self._attr_name = f"PID Output"
+        self._attr_name = "PID Output"
         self._attr_has_entity_name = True
         self._attr_native_unit_of_measurement = "%"
 

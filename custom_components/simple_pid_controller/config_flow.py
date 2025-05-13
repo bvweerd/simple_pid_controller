@@ -54,9 +54,9 @@ class PIDControllerFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_NAME, default=self.hass.config.location_name
                     ): str,
-                    vol.Required(
-                        CONF_SENSOR_ENTITY_ID
-                    ): selector({"entity": {"domain": "sensor"}}),
+                    vol.Required(CONF_SENSOR_ENTITY_ID): selector(
+                        {"entity": {"domain": "sensor"}}
+                    ),
                 }
             ),
         )
@@ -83,12 +83,10 @@ class PIDControllerOptionsFlowHandler(OptionsFlow):
 
         options_schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_SENSOR_ENTITY_ID, default=current_sensor
-                ): selector({"entity": {"domain": "sensor"}}),
+                vol.Required(CONF_SENSOR_ENTITY_ID, default=current_sensor): selector(
+                    {"entity": {"domain": "sensor"}}
+                ),
             }
         )
 
-        return self.async_show_form(
-            step_id="init", data_schema=options_schema
-        )
+        return self.async_show_form(step_id="init", data_schema=options_schema)
