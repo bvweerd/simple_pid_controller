@@ -4,6 +4,7 @@ from homeassistant.helpers.device_registry import DeviceRegistry
 from custom_components.simple_pid_controller.const import DOMAIN, CONF_SENSOR_ENTITY_ID
 from homeassistant.const import CONF_NAME
 
+
 @pytest.fixture(autouse=True)
 def _enable_custom_integrations(enable_custom_integrations):
     """Enable loading of custom integrations in custom_components/"""  # noqa: F811

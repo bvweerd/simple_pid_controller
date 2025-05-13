@@ -11,8 +11,12 @@ from . import PIDDeviceHandle
 from .const import DOMAIN
 
 SWITCH_ENTITIES = [
-    {"key": "auto_mode", "name": "Auto Mode", "default_state" : True},
-    {"key": "proportional_on_measurement", "name": "Proportional on Measurement", "default_state" : False},
+    {"key": "auto_mode", "name": "Auto Mode", "default_state": True},
+    {
+        "key": "proportional_on_measurement",
+        "name": "Proportional on Measurement",
+        "default_state": False,
+    },
 ]
 
 
@@ -21,9 +25,7 @@ async def async_setup_entry(
 ) -> None:
     handle: PIDDeviceHandle = hass.data[DOMAIN][entry.entry_id]
     name = handle.name
-    async_add_entities(
-        [PIDOptionSwitch(entry, name, desc) for desc in SWITCH_ENTITIES]
-    )
+    async_add_entities([PIDOptionSwitch(entry, name, desc) for desc in SWITCH_ENTITIES])
 
 
 class PIDOptionSwitch(SwitchEntity, RestoreEntity):
