@@ -33,7 +33,7 @@ class PIDOptionSwitch(SwitchEntity, RestoreEntity):
         self._attr_has_entity_name = True
         self._attr_unique_id = f"{entry.entry_id}_{desc['key']}"
         self._attr_entity_category = EntityCategory.CONFIG
-        self._state = desc['default_state']
+        self._state = desc["default_state"]
 
         # Device-info
         self._attr_device_info = {

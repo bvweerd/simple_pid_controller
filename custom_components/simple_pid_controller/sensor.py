@@ -13,6 +13,7 @@ from homeassistant.helpers.entity import EntityCategory
 
 from datetime import timedelta
 from simple_pid import PID
+from typing import Any
 
 from . import PIDDeviceHandle
 from .const import DOMAIN
@@ -30,7 +31,7 @@ async def async_setup_entry(
     handle: PIDDeviceHandle = hass.data[DOMAIN][entry.entry_id]
     name = handle.name
 
-    # Initialiseer de PID-regelaar met standaardwaarden (worden later live aangepast)
+    # Init PID with default values
     pid = PID(1.0, 0.1, 0.05, setpoint=50)
     pid.sample_time = 10.0
     pid.output_limits = (-10.0, 10.0)
@@ -62,7 +63,7 @@ async def async_setup_entry(
 
         output = pid(input_value)
 
-        # Bereken bijdragen
+        # Calculate contributions
         p_contrib = kp * (setpoint - input_value) if not p_on_m else -kp * input_value
         i_contrib = pid._integral * ki
         d_contrib = pid._last_output - output if pid._last_output is not None else 0.0
@@ -88,11 +89,11 @@ async def async_setup_entry(
 
         return output
 
-    # Coordinator instellen
+    # Setup Coordinator 
     coordinator = PIDDataCoordinator(hass, name, update_pid, interval=10)
-    # Wacht tot Home Assistant volledig opgestart is
+    # Wait for HA to finish starting
     async def start_refresh(_: Any) -> None:
-        _LOGGER.debug("Home Assistant gestart, eerste PID-refresh gestart")
+        _LOGGER.debug("Home Assistant started, first PID-refresh started")
         await coordinator.async_request_refresh()
 
     hass.bus.async_listen_once("homeassistant_started", start_refresh)
@@ -106,7 +107,7 @@ async def async_setup_entry(
         ]
     )
 
-    # Zet listeners op input_number en switch wijzigingen
+    # Put listeners on inputs
     def make_listener(entity_id: str):
         def _listener(event):
             if event.data.get("entity_id") == entity_id:

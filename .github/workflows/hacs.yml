@@ -1,0 +1,20 @@
+name: HACS CI
+
+on:
+  push:
+    branches:
+      - main
+  release:
+    types: [published]
+
+jobs:
+  update-hacs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Run HACS action
+        uses: hacs/action@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          category: "integration"

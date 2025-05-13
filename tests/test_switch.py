@@ -11,7 +11,7 @@ async def test_switch_operations(hass, config_entry):
         # Default state should be 'on'
         state = hass.states.get(entity_id)
         assert state is not None, f"Switch {entity_id} does not exist"
-        if desc['default_state'] == True:
+        if desc["default_state"]:
             assert state.state == "on"
         else:
             assert state.state == "off"

@@ -1,4 +1,3 @@
-import asyncio
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from homeassistant.helpers.device_registry import DeviceRegistry
