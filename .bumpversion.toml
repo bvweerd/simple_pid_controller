@@ -1,0 +1,12 @@
+[tool.bumpversion]
+current_version = "1.0.1"
+parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
+serialize = ["{major}.{minor}.{patch}"]
+search  = "{current_version}"
+replace = "{new_version}"
+regex   = false
+
+[[tool.bumpversion.files]]
+filename = "custom_components/simple_pid_controller/manifest.json"
+search = '"version": "{current_version}"'
+replace = '"version": "{new_version}"'

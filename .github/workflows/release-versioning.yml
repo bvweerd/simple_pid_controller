@@ -1,33 +1,49 @@
-name: Release versioning
+name: Bump version
 
 on:
-  #push:
-  #  branches:
-  #    - main
-  # of: tags
-  push:
-    tags:
-      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      bump-type:
+        description: 'Bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+        - major
+        - minor
+        - patch
 
 jobs:
-  create-release:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout the code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git user
+        run: |
+          git config user.name  "${{ github.actor }}"
+          git config user.email "${{ github.actor }}@users.noreply.github.com"
 
       - name: Bump version
-        run: |
-          # (voorbeeld met bump2version)
-          pip install bump2version
-          bump2version patch
-
-      - name: Push version tag
-        run: |
-          git push origin HEAD --tags
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref }}
+        id: bump
+        uses: callowayproject/bump-my-version@master
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BUMPVERSION_TAG: "true"
+          BUMPVERSION_COMMIT: "true"
+        with:
+          args: ${{ inputs.bump-type }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push bumped version back to repo
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: main
+
+      - name: Check
+        if: steps.bump.outputs.bumped == 'true'
+        run: |
+          echo "Version was bumped from ${{ steps.bump.outputs.previous-version }} to ${{ steps.bump.outputs.current-version }}!"
