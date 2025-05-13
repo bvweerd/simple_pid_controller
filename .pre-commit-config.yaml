@@ -31,10 +31,23 @@ repos:
     rev: v1.10.0
     hooks:
       - id: mypy
+        always_run: true
+        pass_filenames: false
         args:
+          - --strict
+          - --ignore-missing-imports
           - --namespace-packages
+          - --warn-unused-ignores
+          - --warn-redundant-casts
+          - --warn-unreachable
+          - --warn-return-any
+          - --disallow-untyped-defs
+          - --disallow-untyped-calls
+          - --disallow-incomplete-defs
+          - --no-implicit-optional
           - --explicit-package-bases
           - --pretty
           - --show-error-codes
           - --show-error-context
+          - custom_components/simple_pid_controller
         files: ^custom_components/simple_pid_controller/.*\\.py$
