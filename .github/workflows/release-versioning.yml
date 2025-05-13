@@ -1,33 +1,57 @@
-name: Release versioning
+name: Release Versioning
 
 on:
-  #push:
-  #  branches:
-  #    - main
-  # of: tags
+  # Trigger bij push van een tag vX.Y.Z
   push:
     tags:
       - 'v*.*.*'
+  # Trigger zodra je in de GitHub UI een Release publiceert
+  release:
+    types: [published]
 
 jobs:
-  create-release:
+  bump-release:
+    # Zorg dat we alleen in deze job de tag-push afhandelen
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Bump version
-        run: |
-          # (voorbeeld met bump2version)
-          pip install bump2version
-          bump2version patch
-
-      - name: Push version tag
-        run: |
-          git push origin HEAD --tags
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+      - name: Checkout code
+        uses: actions/checkout@v3
         with:
-          tag_name: ${{ github.ref }}
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install bump2version
+        run: pip install bump2version
+
+      - name: Bump version in manifest.json
+        # Gebruik --no-tag zodat we alleen het bestand bumpen voor de release
+        run: bump2version patch --allow-dirty --no-tag
+
+      - name: Commit & Push bumped files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add custom_components/simple_pid_controller/manifest.json
+          git commit -m "chore: bump to next version after release ${{ github.ref_name }}"
+          git push origin HEAD:main
+
+  publish-release:
+    # Deze job draait na het aanmaken van de GitHub Release (event ‘published’)
+    if: github.event_name == 'release'
+    needs: bump-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Create GitHub Release from tag
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
