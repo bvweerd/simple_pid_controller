@@ -26,3 +26,7 @@ jobs:
 
       - name: Run tests
         run: pytest
+
+      - name: Debug on failure
+        if: failure()
+        uses: mxschmitt/action-tmate@v3
