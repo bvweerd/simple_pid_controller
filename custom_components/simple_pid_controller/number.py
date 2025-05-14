@@ -9,7 +9,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity import EntityCategory
 
 from . import PIDDeviceHandle
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    CONF_RANGE_MIN,
+    CONF_RANGE_MAX,
+    DEFAULT_RANGE_MIN,
+    DEFAULT_RANGE_MAX,
+)
 
 PID_NUMBER_ENTITIES = [
     {
@@ -91,7 +97,9 @@ async def async_setup_entry(
     entities = [PIDParameterNumber(entry, name, desc) for desc in PID_NUMBER_ENTITIES]
     async_add_entities(entities)
 
-    entities = [ControlParameterNumber(entry, name, desc) for desc in CONTROL_NUMBER_ENTITIES]
+    entities = [
+        ControlParameterNumber(entry, name, desc) for desc in CONTROL_NUMBER_ENTITIES
+    ]
     async_add_entities(entities)
 
 
@@ -128,12 +136,17 @@ class PIDParameterNumber(RestoreNumber):
         self._attr_native_value = value
         self.async_write_ha_state()
 
+
 class ControlParameterNumber(RestoreNumber):
     def __init__(self, entry: ConfigEntry, device_name: str, desc: dict) -> None:
         opts = entry.options or {}
         data = entry.data or {}
-        self._range_min = opts.get(CONF_RANGE_MIN, data.get(CONF_RANGE_MIN, DEFAULT_RANGE_MIN))
-        self._range_max = opts.get(CONF_RANGE_MAX, data.get(CONF_RANGE_MAX, DEFAULT_RANGE_MAX))
+        self._range_min = opts.get(
+            CONF_RANGE_MIN, data.get(CONF_RANGE_MIN, DEFAULT_RANGE_MIN)
+        )
+        self._range_max = opts.get(
+            CONF_RANGE_MAX, data.get(CONF_RANGE_MAX, DEFAULT_RANGE_MAX)
+        )
 
         self._attr_name = f"{desc['name']}"
         self._attr_has_entity_name = True
@@ -145,7 +158,9 @@ class ControlParameterNumber(RestoreNumber):
         self._attr_native_max_value = self._range_max
         self._attr_native_step = desc["step"]
         # a + (b - a) * f:
-        self._attr_native_value = self._range_min + (self._range_max + self._range_min) * float(desc["default"])
+        self._attr_native_value = self._range_min + (
+            self._range_max + self._range_min
+        ) * float(desc["default"])
         self._attr_entity_category = desc["entity_category"]
 
         # Device-info
@@ -170,7 +185,7 @@ class ControlParameterNumber(RestoreNumber):
     @property
     def max_value(self) -> float:
         return self._range_max
-        
+
     async def async_set_native_value(self, value: float) -> None:
         self._attr_native_value = value
         self.async_write_ha_state()
