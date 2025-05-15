@@ -35,9 +35,7 @@ async def config_entry(hass, device_registry: DeviceRegistry):
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.entry_id)},
-        name={CONF_NAME},
-        manufacturer="Test",
-        model="PID Controller",
+        name=entry.entry_id,
     )
 
     return entry
