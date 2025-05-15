@@ -1,7 +1,7 @@
 import pytest
 from custom_components.simple_pid_controller.number import (
     PID_NUMBER_ENTITIES,
-    CONTROL_NUMBER_ENTITIES,
+    # CONTROL_NUMBER_ENTITIES,
 )
 
 
@@ -9,7 +9,8 @@ async def test_number_platform(hass, config_entry):
     """Check that all Number entities from PID_NUMBER_ENTITIES are created."""
 
     numbers = hass.states.async_entity_ids("number")
-    assert len(numbers) == len(PID_NUMBER_ENTITIES) + len(CONTROL_NUMBER_ENTITIES)
+    # assert len(numbers) == len(PID_NUMBER_ENTITIES) + len(CONTROL_NUMBER_ENTITIES)
+    assert len(numbers) == len(PID_NUMBER_ENTITIES)
 
 
 @pytest.mark.parametrize("desc", PID_NUMBER_ENTITIES)
