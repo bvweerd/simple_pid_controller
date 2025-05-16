@@ -2,6 +2,8 @@ import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from homeassistant.helpers.device_registry import DeviceRegistry
 from custom_components.simple_pid_controller.const import DOMAIN, CONF_SENSOR_ENTITY_ID
+import custom_components.simple_pid_controller.sensor as sensor_mod
+
 from homeassistant.const import CONF_NAME
 
 
@@ -39,3 +41,32 @@ async def config_entry(hass, device_registry: DeviceRegistry):
     )
 
     return entry
+
+
+class FakePID:
+    instances = []
+
+    def __init__(self, kp, ki, kd, setpoint=None):
+        FakePID.instances.append(self)
+        self.sample_time = None
+        self.output_limits = None
+        self.auto_mode = None
+        self.proportional_on_measurement = None
+        self._integral = 0.5
+        self._last_output = None
+        self._outputs = [10.0, 12.0]
+
+    def __call__(self, input_value):
+        if self._outputs:
+            out = self._outputs.pop(0)
+        else:
+            out = self._last_output or 0.0
+        self._last_output = out
+        return out
+
+
+@pytest.fixture(autouse=True)
+def fake_pid(monkeypatch):
+    FakePID.instances.clear()
+    monkeypatch.setattr(sensor_mod, "PID", FakePID)
+    return FakePID
