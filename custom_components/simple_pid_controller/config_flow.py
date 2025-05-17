@@ -51,9 +51,7 @@ class PIDControllerFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_NAME, default=self.hass.config.location_name
-                    ): str,
+                    vol.Required(CONF_NAME, default=CONF_NAME): str,
                     vol.Required(CONF_SENSOR_ENTITY_ID): selector(
                         {"entity": {"domain": "sensor"}}
                     ),
