@@ -8,7 +8,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity import EntityCategory
 
-from . import PIDDeviceHandle
 from .const import DOMAIN
 
 PID_NUMBER_ENTITIES = [
@@ -88,8 +87,8 @@ PID_NUMBER_ENTITIES = [
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    handle: PIDDeviceHandle = hass.data[DOMAIN][entry.entry_id]
-    name = handle.name
+    name = entry.entry_id
+
     entities = [PIDParameterNumber(entry, name, desc) for desc in PID_NUMBER_ENTITIES]
     async_add_entities(entities)
 
