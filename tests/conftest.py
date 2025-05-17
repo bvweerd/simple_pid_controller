@@ -33,40 +33,27 @@ async def config_entry(hass, device_registry: DeviceRegistry):
     )
 
     entry.add_to_hass(hass)
+    await hass.async_block_till_done()
 
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.entry_id)},
-        name=entry.entry_id,
-    )
+    # device_registry.async_get_or_create(
+    #    config_entry_id=entry.entry_id,
+    #    identifiers={(DOMAIN, entry.entry_id)},
+    #    name=entry.entry_id,
+    # )
 
     return entry
 
 
-class FakePID:
-    instances = []
-
-    def __init__(self, kp, ki, kd, setpoint=None):
-        FakePID.instances.append(self)
-        self.sample_time = None
-        self.output_limits = None
-        self.auto_mode = None
-        self.proportional_on_measurement = None
-        self._integral = 0.5
-        self._last_output = None
-        self._outputs = [10.0, 12.0]
-
-    def __call__(self, input_value):
-        if self._outputs:
-            out = self._outputs.pop(0)
-        else:
-            out = self._last_output or 0.0
-        self._last_output = out
-        return out
-
-
-@pytest.fixture(autouse=True)
-def fake_pid(monkeypatch):
-    FakePID.instances.clear()
-    monkeypatch.setattr(sensor_mod, "PID", FakePID)
-    return FakePID
+@pytest.fixture
+async def sensor_entities(hass, config_entry):
+    """
+    catch all SensorEntity-instances
+    """
+    created = []
+    # async_add_entities callback fills 'created'
+    await sensor_mod.async_setup_entry(
+        hass, config_entry, lambda entities: created.extend(entities)
+    )
+    # wait till all items are created
+    await hass.async_block_till_done()
+    return created
