@@ -23,7 +23,8 @@ SWITCH_ENTITIES = [
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    name = entry.entry_id
+    handle: PIDDeviceHandle = hass.data[DOMAIN][entry.entry_id]
+    name = handle.name
     async_add_entities([PIDOptionSwitch(entry, name, desc) for desc in SWITCH_ENTITIES])
 
 

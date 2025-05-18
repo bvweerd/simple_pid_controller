@@ -29,7 +29,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up PID output and diagnostic sensors."""
     handle: PIDDeviceHandle = hass.data[DOMAIN][entry.entry_id]
-    name = entry.entry_id
+    name = handle.name
 
     # Init PID with default values
     pid = PID(1.0, 0.1, 0.05, setpoint=50)
