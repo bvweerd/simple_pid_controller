@@ -52,12 +52,16 @@ async def async_setup_entry(
         out_max = handle.get_number("output_max")
         auto_mode = handle.get_switch("auto_mode")
         p_on_m = handle.get_switch("proportional_on_measurement")
+        windup_protection = handle.get_switch("windup_protection")
 
         # Pas live de PID-instellingen aan
         pid.tunings = (kp, ki, kd)
         pid.setpoint = setpoint
         pid.sample_time = sample_time
-        pid.output_limits = (out_min, out_max)
+        if windup_protection:
+            pid.output_limits = (out_min, out_max)
+        else:
+            pid.output_limits = (None, None)            
         pid.auto_mode = auto_mode
         pid.proportional_on_measurement = p_on_m
 
@@ -132,7 +136,7 @@ async def async_setup_entry(
             "state_changed", make_listener(f"number.{entry.entry_id}_{key}")
         )
 
-    for key in ["auto_mode", "proportional_on_measurement"]:
+    for key in ["auto_mode", "proportional_on_measurement", "windup_protection"]:
         hass.bus.async_listen(
             "state_changed", make_listener(f"switch.{entry.entry_id}_{key}")
         )

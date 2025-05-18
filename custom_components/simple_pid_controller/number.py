@@ -17,6 +17,9 @@ from .const import (
     DEFAULT_RANGE_MAX,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
+
 PID_NUMBER_ENTITIES = [
     {
         "name": "Kp",
@@ -159,10 +162,19 @@ class ControlParameterNumber(RestoreNumber):
         self._attr_native_min_value = self._range_min
         self._attr_native_max_value = self._range_max
         self._attr_native_step = desc["step"]
+        if desc['key'] == "setpoint":
         # a + (b - a) * f:
         self._attr_native_value = self._range_min + (
             self._range_max + self._range_min
         ) * float(desc["default"])
+        elif desc['key'] == "output_min":
+            self._attr_native_value = self._range_min
+        elif desc['key'] == "output_max":
+            self._attr_native_value = self._range_max
+        else:
+            #error
+            _LOGGER.debug("Unreachable state 1 in number.py is reached. Please report.")
+            
         self._attr_entity_category = desc["entity_category"]
 
         # Device-info
@@ -182,12 +194,30 @@ class ControlParameterNumber(RestoreNumber):
 
     @property
     def min_value(self) -> float:
-        return self._range_min
+        if desc['key'] == "setpoint":
+            return self._range_min
+        elif desc['key'] == "output_min":
+            return abs(self._range_max) * -1
+        elif desc['key'] == "output_max":
+            return 0.0
+        else:
+            # error
+            _LOGGER.debug("Unreachable state 2 in number.py is reached. Please report.")
+
 
     @property
     def max_value(self) -> float:
-        return self._range_max
+        if desc['key'] == "setpoint":
+            return self._range_max
+        elif desc['key'] == "output_min":
+            return 0.0
+        elif desc['key'] == "output_max":
+            return self._range_max
+        else:
+            # error
+            _LOGGER.debug("Unreachable state 3 in number.py is reached. Please report.")
 
     async def async_set_native_value(self, value: float) -> None:
         self._attr_native_value = value
         self.async_write_ha_state()
+
