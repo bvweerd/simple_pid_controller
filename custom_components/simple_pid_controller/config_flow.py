@@ -19,6 +19,7 @@ from homeassistant.helpers.selector import selector
 from .const import (
     DOMAIN,
     CONF_NAME,
+    DEFAULT_NAME,
     CONF_SENSOR_ENTITY_ID,
     CONF_RANGE_MIN,
     CONF_RANGE_MAX,
@@ -59,9 +60,7 @@ class PIDControllerFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_NAME, default=self.hass.config.location_name
-                    ): str,
+                    vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
                     vol.Required(CONF_SENSOR_ENTITY_ID): selector(
                         {"entity": {"domain": "sensor"}}
                     ),
