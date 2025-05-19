@@ -105,6 +105,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     handle = PIDDeviceHandle(hass, entry)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = handle
 
+    # register updatelistener for optionsflow
+    entry.async_on_unload(entry.add_update_listener(_async_update_options_listener))
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
@@ -114,3 +117,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if DOMAIN in hass.data and entry.entry_id in hass.data[DOMAIN]:
         hass.data[DOMAIN].pop(entry.entry_id)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def _async_update_options_listener(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
+    """Update after options are changed in optionsflow"""
+    await hass.config_entries.async_reload(entry.entry_id)

@@ -1,10 +1,14 @@
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.data_entry_flow import FlowResultType
+
 from custom_components.simple_pid_controller.const import (
     DOMAIN,
     CONF_SENSOR_ENTITY_ID,
     CONF_NAME,
+    CONF_RANGE_MIN,
+    CONF_RANGE_MAX,
 )
 
 
@@ -35,3 +39,28 @@ async def test_create_entry(hass):
     assert result2["type"] == "create_entry"
     assert result2["title"] == "My PID"
     assert result2["data"][CONF_SENSOR_ENTITY_ID] == "sensor.test"
+
+
+async def test_options_flow(hass, config_entry):
+    """After submitting the OptionsFlow, entry.options is updated."""
+    # 1) Start de options flow via de dedicated helper
+    init_result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert init_result["type"] == FlowResultType.FORM
+    assert init_result["step_id"] == "init"
+
+    # 2) Dien nieuwe opties in
+    new_options = {
+        CONF_SENSOR_ENTITY_ID: "sensor.new",
+        CONF_RANGE_MIN: 1.0,
+        CONF_RANGE_MAX: 10.0,
+    }
+    finish_result = await hass.config_entries.options.async_configure(
+        init_result["flow_id"],
+        user_input=new_options,
+    )
+
+    # 3) Verifieer dat de flow CREATE_ENTRY teruggeeft en options zijn bijgewerkt
+    assert finish_result["type"] == FlowResultType.CREATE_ENTRY
+    assert config_entry.options[CONF_SENSOR_ENTITY_ID] == "sensor.new"
+    assert config_entry.options[CONF_RANGE_MIN] == 1.0
+    assert config_entry.options[CONF_RANGE_MAX] == 10.0
