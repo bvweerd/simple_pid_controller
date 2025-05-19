@@ -9,10 +9,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity import EntityCategory
-from . import PIDDeviceHandle
 
+from .entity import BasePIDEntity
 from .const import (
-    DOMAIN,
     CONF_RANGE_MIN,
     CONF_RANGE_MAX,
     DEFAULT_RANGE_MIN,
@@ -96,23 +95,20 @@ CONTROL_NUMBER_ENTITIES = [
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    handle: PIDDeviceHandle = hass.data[DOMAIN][entry.entry_id]
-    name = handle.name
-
-    entities = [PIDParameterNumber(entry, name, desc) for desc in PID_NUMBER_ENTITIES]
+    entities = [PIDParameterNumber(hass, entry, desc) for desc in PID_NUMBER_ENTITIES]
     async_add_entities(entities)
 
     entities = [
-        ControlParameterNumber(entry, name, desc) for desc in CONTROL_NUMBER_ENTITIES
+        ControlParameterNumber(hass, entry, desc) for desc in CONTROL_NUMBER_ENTITIES
     ]
     async_add_entities(entities)
 
 
 class PIDParameterNumber(RestoreNumber):
-    def __init__(self, entry: ConfigEntry, device_name: str, desc: dict) -> None:
-        self._attr_name = f"{desc['name']}"
-        self._attr_has_entity_name = True
-        self._attr_unique_id = f"{entry.entry_id}_{desc['key']}"
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, desc: dict) -> None:
+        BasePIDEntity.__init__(self, hass, entry, desc["key"], desc["name"])
+        RestoreNumber.__init__(self)
+
         self._attr_icon = "mdi:ray-vertex"
         self._attr_mode = "box"
         self._attr_native_unit_of_measurement = desc["unit"]
@@ -121,12 +117,6 @@ class PIDParameterNumber(RestoreNumber):
         self._attr_native_step = desc["step"]
         self._attr_native_value = desc["default"]
         self._attr_entity_category = desc["entity_category"]
-
-        # Device-info
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, entry.entry_id)},
-            "name": device_name,
-        }
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
@@ -150,10 +140,10 @@ class PIDParameterNumber(RestoreNumber):
 class ControlParameterNumber(RestoreNumber):
     """Number entity for PID control parameters."""
 
-    def __init__(self, entry: ConfigEntry, device_name: str, desc: dict) -> None:
-        self._attr_name = f"{desc['name']}"
-        self._attr_has_entity_name = True
-        self._attr_unique_id = f"{entry.entry_id}_{desc['key']}"
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, desc: dict) -> None:
+        BasePIDEntity.__init__(self, hass, entry, desc["key"], desc["name"])
+        RestoreNumber.__init__(self)
+
         self._attr_icon = "mdi:ray-vertex"
         self._attr_mode = "box"
         self._attr_native_unit_of_measurement = desc["unit"]
@@ -197,11 +187,6 @@ class ControlParameterNumber(RestoreNumber):
             self._attr_native_value = range_max
         else:
             _LOGGER.error("Unexpected error, unknown state in number.py")
-
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, entry.entry_id)},
-            "name": device_name,
-        }
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
