@@ -31,48 +31,39 @@
     "number": {
       "simple_pid_controller": {
         "kp": {
-          "name": "Kp",
-          "description": "Proportional gain"
+          "name": "Kp"
         },
         "ki": {
-          "name": "Ki",
-          "description": "Integral gain"
+          "name": "Ki"
         },
         "kd": {
-          "name": "Kd",
-          "description": "Derivative gain"
+          "name": "Kd"
         },
         "setpoint": {
-          "name": "Setpoint",
-          "description": "Desired value for the controller"
+          "name": "Setpoint"
         },
         "output": {
-          "name": "Output",
-          "description": "Controller output value"
+          "name": "Output"
         }
       }
     },
     "switch": {
       "simple_pid_controller": {
         "auto_mode": {
-          "name": "Auto Mode",
-          "description": "Enable automatic PID mode"
+          "name": "Auto Mode"
         },
         "proportional_on_measurement": {
-          "name": "Proportional on Measurement",
-          "description": "Use proportional-on-measurement mode"
+          "name": "Proportional on Measurement"
         },
         "windup_protection": {
-          "name": "Windup Protection",
-          "description": "Enable windup protection"
+          "name": "Windup Protection"
         }
       }
     },
     "sensor": {
       "simple_pid_controller": {
         "current_value": {
-          "name": "Current Value",
-          "description": "Current value measured by the sensor"
+          "name": "Current Value"
         }
       }
     }
