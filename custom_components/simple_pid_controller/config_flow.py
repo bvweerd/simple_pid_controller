@@ -93,8 +93,10 @@ class PIDControllerOptionsFlowHandler(OptionsFlow):
                 data=user_input,
             )
 
-        # Pre‐fill form with existing options or sensible defaults
-        current_sensor = self.config_entry.options.get(CONF_SENSOR_ENTITY_ID)
+        # Pre-fill form with existing options or sensible defaults
+        current_sensor = self.config_entry.options.get(
+            CONF_SENSOR_ENTITY_ID
+        ) or self.config_entry.data.get(CONF_SENSOR_ENTITY_ID)
         current_min = self.config_entry.options.get(CONF_RANGE_MIN, DEFAULT_RANGE_MIN)
         current_max = self.config_entry.options.get(CONF_RANGE_MAX, DEFAULT_RANGE_MAX)
 
