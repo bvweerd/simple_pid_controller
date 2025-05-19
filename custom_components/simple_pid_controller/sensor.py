@@ -16,8 +16,12 @@ from simple_pid import PID
 from typing import Any
 
 from . import PIDDeviceHandle
+from .entity import BasePIDEntity
 from .const import DOMAIN
 from .coordinator import PIDDataCoordinator
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,10 +111,16 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            PIDOutputSensor(entry, name, coordinator),
-            PIDContributionSensor(entry, name, "p", handle, coordinator),
-            PIDContributionSensor(entry, name, "i", handle, coordinator),
-            PIDContributionSensor(entry, name, "d", handle, coordinator),
+            PIDOutputSensor(hass, entry, coordinator),
+            PIDContributionSensor(
+                hass, entry, "pid_p_contrib", "P contribution", handle, coordinator
+            ),
+            PIDContributionSensor(
+                hass, entry, "pid_i_contrib", "I contribution", handle, coordinator
+            ),
+            PIDContributionSensor(
+                hass, entry, "pid_d_contrib", "D contribution", handle, coordinator
+            ),
         ]
     )
 
@@ -146,19 +156,16 @@ class PIDOutputSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
     """Sensor representing the PID output."""
 
     def __init__(
-        self, entry: ConfigEntry, device_name: str, coordinator: PIDDataCoordinator
+        self, hass: HomeAssistant, entry: ConfigEntry, coordinator: PIDDataCoordinator
     ):
         super().__init__(coordinator)
-        self._attr_unique_id = f"{entry.entry_id}_pid_output"
-        self._attr_name = "PID Output"
-        self._attr_has_entity_name = True
-        self._attr_native_unit_of_measurement = "%"
 
-        # Device-info
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, entry.entry_id)},
-            "name": device_name,
-        }
+        name = "PID Output"
+        key = "pid_output"
+
+        BasePIDEntity.__init__(self, hass, entry, key, name)
+
+        self._attr_native_unit_of_measurement = "%"
 
     @property
     def native_value(self) -> float | None:
@@ -172,27 +179,20 @@ class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity)
 
     def __init__(
         self,
+        hass: HomeAssistant,
         entry: ConfigEntry,
-        device_name: str,
-        component: str,
+        key: str,
+        name: str,
         handle: PIDDeviceHandle,
         coordinator: PIDDataCoordinator,
     ):
         super().__init__(coordinator)
-        self._attr_unique_id = f"{entry.entry_id}_pid_{component}_contrib"
-        self._attr_name = f"PID {component.upper()} Contribution"
+
+        BasePIDEntity.__init__(self, hass, entry, key, name)
+
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
         self._attr_entity_registry_enabled_default = False
-        self._attr_has_entity_name = True
-        self._handle = handle
-        self._component = component
-        self._entry_id = entry.entry_id
-
-        # Device-info
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, entry.entry_id)},
-            "name": device_name,
-        }
+        self._key = key
 
     @property
     def native_value(self):
@@ -201,5 +201,5 @@ class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity)
             "p": contributions[0],
             "i": contributions[1],
             "d": contributions[2],
-        }.get(self._component)
+        }.get(self._key)
         return round(value, 2) if value is not None else None

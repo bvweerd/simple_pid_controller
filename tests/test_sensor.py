@@ -2,7 +2,7 @@ import pytest
 from datetime import timedelta
 from homeassistant.util.dt import utcnow
 from pytest_homeassistant_custom_component.common import async_fire_time_changed
-from custom_components.simple_pid_controller.number import DOMAIN
+from custom_components.simple_pid_controller.const import DOMAIN
 
 
 @pytest.mark.asyncio
