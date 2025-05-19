@@ -17,6 +17,11 @@ SWITCH_ENTITIES = [
         "name": "Proportional on Measurement",
         "default_state": False,
     },
+    {
+        "key": "windup_protection",
+        "name": "Windup Protection",
+        "default_state": True,
+    },
 ]
 
 

@@ -40,6 +40,8 @@
 | Number   | `Sample Time`             | PID evaluation interval                 |
 | Switch   | `Auto Mode`               | Toggle automatic control                |
 | Switch   | `Proportional on Measurement` | Change proportional mode         |
+| Switch   | `Windup Protection`       | Toggle windup protection                |
+
 
 > 💡 All entities are editable via the UI in **Settings > Devices & Services > [Your Controller] > Options**.
 
@@ -86,6 +88,9 @@
    - **Name**: e.g., "Heater Controller"
    - **Sensor Entity**: e.g., `sensor.living_room_temperature`
 4. Submit and finish setup
+
+## Default Range
+The controller’s setpoint range defaults to 0.0-100.0. To customize this range, go to Settings > Devices & Services, select the Simple PID Controller integration, click Options, adjust the Range Min and Range Max values to your desired bounds, and save. The new range will apply immediately.
 
 ---
 
