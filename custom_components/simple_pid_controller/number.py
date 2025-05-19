@@ -131,7 +131,12 @@ class PIDParameterNumber(RestoreNumber):
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
         if (last := await self.async_get_last_number_data()) is not None:
-            self._attr_native_value = last.native_value
+            if last.native_value < self._attr_native_min_value:
+                self._attr_native_value = self._attr_native_min_value
+            elif last.native_value > self._attr_native_max_value:
+                self._attr_native_value = self._attr_native_max_value
+            else:
+                self._attr_native_value = last.native_value
 
     @property
     def native_value(self) -> float:
@@ -182,8 +187,6 @@ class ControlParameterNumber(RestoreNumber):
         self._attr_native_step = desc.get("step", 1.0)
 
         # Initialize current value
-        self._attr_native_value = self._key
-
         if self._key == "setpoint":
             self._attr_native_value = range_min + (range_max + range_min) * float(
                 desc["default"]
