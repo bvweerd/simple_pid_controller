@@ -61,7 +61,7 @@ async def async_setup_entry(
         if windup_protection:
             pid.output_limits = (out_min, out_max)
         else:
-            pid.output_limits = (None, None)            
+            pid.output_limits = (None, None)
         pid.auto_mode = auto_mode
         pid.proportional_on_measurement = p_on_m
 
