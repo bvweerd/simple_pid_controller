@@ -18,6 +18,9 @@ from .const import (
     DEFAULT_RANGE_MAX,
 )
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 _LOGGER = logging.getLogger(__name__)
 
 

@@ -48,6 +48,8 @@ class PIDControllerFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
+            self._async_abort_entries_match({CONF_NAME: user_input[CONF_NAME]})
+
             return self.async_create_entry(
                 title=user_input[CONF_NAME],
                 data={

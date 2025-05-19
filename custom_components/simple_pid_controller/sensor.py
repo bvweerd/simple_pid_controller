@@ -20,6 +20,9 @@ from .entity import BasePIDEntity
 from .const import DOMAIN
 from .coordinator import PIDDataCoordinator
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -29,6 +32,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up PID output and diagnostic sensors."""
+    handle: PIDDeviceHandle = hass.data[DOMAIN][entry.entry_id]
+    name = handle.name
 
     # Init PID with default values
     pid = PID(1.0, 0.1, 0.05, setpoint=50)
@@ -95,9 +100,6 @@ async def async_setup_entry(
         return output
 
     # Setup Coordinator
-    handle: PIDDeviceHandle = hass.data[DOMAIN][entry.entry_id]
-    name = handle.name
-
     coordinator = PIDDataCoordinator(hass, name, update_pid, interval=10)
 
     # Wait for HA to finish starting

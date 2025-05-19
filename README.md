@@ -1,6 +1,6 @@
 # Simple PID Controller
 
-> A Home Assistant integration for real-time PID control with UI-based tuning and diagnostics.
+> The Simple PID Controller is a Home Assistant integration for real-time PID control with UI-based tuning and diagnostics.
 
 ---
 
@@ -9,6 +9,7 @@
 - [Installation](#installation)
   - [HACS (Recommended)](#hacs-recommended)
   - [Manual Installation](#manual-installation)
+  - [Removal Instructions](#removal-instructions) 
 - [Configuration](#configuration)
 - [Entities Overview](#entities-overview)
 - [PID Tuning Guide](#pid-tuning-guide)
@@ -16,6 +17,8 @@
   - [Ziegler–Nichols Method](#2-zieglernichols-method)
 - [Example PID Graph](#example-pid-graph)
 - [Support & Development](#support--development)
+- [Service Actions](#service-actions)
+
 
 ---
 
@@ -65,22 +68,15 @@
 
 1. Download or clone this repository
 2. Copy `simple_pid_controller` to `/config/custom_components/`
-3. Ensure this folder structure:
-   ```text
-   config/
-   └── custom_components/
-       └── simple_pid_controller/
-           ├── __init__.py
-           ├── manifest.json
-           ├── sensor.py
-           ├── number.py
-           └── switch.py
-   ```
-4. Restart Home Assistant
+3. Restart Home Assistant
+
+### Removal Instructions 
+To remove the Simple PID Controller, navigate to **Settings > Devices & Services**, select **Simple PID Controller**, and click **Delete**. If installed manually, delete the `custom_components/simple_pid_controller` directory and restart Home Assistant.
 
 ---
 
 ## ⚙️ Configuration
+The controller is configured through the UI using the Config Flow {% term config_flow %}.
 
 1. Go to **Settings > Devices & Services**
 2. Click **Add Integration** and choose **Simple PID Controller**
@@ -89,8 +85,8 @@
    - **Sensor Entity**: e.g., `sensor.living_room_temperature`
 4. Submit and finish setup
 
-## Default Range
-The controller’s setpoint range defaults to 0.0-100.0. To customize this range, go to Settings > Devices & Services, select the Simple PID Controller integration, click Options, adjust the Range Min and Range Max values to your desired bounds, and save. The new range will apply immediately.
+**Default Range:**  
+The controller’s setpoint range defaults to **0.0 – 100.0**. To customize this range, select the integration in **Settings > Devices & Services**, click **Options**, adjust **Range Min** and **Range Max**, and save.
 
 ---
 
@@ -106,6 +102,7 @@ The controller’s setpoint range defaults to 0.0-100.0. To customize this range
 | Number   | `Sample Time`                 | PID evaluation rate in seconds.                    |
 | Switch   | `Auto Mode`                   | Enable/disable PID automation.                     |
 | Switch   | `Proportional on Measurement` | Use measurement instead of error for P term.       |
+| Switch   | `Windup Protection`           | Toggle windup protection                           |
 
 ---
 
@@ -157,4 +154,10 @@ Here's an example output showing the controller responding to a setpoint:
 
 - **GitHub Repository**: [https://github.com/bvweerd/simple_pid_controller](https://github.com/bvweerd/simple_pid_controller)
 - **Issues & Bugs**: [Report here](https://github.com/bvweerd/simple_pid_controller/issues)
+
+---
+
+## 🔧 Service Actions 
+This Integration does **not** expose any custom services. All interactions are performed via UI-based entities.
+
 

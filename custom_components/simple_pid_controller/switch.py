@@ -9,6 +9,9 @@ from homeassistant.helpers.entity import EntityCategory
 
 from .entity import BasePIDEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 SWITCH_ENTITIES = [
     {"key": "auto_mode", "name": "Auto Mode", "default_state": True},
     {
