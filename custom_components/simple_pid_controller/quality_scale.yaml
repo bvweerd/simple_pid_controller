@@ -19,9 +19,13 @@ rules:
   entity-unique-id: done
   has-entity-name: done
   runtime-data: todo
-  test-before-configure: todo
-  test-before-setup: todo
-  unique-config-entry: todo
+  test-before-configure:
+    status: exempt
+    comment: This integration has no external dependenc
+  test-before-setup: 
+    status: exempt
+    comment: This integration has no external dependencies
+  unique-config-entry: done
 
   # Silver
   action-exceptions: todo
@@ -31,7 +35,7 @@ rules:
   entity-unavailable: todo
   integration-owner: done
   log-when-unavailable: todo
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: 
     status: exempt
     comment: This integration does not use authentication
