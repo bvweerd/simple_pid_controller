@@ -143,43 +143,58 @@ class PIDParameterNumber(RestoreNumber):
 
 
 class ControlParameterNumber(RestoreNumber):
-    def __init__(self, entry: ConfigEntry, device_name: str, desc: dict) -> None:
-        opts = entry.options or {}
-        data = entry.data or {}
-        self._range_min = opts.get(
-            CONF_RANGE_MIN, data.get(CONF_RANGE_MIN, DEFAULT_RANGE_MIN)
-        )
-        self._range_max = opts.get(
-            CONF_RANGE_MAX, data.get(CONF_RANGE_MAX, DEFAULT_RANGE_MAX)
-        )
+    """Number entity for PID control parameters."""
 
+    def __init__(self, entry: ConfigEntry, device_name: str, desc: dict) -> None:
         self._attr_name = f"{desc['name']}"
         self._attr_has_entity_name = True
         self._attr_unique_id = f"{entry.entry_id}_{desc['key']}"
         self._attr_icon = "mdi:ray-vertex"
         self._attr_mode = "box"
         self._attr_native_unit_of_measurement = desc["unit"]
-        self._attr_native_min_value = self._range_min
-        self._attr_native_max_value = self._range_max
         self._attr_native_step = desc["step"]
-        self.key = desc["key"]
-
-        if self.key == "setpoint":
-            # a + (b - a) * f:
-            self._attr_native_value = self._range_min + (
-                self._range_max + self._range_min
-            ) * float(desc["default"])
-        elif self.key == "output_min":
-            self._attr_native_value = self._range_min
-        elif self.key == "output_max":
-            self._attr_native_value = self._range_max
-        else:
-            # error
-            _LOGGER.debug("Unreachable state 1 in number.py is reached. Please report.")
-
+        self._attr_native_value = desc["default"]
         self._attr_entity_category = desc["entity_category"]
+        self._key = desc["key"]
 
-        # Device-info
+        # Compute range limits based on key
+        opts = entry.options or {}
+        data = entry.data or {}
+        range_min = opts.get(
+            CONF_RANGE_MIN, data.get(CONF_RANGE_MIN, DEFAULT_RANGE_MIN)
+        )
+        range_max = opts.get(
+            CONF_RANGE_MAX, data.get(CONF_RANGE_MAX, DEFAULT_RANGE_MAX)
+        )
+
+        if self._key == "setpoint":
+            min_val, max_val = range_min, range_max
+        elif self._key == "output_min":
+            min_val, max_val = -abs(range_max), 0.0
+        elif self._key == "output_max":
+            min_val, max_val = 0.0, range_max
+        else:
+            _LOGGER.error("Unexpected PID parameter key: %s", self._key)
+            min_val, max_val = DEFAULT_RANGE_MIN, DEFAULT_RANGE_MAX
+
+        self._attr_native_min_value = min_val
+        self._attr_native_max_value = max_val
+        self._attr_native_step = desc.get("step", 1.0)
+
+        # Initialize current value
+        self._attr_native_value = self._key
+
+        if self._key == "setpoint":
+            self._attr_native_value = range_min + (range_max + range_min) * float(
+                desc["default"]
+            )
+        elif self._key == "output_min":
+            self._attr_native_value = range_min
+        elif self._key == "output_max":
+            self._attr_native_value = range_max
+        else:
+            _LOGGER.error("Unexpected error, unknown state in number.py")
+
         self._attr_device_info = {
             "identifiers": {(DOMAIN, entry.entry_id)},
             "name": device_name,
@@ -193,30 +208,6 @@ class ControlParameterNumber(RestoreNumber):
     @property
     def native_value(self) -> float:
         return self._attr_native_value
-
-    @property
-    def min_value(self) -> float:
-        if self.key == "setpoint":
-            return self._range_min
-        elif self.key == "output_min":
-            return abs(self._range_max) * -1
-        elif self.key == "output_max":
-            return 0.0
-        else:
-            # error
-            _LOGGER.debug("Unreachable state 2 in number.py is reached. Please report.")
-
-    @property
-    def max_value(self) -> float:
-        if self.key == "setpoint":
-            return self._range_max
-        elif self.key == "output_min":
-            return 0.0
-        elif self.key == "output_max":
-            return self._range_max
-        else:
-            # error
-            _LOGGER.debug("Unreachable state 3 in number.py is reached. Please report.")
 
     async def async_set_native_value(self, value: float) -> None:
         self._attr_native_value = value

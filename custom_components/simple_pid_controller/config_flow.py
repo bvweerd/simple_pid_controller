@@ -41,7 +41,7 @@ class PIDControllerFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> PIDControllerOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return PIDControllerOptionsFlowHandler(config_entry)
+        return PIDControllerOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -78,34 +78,39 @@ class PIDControllerFlowHandler(ConfigFlow, domain=DOMAIN):
 class PIDControllerOptionsFlowHandler(OptionsFlow):
     """Handle options for PID Controller."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
+        super().__init__()
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Manage the options."""
+        """Manage the options form and save user input."""
+        # If the user has submitted the form, create the entry
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(
+                title=self.config_entry.title,
+                data=user_input,
+            )
 
-        current_sensor = self.config_entry.options.get(
-            CONF_SENSOR_ENTITY_ID,
-            self.config_entry.data.get(CONF_SENSOR_ENTITY_ID, ""),
-        )
+        # Pre‐fill form with existing options or sensible defaults
+        current_sensor = self.config_entry.options.get(CONF_SENSOR_ENTITY_ID)
+        current_min = self.config_entry.options.get(CONF_RANGE_MIN, DEFAULT_RANGE_MIN)
+        current_max = self.config_entry.options.get(CONF_RANGE_MAX, DEFAULT_RANGE_MAX)
 
         options_schema = vol.Schema(
             {
-                vol.Required(CONF_SENSOR_ENTITY_ID, default=current_sensor): selector(
-                    {"entity": {"domain": "sensor"}}
-                ),
+                vol.Required(
+                    CONF_SENSOR_ENTITY_ID,
+                    default=current_sensor,
+                ): selector({"entity": {"domain": "sensor"}}),
                 vol.Required(
                     CONF_RANGE_MIN,
-                    default=current_sensor.get(CONF_RANGE_MIN, DEFAULT_RANGE_MIN),
+                    default=current_min,
                 ): vol.Coerce(float),
                 vol.Required(
                     CONF_RANGE_MAX,
-                    default=current_sensor.get(CONF_RANGE_MAX, DEFAULT_RANGE_MAX),
+                    default=current_max,
                 ): vol.Coerce(float),
             }
         )
