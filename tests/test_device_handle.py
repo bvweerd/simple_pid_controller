@@ -78,3 +78,25 @@ def test_get_input_sensor_value_invalid(hass, config_entry):
 
     # Should handle gracefully and return None
     assert handle.get_input_sensor_value() is None
+
+
+@pytest.mark.parametrize("state", ["unknown", "unavailable"])
+async def test_get_switch_returns_true_when_state_unavailable(
+    hass, config_entry, state
+):
+    """Regel 79: get_switch returns True if state 'unknown' or 'unavailable'."""
+    fake_entity = f"switch.{config_entry.entry_id}_test_key"
+    handle = PIDDeviceHandle(hass, config_entry)
+    # Force existence of entity_id
+    handle._get_entity_id = lambda platform, key: fake_entity
+    # State to 'unknown' or 'unavailable'
+    hass.states.async_set(fake_entity, state)
+    assert handle.get_switch("test_key") is True
+
+
+async def test_get_switch_returns_true_when_no_entity_configured(hass, config_entry):
+    """Regel 74: get_switch must return True if _get_entity_id None."""
+    handle = PIDDeviceHandle(hass, config_entry)
+    # Force no  entity_id
+    handle._get_entity_id = lambda platform, key: None
+    assert handle.get_switch("any_key") is True

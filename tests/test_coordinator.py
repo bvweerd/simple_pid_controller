@@ -1,29 +1,26 @@
 import pytest
 from custom_components.simple_pid_controller.coordinator import PIDDataCoordinator
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 
-@pytest.mark.asyncio
-async def test_coordinator_update_method_assignment(hass):
-    """Test that the coordinator assigns the update_method and calls it."""
+async def test_async_update_data_success(hass):
+    """Test that _async_update_data returns the value from update_method on success."""
 
-    # Dummy async update method
-    called = {}
-
-    async def dummy_update_method():
-        called["yes"] = True
+    async def fake_update():
         return 42.0
 
-    coordinator = PIDDataCoordinator(
-        hass=hass,
-        name="test",
-        update_method=dummy_update_method,
-        interval=10,  # 10 seconds
-    )
-
-    # Check assignment
-    assert coordinator.update_method == dummy_update_method
-
-    # Call _async_update_data and ensure dummy_update_method is called and result is correct
+    coordinator = PIDDataCoordinator(hass, "test", fake_update, interval=1)
     result = await coordinator._async_update_data()
     assert result == 42.0
-    assert called["yes"] is True
+
+
+async def test_async_update_data_failure(hass):
+    """Test that _async_update_data raises UpdateFailed with proper message on exception."""
+
+    async def fake_update():
+        raise ValueError("test error")
+
+    coordinator = PIDDataCoordinator(hass, "test", fake_update, interval=1)
+    with pytest.raises(UpdateFailed) as excinfo:
+        await coordinator._async_update_data()
+    assert "PID update failed: test error" in str(excinfo.value)
