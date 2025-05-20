@@ -1,53 +1,66 @@
 {
-    "config": {
-        "step": {
-            "user": {
-                "title": "Configure PID Controller"
-            }
-        },
-        "error": {
-            "already_configured": "A configuration with this name already exists."
-        },
-        "field": {
-            "name": "Name",
-            "sensor_entity_id": "Sensor Entity",
-            "range_min": "Minimum Range",
-            "range_max": "Maximum Range"
+  "title": "Simple PID Controller",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Simple PID Controller",
+        "description": "Enter a name and choose the sensor to drive the PID loop.",
+        "data": {
+          "name": "Name",
+          "sensor_entity_id": "Sensor Entity"
         }
+      }
     },
-    "options": {
-        "step": {
-            "init": {
-                "title": "Configure PID Controller Options"
-            }
-        },
-        "field": {
-            "sensor_entity_id": "Sensor Entity",
-            "range_min": "Minimum Range",
-            "range_max": "Maximum Range"
-        }
+    "abort": {
+      "single_instance_allowed": "Only a single instance of Simple PID Controller is allowed."
     },
-    "entity": {
-        "number": {
-            "simple_pid_controller": {
-                "kp": "Kp",
-                "ki": "Ki",
-                "kd": "Kd",
-                "setpoint": "Setpoint",
-                "output": "Output"
-            }
-        },
-        "switch": {
-            "simple_pid_controller": {
-                "auto_mode": "Auto Mode",
-                "proportional_on_measurement": "Proportional on Measurement",
-                "windup_protection": "Windup Protection"
-            }
-        },
-        "sensor": {
-            "simple_pid_controller": {
-                "current_value": "Current Value"
-            }
-        }
+    "error": {
+      "already_configured": "A configuration with this name already exists."
+    },
+    "field": {
+      "name": "Name",
+      "sensor_entity_id": "Sensor Entity",
+      "range_min": "Minimum Range",
+      "range_max": "Maximum Range"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Edit PID Controller Options",
+        "description": "Modify the sensor entity used by the controller.",
+        "data": {
+          "sensor_entity_id": "Sensor Entity"
+        }
+      }
+    },
+    "field": {
+      "sensor_entity_id": "Sensor Entity",
+      "range_min": "Minimum Range",
+      "range_max": "Maximum Range"
+    }
+  },
+  "entity": {
+    "number": {
+      "simple_pid_controller": {
+        "kp": "Kp",
+        "ki": "Ki",
+        "kd": "Kd",
+        "setpoint": "Setpoint",
+        "output": "Output"
+      }
+    },
+    "switch": {
+      "simple_pid_controller": {
+        "auto_mode": "Auto Mode",
+        "proportional_on_measurement": "Proportional on Measurement",
+        "windup_protection": "Windup Protection"
+      }
+    },
+    "sensor": {
+      "simple_pid_controller": {
+        "current_value": "Current Value"
+      }
+    }
+  }
 }
