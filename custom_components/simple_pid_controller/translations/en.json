@@ -1,80 +1,69 @@
 {
+  "title": "Simple PID Controller",
   "config": {
     "step": {
       "user": {
-        "title": "Configure PID Controller"
+        "title": "Configure Simple PID Controller",
+        "description": "Enter a name and choose the sensor to drive the PID loop.",
+        "data": {
+          "name": "Name",
+          "sensor_entity_id": "Sensor Entity"
+        }
       }
+    },
+    "abort": {
+      "single_instance_allowed": "Only a single instance with this name is allowed."
     },
     "error": {
       "already_configured": "A configuration with this name already exists."
-    },
-    "field": {
-      "name": "Name",
-      "sensor_entity_id": "Sensor Entity",
-      "range_min": "Minimum Range",
-      "range_max": "Maximum Range"
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Configure PID Controller Options"
+        "title": "Edit PID Controller Options",
+        "description": "Modify the sensor entity and range used by the controller.",
+        "data": {
+          "sensor_entity_id": "Sensor Entity",
+          "range_min": "Minimum Range",
+          "range_max": "Maximum Range"
+        }
       }
-    },
-    "field": {
-      "sensor_entity_id": "Sensor Entity",
-      "range_min": "Minimum Range",
-      "range_max": "Maximum Range"
     }
   },
   "entity": {
     "number": {
-      "simple_pid_controller": {
-        "kp": {
-          "name": "Kp",
-          "description": "Proportional gain"
-        },
-        "ki": {
-          "name": "Ki",
-          "description": "Integral gain"
-        },
-        "kd": {
-          "name": "Kd",
-          "description": "Derivative gain"
-        },
-        "setpoint": {
-          "name": "Setpoint",
-          "description": "Desired value for the controller"
-        },
-        "output": {
-          "name": "Output",
-          "description": "Controller output value"
-        }
-      }
+	  "kp": {
+		"name": "Kp"
+	  },
+	  "ki": {
+		"name": "Ki"
+	  },
+	  "kd": {
+		"name": "Kd"
+	  },
+	  "setpoint": {
+		"name": "Setpoint"
+	  },
+	  "output": {
+		"name": "Output"
+	  }
     },
     "switch": {
-      "simple_pid_controller": {
         "auto_mode": {
-          "name": "Auto Mode",
-          "description": "Enable automatic PID mode"
-        },
+			"name": "Auto Mode"
+		},
         "proportional_on_measurement": {
-          "name": "Proportional on Measurement",
-          "description": "Use proportional-on-measurement mode"
-        },
+			"name": "Proportional on Measurement"
+		},
         "windup_protection": {
-          "name": "Windup Protection",
-          "description": "Enable windup protection"
-        }
-      }
+			"name": "Windup Protection"
+		}
     },
     "sensor": {
-      "simple_pid_controller": {
         "current_value": {
-          "name": "Current Value",
-          "description": "Current value measured by the sensor"
-        }
-      }
+			"name": "Current Value"
+		}
     }
   }
 }
