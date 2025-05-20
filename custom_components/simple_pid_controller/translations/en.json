@@ -33,26 +33,37 @@
   },
   "entity": {
     "number": {
-      "simple_pid_controller": {
-        "kp": "Kp",
-        "ki": "Ki",
-        "kd": "Kd",
-        "setpoint": "Setpoint",
-        "output": "Output"
-      }
+	  "kp": {
+		"name": "Kp"
+	  },
+	  "ki": {
+		"name": "Ki"
+	  },
+	  "kd": {
+		"name": "Kd"
+	  },
+	  "setpoint": {
+		"name": "Setpoint"
+	  },
+	  "output": {
+		"name": "Output"
+	  }
     },
     "switch": {
-      "simple_pid_controller": {
-        "auto_mode": "Auto Mode",
-        "proportional_on_measurement": "Proportional on Measurement",
-        "windup_protection": "Windup Protection"
-      }
+        "auto_mode": {
+			"name": "Auto Mode"
+		},
+        "proportional_on_measurement": {
+			"name": "Proportional on Measurement"
+		},
+        "windup_protection": {
+			"name": "Windup Protection"
+		}
     },
     "sensor": {
-      "simple_pid_controller": {
-        "current_value": "Current Value"
-      }
+        "current_value": {
+			"name": "Current Value"
+		}
     }
   }
 }
-
