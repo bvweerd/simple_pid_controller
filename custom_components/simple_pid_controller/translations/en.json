@@ -12,7 +12,7 @@
       }
     },
     "abort": {
-      "single_instance_allowed": "Only a single instance of Simple PID Controller is allowed."
+      "single_instance_allowed": "Only a single instance with this name is allowed."
     },
     "error": {
       "already_configured": "A configuration with this name already exists."
