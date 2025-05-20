@@ -16,50 +16,47 @@
     },
     "error": {
       "already_configured": "A configuration with this name already exists."
-    },
-    "field": {
-      "name": "Name",
-      "sensor_entity_id": "Sensor Entity",
-      "range_min": "Minimum Range",
-      "range_max": "Maximum Range"
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "Edit PID Controller Options",
-        "description": "Modify the sensor entity used by the controller.",
+        "description": "Modify the sensor entity and range used by the controller.",
         "data": {
-          "sensor_entity_id": "Sensor Entity"
+          "sensor_entity_id": "Sensor Entity",
+          "range_min": "Minimum Range",
+          "range_max": "Maximum Range"
         }
       }
-    },
-    "field": {
-      "sensor_entity_id": "Sensor Entity",
-      "range_min": "Minimum Range",
-      "range_max": "Maximum Range"
     }
   },
   "entity": {
     "number": {
       "simple_pid_controller": {
-        "kp": "Kp",
-        "ki": "Ki",
-        "kd": "Kd",
-        "setpoint": "Setpoint",
-        "output": "Output"
+        "attributes": {
+          "kp": "Kp",
+          "ki": "Ki",
+          "kd": "Kd",
+          "setpoint": "Setpoint",
+          "output": "Output"
+        }
       }
     },
     "switch": {
       "simple_pid_controller": {
-        "auto_mode": "Auto Mode",
-        "proportional_on_measurement": "Proportional on Measurement",
-        "windup_protection": "Windup Protection"
+        "attributes": {
+          "auto_mode": "Auto Mode",
+          "proportional_on_measurement": "Proportional on Measurement",
+          "windup_protection": "Windup Protection"
+        }
       }
     },
     "sensor": {
       "simple_pid_controller": {
-        "current_value": "Current Value"
+        "attributes": {
+          "current_value": "Current Value"
+        }
       }
     }
   }
