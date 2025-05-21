@@ -8,6 +8,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
+from dataclasses import dataclass
 
 from .const import (
     DOMAIN,
@@ -94,6 +95,13 @@ class PIDDeviceHandle:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Simple PID Controller from a config entry."""
 
+    @dataclass
+    class MyData:
+        handle: PIDDeviceHandle
+        coordinator: PIDDataCoordinator
+
+    entry.runtime_data = MyData(handle, coordinator)
+    
     sensor_entity_id = entry.options.get(
         CONF_SENSOR_ENTITY_ID, entry.data.get(CONF_SENSOR_ENTITY_ID)
     )
@@ -103,7 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Sensor {sensor_entity_id} not ready")
 
     handle = PIDDeviceHandle(hass, entry)
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = handle
+    entry.runtime_data.handle = handle
 
     # register updatelistener for optionsflow
     entry.async_on_unload(entry.add_update_listener(_async_update_options_listener))
@@ -113,11 +121,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload PID Controller entry."""
-    if DOMAIN in hass.data and entry.entry_id in hass.data[DOMAIN]:
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
+    """Unload a config entry."""
+    if (unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS))
+        entry.runtime_data.listener()
+    return unload_ok
+    
 
 async def _async_update_options_listener(
     hass: HomeAssistant, entry: ConfigEntry

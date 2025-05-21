@@ -32,7 +32,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up PID output and diagnostic sensors."""
-    handle: PIDDeviceHandle = hass.data[DOMAIN][entry.entry_id]
+    handle: PIDDeviceHandle = entry.runtime_data.handle
     name = handle.name
 
     # Init PID with default values
@@ -101,25 +101,27 @@ async def async_setup_entry(
 
     # Setup Coordinator
     coordinator = PIDDataCoordinator(hass, name, update_pid, interval=10)
-
+    entry.runtime_data.coordinator = coordinator  # Takes care of proper cleanup on unload
+    
     # Wait for HA to finish starting
     async def start_refresh(_: Any) -> None:
         _LOGGER.debug("Home Assistant started, first PID-refresh started")
         await coordinator.async_request_refresh()
 
-    hass.bus.async_listen_once("homeassistant_started", start_refresh)
+    unsub = hass.bus.async_listen_once("homeassistant_started", start_refresh)
+    entry.async_on_unload(unsub)  # Takes care of proper cleanup on unload
 
     async_add_entities(
         [
             PIDOutputSensor(hass, entry, coordinator),
             PIDContributionSensor(
-                hass, entry, "pid_p_contrib", "P contribution", handle, coordinator
+                hass, entry, "pid_p_contrib", "P contribution", coordinator
             ),
             PIDContributionSensor(
-                hass, entry, "pid_i_contrib", "I contribution", handle, coordinator
+                hass, entry, "pid_i_contrib", "I contribution", coordinator
             ),
             PIDContributionSensor(
-                hass, entry, "pid_d_contrib", "D contribution", handle, coordinator
+                hass, entry, "pid_d_contrib", "D contribution", coordinator
             ),
         ]
     )
@@ -183,7 +185,6 @@ class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity)
         entry: ConfigEntry,
         key: str,
         name: str,
-        handle: PIDDeviceHandle,
         coordinator: PIDDataCoordinator,
     ):
         super().__init__(coordinator)
