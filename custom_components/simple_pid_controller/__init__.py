@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from dataclasses import dataclass
+from .coordinator import PIDDataCoordinator
 
 from .const import (
     DOMAIN,
@@ -121,7 +122,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if (unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS))
+    if (unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS)):
         entry.runtime_data.listener()
     return unload_ok
     
