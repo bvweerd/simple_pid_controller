@@ -100,16 +100,18 @@ async def async_setup_entry(
         return output
 
     # Setup Coordinator
-    coordinator = PIDDataCoordinator(hass, name, update_pid, interval=10)
-    entry.runtime_data.coordinator = coordinator  # Takes care of proper cleanup on unload
+    if not hasattr(data, "coordinator"):
+        entry.runtime_data.coordinator = PIDDataCoordinator(hass, name, update_pid, interval=10)
+    coordinator = entry.runtime_data.coordinator
     
     # Wait for HA to finish starting
     async def start_refresh(_: Any) -> None:
         _LOGGER.debug("Home Assistant started, first PID-refresh started")
         await coordinator.async_request_refresh()
 
-    unsub = hass.bus.async_listen_once("homeassistant_started", start_refresh)
-    entry.async_on_unload(unsub)  # Takes care of proper cleanup on unload
+    entry.async_on_unload(
+        hass.bus.async_listen_once("homeassistant_started", start_refresh)
+    )
 
     async_add_entities(
         [

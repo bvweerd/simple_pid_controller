@@ -100,7 +100,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         handle: PIDDeviceHandle
         coordinator: PIDDataCoordinator
 
-    entry.runtime_data = MyData(handle, coordinator)
+    entry.runtime_data = MyData(handle=handle, coordinator=coordinator)
     
     sensor_entity_id = entry.options.get(
         CONF_SENSOR_ENTITY_ID, entry.data.get(CONF_SENSOR_ENTITY_ID)
@@ -111,7 +111,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Sensor {sensor_entity_id} not ready")
 
     handle = PIDDeviceHandle(hass, entry)
-    entry.runtime_data.handle = handle
 
     # register updatelistener for optionsflow
     entry.async_on_unload(entry.add_update_listener(_async_update_options_listener))
