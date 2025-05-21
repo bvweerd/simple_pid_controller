@@ -3,13 +3,13 @@ rules:
   action-setup:
     status: exempt
     comment: This integration does not provide any actions
-  appropriate-polling: 
+  appropriate-polling:
     status: exempt
     comment: This integration does not use polling
   brands: done
   common-modules: done
-  config-flow-test-coverage: todo
-  config-flow: todo
+  config-flow-test-coverage: done
+  config-flow: done
   dependency-transparency: done
   docs-actions: done
   docs-high-level-description: done
@@ -21,8 +21,8 @@ rules:
   runtime-data: todo
   test-before-configure:
     status: exempt
-    comment: This integration has no external dependenc
-  test-before-setup: 
+    comment: This integration has no external dependencies
+  test-before-setup:
     status: exempt
     comment: This integration has no external dependencies
   unique-config-entry: done
@@ -36,7 +36,7 @@ rules:
   integration-owner: done
   log-when-unavailable: todo
   parallel-updates: done
-  reauthentication-flow: 
+  reauthentication-flow:
     status: exempt
     comment: This integration does not use authentication
   test-coverage: todo

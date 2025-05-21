@@ -15,7 +15,8 @@
       "single_instance_allowed": "Only a single instance with this name is allowed."
     },
     "error": {
-      "already_configured": "A configuration with this name already exists."
+      "already_configured": "A configuration with this name already exists.",
+	  "range_min_max": "Minimum must be lower than maximum."
     }
   },
   "options": {
@@ -29,6 +30,9 @@
           "range_max": "Maximum Range"
         }
       }
+    },
+    "error": {
+	  "range_min_max": "Minimum must be lower than maximum."
     }
   },
   "entity": {
