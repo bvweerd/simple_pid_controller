@@ -113,3 +113,63 @@ async def test_listeners_trigger_refresh_sensor(hass, config_entry, monkeypatch)
     assert (
         called
     ), "Coordinator.async_request_refresh was not called on sensor state change"
+
+
+@pytest.mark.asyncio
+async def test_update_pid_raises_on_missing_input(hass, config_entry):
+    """Line 47: update_pid should raise ValueError when input sensor unavailable."""
+    handle = hass.data[DOMAIN][config_entry.entry_id]
+    # Force no input value
+    handle.get_input_sensor_value = lambda: None
+    # Provide defaults for numbers and switches
+    handle.get_number = lambda key: 0.0
+    handle.get_switch = lambda key: True
+    # Setup entry to get coordinator with update_method
+    entities: list = []
+    await async_setup_entry(hass, config_entry, lambda e: entities.extend(e))
+    coordinator = entities[0].coordinator
+    with pytest.raises(ValueError) as excinfo:
+        await coordinator.update_method()
+    assert "Input sensor not available" in str(excinfo.value)
+
+
+@pytest.mark.asyncio
+async def test_update_pid_output_limits_none_when_windup_protection_disabled(
+    monkeypatch, hass, config_entry
+):
+    """Line 68: update_pid should set output_limits to (None, None) when windup_protection is False."""
+    from custom_components.simple_pid_controller import sensor as sensor_module
+
+    # Dummy PID to inspect output_limits
+    class DummyPID:
+        def __init__(self, kp, ki, kd, setpoint):
+            self._proportional = 1.0
+            self._integral = 1.0
+            self._last_output = None
+            self.tunings = (kp, ki, kd)
+            self.setpoint = setpoint
+            self.sample_time = 1.0
+            self.output_limits = (0.0, 0.0)
+            self.auto_mode = True
+            self.proportional_on_measurement = False
+
+        def __call__(self, input_value):
+            return 0.0
+
+    monkeypatch.setattr(sensor_module, "PID", DummyPID)
+    handle = hass.data[DOMAIN][config_entry.entry_id]
+    # Provide valid input and parameters
+    handle.get_input_sensor_value = lambda: 1.0
+    handle.get_number = lambda key: 0.0
+    # windup_protection False, other switches True
+    handle.get_switch = lambda key: False if key == "windup_protection" else True
+    entities: list = []
+    await async_setup_entry(hass, config_entry, lambda e: entities.extend(e))
+    coordinator = entities[0].coordinator
+    # Execute update_method
+    await coordinator.update_method()
+    # Extract pid from closure
+    freevars = coordinator.update_method.__code__.co_freevars
+    pid_idx = freevars.index("pid")
+    pid = coordinator.update_method.__closure__[pid_idx].cell_contents
+    assert pid.output_limits == (None, None)
