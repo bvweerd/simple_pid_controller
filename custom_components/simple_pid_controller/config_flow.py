@@ -47,8 +47,8 @@ class PIDControllerFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        
-        schema=vol.Schema(
+
+        schema = vol.Schema(
             {
                 vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
                 vol.Required(CONF_SENSOR_ENTITY_ID): selector(
@@ -62,7 +62,7 @@ class PIDControllerFlowHandler(ConfigFlow, domain=DOMAIN):
                 ),
             }
         )
-        
+
         if user_input is not None:
             self._async_abort_entries_match({CONF_NAME: user_input[CONF_NAME]})
 
@@ -73,7 +73,7 @@ class PIDControllerFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.async_show_form(
                     step_id="user", data_schema=schema, errors={"base": "range_min_max"}
                 )
-                
+
             return self.async_create_entry(
                 title=user_input[CONF_NAME],
                 data={
@@ -82,7 +82,7 @@ class PIDControllerFlowHandler(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        return self.async_show_form(step_id="user", data_schema=schema )
+        return self.async_show_form(step_id="user", data_schema=schema)
 
 
 class PIDControllerOptionsFlowHandler(OptionsFlow):
@@ -123,18 +123,19 @@ class PIDControllerOptionsFlowHandler(OptionsFlow):
 
         # If the user has submitted the form, create the entry
         if user_input is not None:
-        
             # Validate that range_min < range_max
             min_val = user_input.get(CONF_RANGE_MIN)
             max_val = user_input.get(CONF_RANGE_MAX)
             if min_val is not None and max_val is not None and min_val >= max_val:
                 return self.async_show_form(
-                    step_id="init", data_schema=options_schema, errors={"base": "range_min_max"}
+                    step_id="init",
+                    data_schema=options_schema,
+                    errors={"base": "range_min_max"},
                 )
-        
+
             return self.async_create_entry(
                 title=self.config_entry.title,
                 data=user_input,
             )
-            
+
         return self.async_show_form(step_id="init", data_schema=options_schema)
