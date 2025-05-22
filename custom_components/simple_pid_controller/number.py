@@ -181,7 +181,7 @@ class ControlParameterNumber(RestoreNumber):
 
         # Initialize current value
         if self._key == "setpoint":
-            self._attr_native_value = range_min + (range_max + range_min) * float(
+            self._attr_native_value = range_min + (range_max - range_min) * float(
                 desc["default"]
             )
         elif self._key == "output_min":
