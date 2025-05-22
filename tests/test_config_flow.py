@@ -9,6 +9,8 @@ from custom_components.simple_pid_controller.const import (
     CONF_SENSOR_ENTITY_ID,
     CONF_RANGE_MIN,
     CONF_RANGE_MAX,
+    DEFAULT_RANGE_MIN,
+    DEFAULT_RANGE_MAX,
 )
 from custom_components.simple_pid_controller.config_flow import (
     PIDControllerFlowHandler,
@@ -21,14 +23,24 @@ SENSOR_ENTITY = "sensor.test_input"
 @pytest.mark.parametrize(
     "user_input, expected_type, expected_data, expected_errors",
     [
-        # Happy path without specifying ranges
+        # Happy path without specifying ranges (defaults applied)
         (
-            {CONF_NAME: "My PID", CONF_SENSOR_ENTITY_ID: SENSOR_ENTITY},
+            {
+                CONF_NAME: "My PID",
+                CONF_SENSOR_ENTITY_ID: SENSOR_ENTITY,
+                CONF_RANGE_MIN: DEFAULT_RANGE_MIN,
+                CONF_RANGE_MAX: DEFAULT_RANGE_MAX,
+            },
             FlowResultType.CREATE_ENTRY,
-            {CONF_NAME: "My PID", CONF_SENSOR_ENTITY_ID: SENSOR_ENTITY},
+            {
+                CONF_NAME: "My PID",
+                CONF_SENSOR_ENTITY_ID: SENSOR_ENTITY,
+                CONF_RANGE_MIN: DEFAULT_RANGE_MIN,
+                CONF_RANGE_MAX: DEFAULT_RANGE_MAX,
+            },
             None,
         ),
-        # Happy path specifying explicit valid ranges (ignored in create)
+        # Happy path specifying explicit valid ranges
         (
             {
                 CONF_NAME: "My PID 2",
@@ -37,7 +49,12 @@ SENSOR_ENTITY = "sensor.test_input"
                 CONF_RANGE_MAX: 10.0,
             },
             FlowResultType.CREATE_ENTRY,
-            {CONF_NAME: "My PID 2", CONF_SENSOR_ENTITY_ID: SENSOR_ENTITY},
+            {
+                CONF_NAME: "My PID 2",
+                CONF_SENSOR_ENTITY_ID: SENSOR_ENTITY,
+                CONF_RANGE_MIN: 1.0,
+                CONF_RANGE_MAX: 10.0,
+            },
             None,
         ),
         # Invalid ranges (min >= max)
@@ -90,7 +107,6 @@ def test_async_get_options_flow():
 @pytest.mark.parametrize(
     "new_options, expected_errors",
     [
-        # Valid options update
         (
             {
                 CONF_SENSOR_ENTITY_ID: "sensor.new",
@@ -99,7 +115,6 @@ def test_async_get_options_flow():
             },
             None,
         ),
-        # Invalid options ranges
         (
             {
                 CONF_SENSOR_ENTITY_ID: "sensor.new",
@@ -132,7 +147,12 @@ async def test_options_flow(hass, config_entry, new_options, expected_errors):
 
 async def test_user_flow_duplicate_abort(hass):
     """Test that a duplicate config entry aborts the flow."""
-    user_input = {CONF_NAME: "Duplicate PID", CONF_SENSOR_ENTITY_ID: SENSOR_ENTITY}
+    user_input = {
+        CONF_NAME: "Duplicate PID",
+        CONF_SENSOR_ENTITY_ID: SENSOR_ENTITY,
+        CONF_RANGE_MIN: DEFAULT_RANGE_MIN,
+        CONF_RANGE_MAX: DEFAULT_RANGE_MAX,
+    }
 
     # Create initial entry
     init_result = await hass.config_entries.flow.async_init(
