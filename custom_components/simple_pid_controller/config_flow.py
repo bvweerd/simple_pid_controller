@@ -79,6 +79,8 @@ class PIDControllerFlowHandler(ConfigFlow, domain=DOMAIN):
                 data={
                     CONF_NAME: user_input[CONF_NAME],
                     CONF_SENSOR_ENTITY_ID: user_input[CONF_SENSOR_ENTITY_ID],
+                    CONF_RANGE_MIN: user_input[CONF_RANGE_MIN],
+                    CONF_RANGE_MAX: user_input[CONF_RANGE_MAX],
                 },
             )
 

@@ -2,7 +2,6 @@ import pytest
 from datetime import timedelta
 from homeassistant.util.dt import utcnow
 from pytest_homeassistant_custom_component.common import async_fire_time_changed
-from custom_components.simple_pid_controller.const import DOMAIN
 from custom_components.simple_pid_controller.sensor import PIDContributionSensor
 from custom_components.simple_pid_controller.coordinator import PIDDataCoordinator
 from custom_components.simple_pid_controller.sensor import async_setup_entry
@@ -13,7 +12,7 @@ async def test_pid_output_and_contributions_update(hass, config_entry):
     """Test that PID output and contribution sensors update on Home Assistant start."""
     sample_time = 5
 
-    handle = hass.data[DOMAIN][config_entry.entry_id]
+    handle = config_entry.runtime_data.handle
 
     handle.get_input_sensor_value = lambda: 10.0
     handle.get_number = lambda key: {
@@ -46,7 +45,7 @@ async def test_pid_output_and_contributions_update(hass, config_entry):
 @pytest.mark.asyncio
 async def test_pid_contribution_native_value_rounding_and_none(hass, config_entry):
     """Test that PIDContributionSensor.native_value rounds correctly and returns None for unknown key."""
-    handle = hass.data[DOMAIN][config_entry.entry_id]
+    handle = config_entry.runtime_data.handle
     # Provide known contributions
     handle.last_contributions = (0.1234, 1.9876, 2.5555)
     coordinator = PIDDataCoordinator(hass, "test", lambda: 0, interval=1)
@@ -59,7 +58,7 @@ async def test_pid_contribution_native_value_rounding_and_none(hass, config_entr
     ]
     for key, expected in mapping:
         sensor = PIDContributionSensor(
-            hass, config_entry, key, f"pid_{key}_contrib", handle, coordinator
+            hass, config_entry, key, f"pid_{key}_contrib", coordinator
         )
         # Override internal handle to use test handle
         sensor._handle = handle
@@ -67,7 +66,7 @@ async def test_pid_contribution_native_value_rounding_and_none(hass, config_entr
 
     # Unknown key should return None
     sensor_none = PIDContributionSensor(
-        hass, config_entry, "x", "pid_x_contrib", handle, coordinator
+        hass, config_entry, "x", "pid_x_contrib", coordinator
     )
     sensor_none._handle = handle
     assert sensor_none.native_value is None
@@ -77,7 +76,7 @@ async def test_pid_contribution_native_value_rounding_and_none(hass, config_entr
 async def test_listeners_trigger_refresh_sensor(hass, config_entry, monkeypatch):
     """Lines 131-132: coordinator.async_request_refresh called on sensor state change."""
     # Prepare handle
-    handle = hass.data[DOMAIN][config_entry.entry_id]
+    handle = config_entry.runtime_data.handle
     handle.get_input_sensor_value = lambda: 0.0
     handle.get_number = lambda key: 0.0
     handle.get_switch = lambda key: True
@@ -118,7 +117,7 @@ async def test_listeners_trigger_refresh_sensor(hass, config_entry, monkeypatch)
 @pytest.mark.asyncio
 async def test_update_pid_raises_on_missing_input(hass, config_entry):
     """Line 47: update_pid should raise ValueError when input sensor unavailable."""
-    handle = hass.data[DOMAIN][config_entry.entry_id]
+    handle = config_entry.runtime_data.handle
     # Force no input value
     handle.get_input_sensor_value = lambda: None
     # Provide defaults for numbers and switches
@@ -157,7 +156,7 @@ async def test_update_pid_output_limits_none_when_windup_protection_disabled(
             return 0.0
 
     monkeypatch.setattr(sensor_module, "PID", DummyPID)
-    handle = hass.data[DOMAIN][config_entry.entry_id]
+    handle = config_entry.runtime_data.handle
     # Provide valid input and parameters
     handle.get_input_sensor_value = lambda: 1.0
     handle.get_number = lambda key: 0.0
