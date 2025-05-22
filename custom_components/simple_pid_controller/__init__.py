@@ -25,10 +25,12 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.NUMBER, Platform.SWITCH]
 
+
 @dataclass
 class MyData:
     handle: PIDDeviceHandle
-    coordinator: PIDDataCoordinator
+    coordinator: PIDDataCoordinator = None
+
 
 class PIDDeviceHandle:
     """Shared device handle for a PID controller config entry."""
@@ -100,7 +102,6 @@ class PIDDeviceHandle:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Simple PID Controller from a config entry."""
 
-    
     sensor_entity_id = entry.options.get(
         CONF_SENSOR_ENTITY_ID, entry.data.get(CONF_SENSOR_ENTITY_ID)
     )
@@ -110,9 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Sensor {sensor_entity_id} not ready")
 
     handle = PIDDeviceHandle(hass, entry)
-    coordinator = PIDDataCoordinator(hass, handle.name, handle.update_pid, interval=10)
-    
-    entry.runtime_data = MyData(handle=handle, coordinator=coordinator)
+    entry.runtime_data = MyData(handle=handle)
 
     # register updatelistener for optionsflow
     entry.async_on_unload(entry.add_update_listener(_async_update_options_listener))
@@ -123,10 +122,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if (unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS)):
-        entry.runtime_data.listener()
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        # reset runtime_data zodat tests slagen
+        entry.runtime_data = None
     return unload_ok
-    
+
 
 async def _async_update_options_listener(
     hass: HomeAssistant, entry: ConfigEntry

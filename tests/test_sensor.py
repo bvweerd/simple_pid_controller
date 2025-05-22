@@ -2,7 +2,6 @@ import pytest
 from datetime import timedelta
 from homeassistant.util.dt import utcnow
 from pytest_homeassistant_custom_component.common import async_fire_time_changed
-from custom_components.simple_pid_controller.const import DOMAIN
 from custom_components.simple_pid_controller.sensor import PIDContributionSensor
 from custom_components.simple_pid_controller.coordinator import PIDDataCoordinator
 from custom_components.simple_pid_controller.sensor import async_setup_entry
@@ -14,7 +13,7 @@ async def test_pid_output_and_contributions_update(hass, config_entry):
     sample_time = 5
 
     handle = config_entry.runtime_data.handle
-    
+
     handle.get_input_sensor_value = lambda: 10.0
     handle.get_number = lambda key: {
         "kp": 1.0,
@@ -59,7 +58,7 @@ async def test_pid_contribution_native_value_rounding_and_none(hass, config_entr
     ]
     for key, expected in mapping:
         sensor = PIDContributionSensor(
-            hass, config_entry, key, f"pid_{key}_contrib", handle, coordinator
+            hass, config_entry, key, f"pid_{key}_contrib", coordinator
         )
         # Override internal handle to use test handle
         sensor._handle = handle
@@ -67,7 +66,7 @@ async def test_pid_contribution_native_value_rounding_and_none(hass, config_entr
 
     # Unknown key should return None
     sensor_none = PIDContributionSensor(
-        hass, config_entry, "x", "pid_x_contrib", handle, coordinator
+        hass, config_entry, "x", "pid_x_contrib", coordinator
     )
     sensor_none._handle = handle
     assert sensor_none.native_value is None
