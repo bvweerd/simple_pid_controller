@@ -56,7 +56,7 @@ async def async_setup_entry(
         p_on_m = handle.get_switch("proportional_on_measurement")
         windup_protection = handle.get_switch("windup_protection")
 
-        # adapt PID settings 
+        # adapt PID settings
         pid.tunings = (kp, ki, kd)
         pid.setpoint = setpoint
         pid.sample_time = sample_time
