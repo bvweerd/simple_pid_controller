@@ -2,6 +2,8 @@ import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from homeassistant.helpers.device_registry import DeviceRegistry
 from custom_components.simple_pid_controller.const import DOMAIN, CONF_SENSOR_ENTITY_ID
+import custom_components.simple_pid_controller.sensor as sensor_mod
+
 from homeassistant.const import CONF_NAME
 
 
@@ -31,13 +33,27 @@ async def config_entry(hass, device_registry: DeviceRegistry):
     )
 
     entry.add_to_hass(hass)
+    await hass.async_block_till_done()
 
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.entry_id)},
-        name={CONF_NAME},
-        manufacturer="Test",
-        model="PID Controller",
-    )
+    # device_registry.async_get_or_create(
+    #    config_entry_id=entry.entry_id,
+    #    identifiers={(DOMAIN, entry.entry_id)},
+    #    name=entry.entry_id,
+    # )
 
     return entry
+
+
+@pytest.fixture
+async def sensor_entities(hass, config_entry):
+    """
+    catch all SensorEntity-instances
+    """
+    created = []
+    # async_add_entities callback fills 'created'
+    await sensor_mod.async_setup_entry(
+        hass, config_entry, lambda entities: created.extend(entities)
+    )
+    # wait till all items are created
+    await hass.async_block_till_done()
+    return created

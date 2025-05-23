@@ -16,8 +16,11 @@ from simple_pid import PID
 from typing import Any
 
 from . import PIDDeviceHandle
-from .const import DOMAIN
+from .entity import BasePIDEntity
 from .coordinator import PIDDataCoordinator
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,8 +31,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up PID output and diagnostic sensors."""
-    handle: PIDDeviceHandle = hass.data[DOMAIN][entry.entry_id]
-    name = handle.name
+    handle: PIDDeviceHandle = entry.runtime_data.handle
 
     # Init PID with default values
     pid = PID(1.0, 0.1, 0.05, setpoint=50)
@@ -42,7 +44,7 @@ async def async_setup_entry(
         if input_value is None:
             raise ValueError("Input sensor not available")
 
-        # Lees parameters uit de UI
+        # Read parameters from UI
         kp = handle.get_number("kp")
         ki = handle.get_number("ki")
         kd = handle.get_number("kd")
@@ -52,12 +54,16 @@ async def async_setup_entry(
         out_max = handle.get_number("output_max")
         auto_mode = handle.get_switch("auto_mode")
         p_on_m = handle.get_switch("proportional_on_measurement")
+        windup_protection = handle.get_switch("windup_protection")
 
-        # Pas live de PID-instellingen aan
+        # adapt PID settings
         pid.tunings = (kp, ki, kd)
         pid.setpoint = setpoint
         pid.sample_time = sample_time
-        pid.output_limits = (out_min, out_max)
+        if windup_protection:
+            pid.output_limits = (out_min, out_max)
+        else:
+            pid.output_limits = (None, None)
         pid.auto_mode = auto_mode
         pid.proportional_on_measurement = p_on_m
 
@@ -92,21 +98,33 @@ async def async_setup_entry(
         return output
 
     # Setup Coordinator
-    coordinator = PIDDataCoordinator(hass, name, update_pid, interval=10)
+    if entry.runtime_data.coordinator is None:
+        entry.runtime_data.coordinator = PIDDataCoordinator(
+            hass, handle.name, update_pid, interval=10
+        )
+    coordinator = entry.runtime_data.coordinator
 
     # Wait for HA to finish starting
     async def start_refresh(_: Any) -> None:
         _LOGGER.debug("Home Assistant started, first PID-refresh started")
         await coordinator.async_request_refresh()
 
-    hass.bus.async_listen_once("homeassistant_started", start_refresh)
+    entry.async_on_unload(
+        hass.bus.async_listen_once("homeassistant_started", start_refresh)
+    )
 
     async_add_entities(
         [
-            PIDOutputSensor(entry, name, coordinator),
-            PIDContributionSensor(entry, name, "p", handle, coordinator),
-            PIDContributionSensor(entry, name, "i", handle, coordinator),
-            PIDContributionSensor(entry, name, "d", handle, coordinator),
+            PIDOutputSensor(hass, entry, coordinator),
+            PIDContributionSensor(
+                hass, entry, "pid_p_contrib", "P contribution", coordinator
+            ),
+            PIDContributionSensor(
+                hass, entry, "pid_i_contrib", "I contribution", coordinator
+            ),
+            PIDContributionSensor(
+                hass, entry, "pid_d_contrib", "D contribution", coordinator
+            ),
         ]
     )
 
@@ -132,7 +150,7 @@ async def async_setup_entry(
             "state_changed", make_listener(f"number.{entry.entry_id}_{key}")
         )
 
-    for key in ["auto_mode", "proportional_on_measurement"]:
+    for key in ["auto_mode", "proportional_on_measurement", "windup_protection"]:
         hass.bus.async_listen(
             "state_changed", make_listener(f"switch.{entry.entry_id}_{key}")
         )
@@ -142,19 +160,16 @@ class PIDOutputSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
     """Sensor representing the PID output."""
 
     def __init__(
-        self, entry: ConfigEntry, device_name: str, coordinator: PIDDataCoordinator
+        self, hass: HomeAssistant, entry: ConfigEntry, coordinator: PIDDataCoordinator
     ):
         super().__init__(coordinator)
-        self._attr_unique_id = f"{entry.entry_id}_pid_output"
-        self._attr_name = "PID Output"
-        self._attr_has_entity_name = True
-        self._attr_native_unit_of_measurement = "%"
 
-        # Device-info
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, entry.entry_id)},
-            "name": device_name,
-        }
+        name = "PID Output"
+        key = "pid_output"
+
+        BasePIDEntity.__init__(self, hass, entry, key, name)
+
+        self._attr_native_unit_of_measurement = "%"
 
     @property
     def native_value(self) -> float | None:
@@ -168,27 +183,19 @@ class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity)
 
     def __init__(
         self,
+        hass: HomeAssistant,
         entry: ConfigEntry,
-        device_name: str,
-        component: str,
-        handle: PIDDeviceHandle,
+        key: str,
+        name: str,
         coordinator: PIDDataCoordinator,
     ):
         super().__init__(coordinator)
-        self._attr_unique_id = f"{entry.entry_id}_pid_{component}_contrib"
-        self._attr_name = f"PID {component.upper()} Contribution"
+
+        BasePIDEntity.__init__(self, hass, entry, key, name)
+
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
         self._attr_entity_registry_enabled_default = False
-        self._attr_has_entity_name = True
-        self._handle = handle
-        self._component = component
-        self._entry_id = entry.entry_id
-
-        # Device-info
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, entry.entry_id)},
-            "name": device_name,
-        }
+        self._key = key
 
     @property
     def native_value(self):
@@ -197,5 +204,5 @@ class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity)
             "p": contributions[0],
             "i": contributions[1],
             "d": contributions[2],
-        }.get(self._component)
+        }.get(self._key)
         return round(value, 2) if value is not None else None

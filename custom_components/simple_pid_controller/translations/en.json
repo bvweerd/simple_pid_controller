@@ -1,0 +1,73 @@
+{
+  "title": "Simple PID Controller",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Simple PID Controller",
+        "description": "Enter a name and choose the sensor to drive the PID loop.",
+        "data": {
+          "name": "Name",
+          "sensor_entity_id": "Sensor Entity"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Only a single instance with this name is allowed."
+    },
+    "error": {
+      "already_configured": "A configuration with this name already exists.",
+	  "range_min_max": "Minimum must be lower than maximum."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Edit PID Controller Options",
+        "description": "Modify the sensor entity and range used by the controller.",
+        "data": {
+          "sensor_entity_id": "Sensor Entity",
+          "range_min": "Minimum Range",
+          "range_max": "Maximum Range"
+        }
+      }
+    },
+    "error": {
+	  "range_min_max": "Minimum must be lower than maximum."
+    }
+  },
+  "entity": {
+    "number": {
+	  "kp": {
+		"name": "Kp"
+	  },
+	  "ki": {
+		"name": "Ki"
+	  },
+	  "kd": {
+		"name": "Kd"
+	  },
+	  "setpoint": {
+		"name": "Setpoint"
+	  },
+	  "output": {
+		"name": "Output"
+	  }
+    },
+    "switch": {
+        "auto_mode": {
+			"name": "Auto Mode"
+		},
+        "proportional_on_measurement": {
+			"name": "Proportional on Measurement"
+		},
+        "windup_protection": {
+			"name": "Windup Protection"
+		}
+    },
+    "sensor": {
+        "current_value": {
+			"name": "Current Value"
+		}
+    }
+  }
+}

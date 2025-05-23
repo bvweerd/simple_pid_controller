@@ -1,0 +1,73 @@
+{
+  "title": "PID-regelaar",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configureer PID-regelaar",
+        "description": "Voer een naam in en kies de sensor als input voor de PID.",
+        "data": {
+          "name": "Naam",
+          "sensor_entity_id": "Sensor naam"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "Slechts één instantie van de PID-regelaar met deze naam is toegestaan."
+    },
+    "error": {
+      "already_configured": "Er bestaat al een configuratie met deze naam.",
+	  "range_min_max": "Minimum moet lager zijn dan maximum."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Bewerk PID-regelaar",
+        "description": "Wijzig de sensor en het bereik dat door de PID-regelaar wordt gebruikt.",
+        "data": {
+          "sensor_entity_id": "Sensor naam",
+          "range_min": "Minimum bereik",
+          "range_max": "Maximum bereik"
+        }
+      }
+    },
+    "error": {
+	  "range_min_max": "Minimum moet lager zijn dan maximum."
+    }
+  },
+  "entity": {
+    "number": {
+      "kp": {
+        "name": "Kp"
+      },
+      "ki": {
+        "name": "Ki"
+      },
+      "kd": {
+        "name": "Kd"
+      },
+      "setpoint": {
+        "name": "Doel"
+      },
+      "output": {
+        "name": "Uitgang"
+      }
+    },
+    "switch": {
+      "auto_mode": {
+        "name": "Automatische mode"
+      },
+      "proportional_on_measurement": {
+        "name": "Proportioneel op meting"
+      },
+      "windup_protection": {
+        "name": "Windup bescherming"
+      }
+    },
+    "sensor": {
+      "current_value": {
+        "name": "Huidige waarde"
+      }
+    }
+  }
+}

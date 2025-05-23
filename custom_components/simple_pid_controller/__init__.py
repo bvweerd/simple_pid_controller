@@ -8,12 +8,28 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
+from dataclasses import dataclass
+from .coordinator import PIDDataCoordinator
 
-from .const import DOMAIN, CONF_NAME, CONF_SENSOR_ENTITY_ID
+from .const import (
+    DOMAIN,
+    CONF_NAME,
+    CONF_SENSOR_ENTITY_ID,
+    CONF_RANGE_MIN,
+    CONF_RANGE_MAX,
+    DEFAULT_RANGE_MIN,
+    DEFAULT_RANGE_MAX,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.NUMBER, Platform.SWITCH]
+
+
+@dataclass
+class MyData:
+    handle: PIDDeviceHandle
+    coordinator: PIDDataCoordinator = None
 
 
 class PIDDeviceHandle:
@@ -23,6 +39,12 @@ class PIDDeviceHandle:
         self.hass = hass
         self.entry = entry
         self.name = entry.data.get(CONF_NAME)
+        self.range_min = entry.options.get(
+            CONF_RANGE_MIN, entry.data.get(CONF_RANGE_MIN, DEFAULT_RANGE_MIN)
+        )
+        self.range_max = entry.options.get(
+            CONF_RANGE_MAX, entry.data.get(CONF_RANGE_MAX, DEFAULT_RANGE_MAX)
+        )
         self.sensor_entity_id = entry.options.get(
             CONF_SENSOR_ENTITY_ID, entry.data.get(CONF_SENSOR_ENTITY_ID)
         )
@@ -72,7 +94,7 @@ class PIDDeviceHandle:
                 return float(state.state)
             except ValueError:
                 _LOGGER.warning(
-                    f"Sensor {self.sensor_entity_id} heeft geen geldige waarde. PID-berekening wordt overgeslagen."
+                    f"Sensor {self.sensor_entity_id} invalid value. PID-calculation skipped."
                 )
         return None
 
@@ -89,14 +111,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Sensor {sensor_entity_id} not ready")
 
     handle = PIDDeviceHandle(hass, entry)
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = handle
+    entry.runtime_data = MyData(handle=handle)
+
+    # register updatelistener for optionsflow
+    entry.async_on_unload(entry.add_update_listener(_async_update_options_listener))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload PID Controller entry."""
-    if DOMAIN in hass.data and entry.entry_id in hass.data[DOMAIN]:
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    """Unload a config entry."""
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        # reset runtime_data zodat tests slagen
+        entry.runtime_data = None
+    return unload_ok
+
+
+async def _async_update_options_listener(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> None:
+    """Update after options are changed in optionsflow"""
+    await hass.config_entries.async_reload(entry.entry_id)
