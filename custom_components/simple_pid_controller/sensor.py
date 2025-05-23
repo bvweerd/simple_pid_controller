@@ -32,7 +32,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up PID output and diagnostic sensors."""
     handle: PIDDeviceHandle = entry.runtime_data.handle
-    name = handle.name
 
     # Init PID with default values
     pid = PID(1.0, 0.1, 0.05, setpoint=50)
@@ -45,7 +44,7 @@ async def async_setup_entry(
         if input_value is None:
             raise ValueError("Input sensor not available")
 
-        # Lees parameters uit de UI
+        # Read parameters from UI
         kp = handle.get_number("kp")
         ki = handle.get_number("ki")
         kd = handle.get_number("kd")
@@ -57,7 +56,7 @@ async def async_setup_entry(
         p_on_m = handle.get_switch("proportional_on_measurement")
         windup_protection = handle.get_switch("windup_protection")
 
-        # Pas live de PID-instellingen aan
+        # adapt PID settings 
         pid.tunings = (kp, ki, kd)
         pid.setpoint = setpoint
         pid.sample_time = sample_time
@@ -101,7 +100,7 @@ async def async_setup_entry(
     # Setup Coordinator
     if entry.runtime_data.coordinator is None:
         entry.runtime_data.coordinator = PIDDataCoordinator(
-            hass, name, update_pid, interval=10
+            hass, handle.name, update_pid, interval=10
         )
     coordinator = entry.runtime_data.coordinator
 
