@@ -8,7 +8,7 @@
   "homekit": {},
   "iot_class": "calculated",
   "issue_tracker": "https://github.com/bvweerd/simple_pid_controller/issues",
-  "quality_scale": "bronze",
+  "quality_scale": "silver",
   "requirements": ["simple-pid==2.0.1"],
   "ssdp": [],
   "version": "1.0.2",
