@@ -9,17 +9,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v2
 
-      - name: Create zip file
+      - name: Get version
+        id: version
+        uses: home-assistant/actions/helpers/version@master
+
+      - name: Patch manifest and zip
         run: |
-          mkdir -p dist
-          zip -r dist/simple_pid_controller.zip custom_components/simple_pid_controller
-
-      - name: Upload release asset
-        uses: softprops/action-gh-release@v2
+          sed -i 's/v0.0.0/${{ steps.version.outputs.version }}/' custom_components/simple_pid_controller/manifest.json
+          cd custom_components/simple_pid_controller/
+          zip ../../simple_pid_controller.zip -r ./
+      - uses: svenstaro/upload-release-action@master
         with:
-          files: dist/simple_pid_controller.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./simple_pid_controller.zip
+          asset_name: simple_pid_controller.zip
+          tag: ${{ github.ref }}
+          overwrite: true
