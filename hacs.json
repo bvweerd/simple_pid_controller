@@ -1,4 +1,6 @@
 {
   "name": "Simple PID Controller",
-  "render_readme": true
+  "render_readme": true,
+  "zip_release": true,
+  "filename": "simple_pid_controller.zip"
 }
