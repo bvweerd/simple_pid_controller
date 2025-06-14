@@ -168,9 +168,9 @@ class ControlParameterNumber(RestoreNumber):
         if self._key == "setpoint":
             min_val, max_val = range_min, range_max
         elif self._key == "output_min":
-            min_val, max_val = -abs(range_max), 0.0
+            min_val, max_val = -abs(range_max), range_min
         elif self._key == "output_max":
-            min_val, max_val = 0.0, range_max
+            min_val, max_val = range_min, range_max
         else:
             _LOGGER.error("Unexpected PID parameter key: %s", self._key)
             min_val, max_val = DEFAULT_RANGE_MIN, DEFAULT_RANGE_MAX
