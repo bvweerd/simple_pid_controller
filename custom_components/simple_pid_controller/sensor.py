@@ -125,6 +125,9 @@ async def async_setup_entry(
             PIDContributionSensor(
                 hass, entry, "pid_d_contrib", "D contribution", coordinator
             ),
+            PIDContributionSensor(
+                hass, entry, "error", "Error", coordinator
+            ),
         ]
     )
 
