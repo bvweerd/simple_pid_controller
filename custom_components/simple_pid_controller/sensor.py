@@ -200,7 +200,7 @@ class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity)
     @property
     def native_value(self):
         contributions = self._handle.last_contributions
-        error = handle.get_input_sensor_value() - handle.get_number("setpoint")
+        error = self._handle.get_input_sensor_value() - self._handle.get_number("setpoint")
         value = {
             "p": contributions[0],
             "i": contributions[1],
