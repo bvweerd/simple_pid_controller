@@ -18,7 +18,9 @@ async def async_get_config_entry_diagnostics(
         "data": {
             "name": handle.name,
             "sensor_entity_id": handle.sensor_entity_id,
-            "range_min": handle.range_min,
-            "range_max": handle.range_max,
+            "input_range_min": handle.input_range_min,
+            "input_range_max": handle.input_range_max,
+            "output_range_min": handle.output_range_min,
+            "output_range_max": handle.output_range_max,
         },
     }

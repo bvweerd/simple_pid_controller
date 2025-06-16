@@ -12,10 +12,14 @@ from homeassistant.helpers.entity import EntityCategory
 
 from .entity import BasePIDEntity
 from .const import (
-    CONF_RANGE_MIN,
-    CONF_RANGE_MAX,
-    DEFAULT_RANGE_MIN,
-    DEFAULT_RANGE_MAX,
+    CONF_INPUT_RANGE_MIN,
+    CONF_INPUT_RANGE_MAX,
+    CONF_OUTPUT_RANGE_MIN,
+    CONF_OUTPUT_RANGE_MAX,
+    DEFAULT_INPUT_RANGE_MIN,
+    DEFAULT_INPUT_RANGE_MAX,
+    DEFAULT_OUTPUT_RANGE_MIN,
+    DEFAULT_OUTPUT_RANGE_MAX,
 )
 
 # Coordinator is used to centralize the data updates
@@ -158,22 +162,39 @@ class ControlParameterNumber(RestoreNumber):
         # Compute range limits based on key
         opts = entry.options or {}
         data = entry.data or {}
-        range_min = opts.get(
-            CONF_RANGE_MIN, data.get(CONF_RANGE_MIN, DEFAULT_RANGE_MIN)
+        input_range_min = opts.get(
+            CONF_INPUT_RANGE_MIN,
+            data.get(CONF_INPUT_RANGE_MIN, DEFAULT_INPUT_RANGE_MIN),
         )
-        range_max = opts.get(
-            CONF_RANGE_MAX, data.get(CONF_RANGE_MAX, DEFAULT_RANGE_MAX)
+        input_range_max = opts.get(
+            CONF_INPUT_RANGE_MAX,
+            data.get(CONF_INPUT_RANGE_MAX, DEFAULT_INPUT_RANGE_MAX),
+        )
+        output_range_min = opts.get(
+            CONF_OUTPUT_RANGE_MIN,
+            data.get(CONF_OUTPUT_RANGE_MIN, DEFAULT_OUTPUT_RANGE_MIN),
+        )
+        output_range_max = opts.get(
+            CONF_OUTPUT_RANGE_MAX,
+            data.get(CONF_OUTPUT_RANGE_MAX, DEFAULT_OUTPUT_RANGE_MAX),
         )
 
         if self._key == "setpoint":
-            min_val, max_val = range_min, range_max
+            min_val, max_val = input_range_min, input_range_max
         elif self._key == "output_min":
-            min_val, max_val = -abs(range_max), range_min
+            min_val, max_val = output_range_min, output_range_max 
         elif self._key == "output_max":
-            min_val, max_val = range_min, range_max
+            min_val, max_val = output_range_min, output_range_max
         else:
-            _LOGGER.error("Unexpected PID parameter key: %s", self._key)
-            min_val, max_val = DEFAULT_RANGE_MIN, DEFAULT_RANGE_MAX
+            _LOGGER.error(
+                "Unknown PID key '%s'. Using default values: input_min=%s, input_max=%s, output_min=%s, output_max=%s",
+                self._key,
+                DEFAULT_INPUT_RANGE_MIN,
+                DEFAULT_INPUT_RANGE_MAX,
+                DEFAULT_OUTPUT_RANGE_MIN,
+                DEFAULT_OUTPUT_RANGE_MAX,
+            )
+            min_val, max_val = DEFAULT_INPUT_RANGE_MIN, DEFAULT_INPUT_RANGE_MAX
 
         self._attr_native_min_value = min_val
         self._attr_native_max_value = max_val
@@ -181,13 +202,13 @@ class ControlParameterNumber(RestoreNumber):
 
         # Initialize current value
         if self._key == "setpoint":
-            self._attr_native_value = range_min + (range_max - range_min) * float(
-                desc["default"]
-            )
+            self._attr_native_value = input_range_min + (
+                input_range_max - input_range_min
+            ) * float(desc["default"])
         elif self._key == "output_min":
-            self._attr_native_value = range_min
+            self._attr_native_value = output_range_min
         elif self._key == "output_max":
-            self._attr_native_value = range_max
+            self._attr_native_value = output_range_max
         else:
             _LOGGER.error("Unexpected error, unknown state in number.py")
 
