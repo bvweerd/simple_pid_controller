@@ -15,10 +15,14 @@ from .const import (
     DOMAIN,
     CONF_NAME,
     CONF_SENSOR_ENTITY_ID,
-    CONF_RANGE_MIN,
-    CONF_RANGE_MAX,
-    DEFAULT_RANGE_MIN,
-    DEFAULT_RANGE_MAX,
+    CONF_INPUT_RANGE_MIN,
+    CONF_INPUT_RANGE_MAX,
+    CONF_OUTPUT_RANGE_MIN,
+    CONF_OUTPUT_RANGE_MAX,
+    DEFAULT_INPUT_RANGE_MIN,
+    DEFAULT_INPUT_RANGE_MAX,
+    DEFAULT_OUTPUT_RANGE_MIN,
+    DEFAULT_OUTPUT_RANGE_MAX,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,11 +43,17 @@ class PIDDeviceHandle:
         self.hass = hass
         self.entry = entry
         self.name = entry.data.get(CONF_NAME)
-        self.range_min = entry.options.get(
-            CONF_RANGE_MIN, entry.data.get(CONF_RANGE_MIN, DEFAULT_RANGE_MIN)
+        self.input_range_min = entry.options.get(
+            CONF_INPUT_RANGE_MIN, entry.data.get(CONF_INPUT_RANGE_MIN, DEFAULT_INPUT_RANGE_MIN)
         )
-        self.range_max = entry.options.get(
-            CONF_RANGE_MAX, entry.data.get(CONF_RANGE_MAX, DEFAULT_RANGE_MAX)
+        self.input_range_max = entry.options.get(
+            CONF_INPUT_RANGE_MAX, entry.data.get(CONF_INPUT_RANGE_MAX, DEFAULT_INPUT_RANGE_MAX)
+        )
+        self.output_range_min = entry.options.get(
+            CONF_OUTPUT_RANGE_MIN, entry.data.get(CONF_OUTPUT_RANGE_MIN, DEFAULT_OUTPUT_RANGE_MIN)
+        )
+        self.output_range_max = entry.options.get(
+            CONF_OUTPUT_RANGE_MAX, entry.data.get(CONF_OUTPUT_RANGE_MAX, DEFAULT_OUTPUT_RANGE_MAX)
         )
         self.sensor_entity_id = entry.options.get(
             CONF_SENSOR_ENTITY_ID, entry.data.get(CONF_SENSOR_ENTITY_ID)

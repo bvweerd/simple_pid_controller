@@ -16,7 +16,8 @@
     },
     "error": {
       "already_configured": "A configuration with this name already exists.",
-	  "range_min_max": "Minimum must be lower than maximum."
+	  "input_range_min_max": "Minimum must be lower than maximum.",
+	  "output_range_min_max": "Minimum must be lower than maximum."
     }
   },
   "options": {

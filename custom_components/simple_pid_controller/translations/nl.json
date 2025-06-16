@@ -16,7 +16,8 @@
     },
     "error": {
       "already_configured": "Er bestaat al een configuratie met deze naam.",
-	  "range_min_max": "Minimum moet lager zijn dan maximum."
+	  "input_range_min_max": "Minimum moet lager zijn dan maximum.",
+	  "output_range_min_max": "Minimum moet lager zijn dan maximum."
     }
   },
   "options": {
