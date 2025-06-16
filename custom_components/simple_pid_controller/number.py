@@ -171,7 +171,7 @@ class ControlParameterNumber(RestoreNumber):
             data.get(CONF_INPUT_RANGE_MAX, DEFAULT_INPUT_RANGE_MAX),
         )
         output_range_min = opts.get(
-            CONF_INPUT_RANGE_MIN,
+            CONF_OUTPUT_RANGE_MIN,
             data.get(CONF_OUTPUT_RANGE_MIN, DEFAULT_OUTPUT_RANGE_MIN),
         )
         output_range_max = opts.get(
