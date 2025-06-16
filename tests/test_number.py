@@ -7,8 +7,10 @@ from custom_components.simple_pid_controller.number import (
     ControlParameterNumber,
 )
 from custom_components.simple_pid_controller.const import (
-    DEFAULT_RANGE_MIN,
-    DEFAULT_RANGE_MAX,
+    DEFAULT_INPUT_RANGE_MIN,
+    DEFAULT_INPUT_RANGE_MAX,
+    DEFAULT_OUTPUT_RANGE_MIN,
+    DEFAULT_OUTPUT_RANGE_MAX,
 )
 
 
@@ -131,9 +133,15 @@ async def test_async_set_native_value_triggers_write(
     assert write_calls, "async_write_ha_state was not called"
 
 
-@pytest.mark.parametrize("invalid_key", ["invalid1", "invalid2"])
+@pytest.mark.parametrize(
+    "invalid_key, expected_min, expected_max",
+    [
+        ("input_invalid", DEFAULT_INPUT_RANGE_MIN, DEFAULT_INPUT_RANGE_MAX),
+        ("output_invalid", DEFAULT_OUTPUT_RANGE_MIN, DEFAULT_OUTPUT_RANGE_MAX),
+    ],
+)
 async def test_controlparameter_number_unexpected_key(
-    hass, config_entry, caplog, invalid_key
+    hass, config_entry, caplog, invalid_key, expected_min, expected_max
 ):
     """Test that ControlParameterNumber logs error and uses default range for unexpected key."""
     desc = {
@@ -147,5 +155,5 @@ async def test_controlparameter_number_unexpected_key(
     caplog.set_level(logging.ERROR)
     num = ControlParameterNumber(hass, config_entry, desc)
     assert f"Unexpected PID parameter key: {invalid_key}" in caplog.text
-    assert num._attr_native_min_value == DEFAULT_RANGE_MIN
-    assert num._attr_native_max_value == DEFAULT_RANGE_MAX
+    assert num._attr_native_min_value == expected_min
+    assert num._attr_native_max_value == expected_max

@@ -5,8 +5,10 @@ from custom_components.simple_pid_controller.const import (
     DOMAIN,
     CONF_SENSOR_ENTITY_ID,
     CONF_NAME,
-    DEFAULT_RANGE_MIN,
-    DEFAULT_RANGE_MAX,
+    DEFAULT_INPUT_RANGE_MIN,
+    DEFAULT_INPUT_RANGE_MAX,
+    DEFAULT_OUTPUT_RANGE_MIN,
+    DEFAULT_OUTPUT_RANGE_MAX,
 )
 
 
@@ -28,5 +30,7 @@ async def test_config_entry_diagnostics(hass, config_entry):
     data = result.get("data")
     assert data["name"] == config_entry.data[CONF_NAME]
     assert data["sensor_entity_id"] == config_entry.data[CONF_SENSOR_ENTITY_ID]
-    assert data["range_min"] == DEFAULT_RANGE_MIN
-    assert data["range_max"] == DEFAULT_RANGE_MAX
+    assert data["input_range_min"] == DEFAULT_INPUT_RANGE_MIN
+    assert data["input_range_max"] == DEFAULT_INPUT_RANGE_MAX
+    assert data["output_range_min"] == DEFAULT_OUTPUT_RANGE_MIN
+    assert data["output_range_max"] == DEFAULT_OUTPUT_RANGE_MAX

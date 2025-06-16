@@ -27,8 +27,10 @@
         "description": "Modify the sensor entity and range used by the controller.",
         "data": {
           "sensor_entity_id": "Sensor Entity",
-          "range_min": "Minimum Range",
-          "range_max": "Maximum Range"
+          "input_range_min": "Minimum Input Range",
+          "input_range_max": "Maximum Input Range",
+          "output_range_min": "Minimum Output Range",
+          "output_range_max": "Maximum Output Range"
         }
       }
     },

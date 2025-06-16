@@ -27,8 +27,10 @@
         "description": "Wijzig de sensor en het bereik dat door de PID-regelaar wordt gebruikt.",
         "data": {
           "sensor_entity_id": "Sensor naam",
-          "range_min": "Minimum bereik",
-          "range_max": "Maximum bereik"
+          "input_range_min": "Minimum Input Bereik",
+          "input_range_max": "Maximum Input Bereik",
+          "output_range_min": "Minimum Output Bereik",
+          "output_range_max": "Maximum Output Bereik"
         }
       }
     },
