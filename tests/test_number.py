@@ -154,6 +154,6 @@ async def test_controlparameter_number_unexpected_key(
     }
     caplog.set_level(logging.ERROR)
     num = ControlParameterNumber(hass, config_entry, desc)
-    assert f"Unexpected PID parameter key: {invalid_key}" in caplog.text
+    assert f"Unknown PID key '{invalid_key}'. Using default values:" in caplog.text
     assert num._attr_native_min_value == expected_min
     assert num._attr_native_max_value == expected_max

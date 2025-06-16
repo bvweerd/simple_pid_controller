@@ -182,7 +182,7 @@ class PIDControllerOptionsFlowHandler(OptionsFlow):
                 and input_min_val >= input_max_val
             ):
                 return self.async_show_form(
-                    step_id="user",
+                    step_id="init",
                     data_schema=options_schema,
                     errors={"base": "input_range_min_max"},
                 )
@@ -194,7 +194,7 @@ class PIDControllerOptionsFlowHandler(OptionsFlow):
                 and output_min_val >= output_max_val
             ):
                 return self.async_show_form(
-                    step_id="user",
+                    step_id="init",
                     data_schema=options_schema,
                     errors={"base": "output_range_min_max"},
                 )
