@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -125,6 +125,7 @@ async def async_setup_entry(
             PIDContributionSensor(
                 hass, entry, "pid_d_contrib", "D contribution", coordinator
             ),
+            PIDContributionSensor(hass, entry, "error", "Error", coordinator),
         ]
     )
 
@@ -170,6 +171,7 @@ class PIDOutputSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
         BasePIDEntity.__init__(self, hass, entry, key, name)
 
         self._attr_native_unit_of_measurement = "%"
+        self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
     def native_value(self) -> float | None:
@@ -195,14 +197,24 @@ class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity)
 
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
         self._attr_entity_registry_enabled_default = False
+        self._attr_state_class = SensorStateClass.MEASUREMENT
         self._key = key
 
     @property
     def native_value(self):
         contributions = self._handle.last_contributions
+        input_value = self._handle.get_input_sensor_value()
+        setpoint = self._handle.get_number("setpoint")
+
+        if input_value is None or setpoint is None:
+            error = 0
+        else:
+            error = input_value - setpoint
+
         value = {
             "p": contributions[0],
             "i": contributions[1],
             "d": contributions[2],
+            "error": error,
         }.get(self._key)
         return round(value, 2) if value is not None else None
