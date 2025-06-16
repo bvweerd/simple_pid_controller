@@ -43,7 +43,7 @@ async def async_setup_entry(
         input_value = handle.get_input_sensor_value()
         if input_value is None:
             raise ValueError("Input sensor not available")
-        
+
         # Read parameters from UI
         kp = handle.get_number("kp")
         ki = handle.get_number("ki")
@@ -125,9 +125,7 @@ async def async_setup_entry(
             PIDContributionSensor(
                 hass, entry, "pid_d_contrib", "D contribution", coordinator
             ),
-            PIDContributionSensor(
-                hass, entry, "error", "Error", coordinator
-            ),
+            PIDContributionSensor(hass, entry, "error", "Error", coordinator),
         ]
     )
 
@@ -205,12 +203,18 @@ class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity)
     @property
     def native_value(self):
         contributions = self._handle.last_contributions
-        error = self._handle.get_input_sensor_value() - self._handle.get_number("setpoint")
+        input_value = self._handle.get_input_sensor_value()
+        if input_value is None:
+            error = 0
+        else:
+            error = self._handle.get_input_sensor_value() - self._handle.get_number(
+                "setpoint"
+            )
+
         value = {
             "p": contributions[0],
             "i": contributions[1],
             "d": contributions[2],
             "error": error,
-            
         }.get(self._key)
         return round(value, 2) if value is not None else None
