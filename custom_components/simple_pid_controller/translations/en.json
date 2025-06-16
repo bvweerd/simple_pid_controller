@@ -7,7 +7,11 @@
         "description": "Enter a name and choose the sensor to drive the PID loop.",
         "data": {
           "name": "Name",
-          "sensor_entity_id": "Sensor Entity"
+          "sensor_entity_id": "Sensor Entity",
+          "input_range_min": "Minimum Input Range",
+          "input_range_max": "Maximum Input Range",
+          "output_range_min": "Minimum Output Range",
+          "output_range_max": "Maximum Output Range"
         }
       }
     },

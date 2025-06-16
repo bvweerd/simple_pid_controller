@@ -7,8 +7,11 @@
         "description": "Voer een naam in en kies de sensor als input voor de PID.",
         "data": {
           "name": "Naam",
-          "sensor_entity_id": "Sensor naam"
-        }
+          "sensor_entity_id": "Sensor naam",
+          "input_range_min": "Minimum Input Bereik",
+          "input_range_max": "Maximum Input Bereik",
+          "output_range_min": "Minimum Output Bereik",
+          "output_range_max": "Maximum Output Bereik"        }
       }
     },
     "abort": {
