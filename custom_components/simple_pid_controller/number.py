@@ -182,7 +182,7 @@ class ControlParameterNumber(RestoreNumber):
         if self._key == "setpoint":
             min_val, max_val = input_range_min, input_range_max
         elif self._key == "output_min":
-            min_val, max_val = output_range_min, output_range_max 
+            min_val, max_val = output_range_min, output_range_max
         elif self._key == "output_max":
             min_val, max_val = output_range_min, output_range_max
         else:
