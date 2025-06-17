@@ -16,7 +16,7 @@
   - [Manual Tuning](#1-manual-trial--error)
   - [Ziegler–Nichols Method](#2-zieglernichols-method)
 - [PID Calculation Frequency and Sample Time](#pid-calculation-frequency-and-sample-time)
-- [More details and extended documentation]{#more-details-and-extended-documentation)
+- [More details and extended documentation](#extended-documentation)
 - [Example PID Graph](#example-pid-graph)
 - [Support & Development](#support--development)
 - [Service Actions](#service-actions)
@@ -183,7 +183,7 @@ By using a single **Sample Time** for both scheduling and calculation—and unde
 
 ---
 
-## 📚 More details and extended documentation
+## 📚 Extended documentation
 
 The integration is based on simple-pid [https://pypi.org/project/simple-pid/](https://pypi.org/project/simple-pid/)
 
