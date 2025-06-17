@@ -103,7 +103,7 @@ CONTROL_NUMBER_ENTITIES = [
         "step": 1.0,
         "default": 0.0,
         "entity_category": EntityCategory.CONFIG,
-    },    
+    },
 ]
 
 
@@ -189,7 +189,7 @@ class ControlParameterNumber(RestoreNumber):
 
         if self._key == "setpoint":
             min_val, max_val = input_range_min, input_range_max
-        if self._key == "starting_output":
+        elif self._key == "starting_output":
             min_val, max_val = output_range_min, output_range_max
         elif self._key == "output_min":
             min_val, max_val = output_range_min, output_range_max

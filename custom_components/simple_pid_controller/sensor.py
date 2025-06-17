@@ -32,12 +32,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up PID output and diagnostic sensors."""
     handle: PIDDeviceHandle = entry.runtime_data.handle
+    handle.init_phase = True
 
-    # Init PID with default values
-    setpoint = handle.get_number("setpoint")
-    starting_output = handle.get_number("starting_output")
-    
-    pid = PID(1.0, 0.0, 0.0, setpoint=setpoint, starting_output=starting_output)
+    pid = PID(1.0, 0.0, 0.0, setpoint=0, auto_mode=False)
     pid.sample_time = 10.0
     pid.output_limits = (0.0, 100.0)
 
@@ -52,6 +49,7 @@ async def async_setup_entry(
         ki = handle.get_number("ki")
         kd = handle.get_number("kd")
         setpoint = handle.get_number("setpoint")
+        starting_output = handle.get_number("starting_output")
         sample_time = handle.get_number("sample_time")
         out_min = handle.get_number("output_min")
         out_max = handle.get_number("output_max")
@@ -68,7 +66,13 @@ async def async_setup_entry(
             pid.output_limits = (out_min, out_max)
         else:
             pid.output_limits = (None, None)
-        pid.auto_mode = auto_mode
+
+        if handle.init_phase:
+            handle.init_phase = False
+            pid.set_auto_mode(True, last_output=starting_output)
+        else:
+            pid.auto_mode = auto_mode
+
         pid.proportional_on_measurement = p_on_m
 
         output = pid(input_value)

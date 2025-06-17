@@ -20,6 +20,7 @@ async def test_pid_output_and_contributions_update(hass, config_entry):
         "ki": 0.1,
         "kd": 0.01,
         "setpoint": 20.0,
+        "starting_output": 50.0,
         "sample_time": sample_time,
         "output_min": 0.0,
         "output_max": 100.0,
@@ -151,7 +152,7 @@ async def test_update_pid_output_limits_none_when_windup_protection_disabled(
 
     # Dummy PID to inspect output_limits
     class DummyPID:
-        def __init__(self, kp, ki, kd, setpoint):
+        def __init__(self, kp, ki, kd, setpoint, auto_mode):
             self._proportional = 1.0
             self._integral = 1.0
             self._last_output = None
@@ -159,7 +160,7 @@ async def test_update_pid_output_limits_none_when_windup_protection_disabled(
             self.setpoint = setpoint
             self.sample_time = 1.0
             self.output_limits = (0.0, 0.0)
-            self.auto_mode = True
+            self.auto_mode = auto_mode
             self.proportional_on_measurement = False
 
         def __call__(self, input_value):
