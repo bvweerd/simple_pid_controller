@@ -16,7 +16,7 @@
   - [Manual Tuning](#1-manual-trial--error)
   - [Ziegler–Nichols Method](#2-zieglernichols-method)
 - [PID Calculation Frequency and Sample Time](#pid-calculation-frequency-and-sample-time)
-- [More details and extended documentation]{#more-details-and-extended-documentation)
+- [More details and extended documentation](#more-details-and-extended-documentation)
 - [Example PID Graph](#example-pid-graph)
 - [Support & Development](#support--development)
 - [Service Actions](#service-actions)

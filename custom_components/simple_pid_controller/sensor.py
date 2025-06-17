@@ -32,7 +32,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up PID output and diagnostic sensors."""
     handle: PIDDeviceHandle = entry.runtime_data.handle
-
+    
     # Init PID with default values
     pid = PID(1.0, 0.1, 0.05, setpoint=50)
     pid.sample_time = 10.0
@@ -199,6 +199,7 @@ class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity)
         self._attr_entity_registry_enabled_default = False
         self._attr_state_class = SensorStateClass.MEASUREMENT
         self._key = key
+        self._handle = entry.runtime_data.handle
 
     @property
     def native_value(self):
@@ -212,9 +213,9 @@ class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity)
             error = input_value - setpoint
 
         value = {
-            "p": contributions[0],
-            "i": contributions[1],
-            "d": contributions[2],
+            "pid_p_contrib": contributions[0],
+            "pid_i_contrib": contributions[1],
+            "pid_d_contrib": contributions[2],
             "error": error,
         }.get(self._key)
         return round(value, 2) if value is not None else None
