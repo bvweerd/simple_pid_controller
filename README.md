@@ -180,7 +180,6 @@ This integration recalculates the PID output at a fixed, user-configurable inter
 
 By using a single **Sample Time** for both scheduling and calculation—and understanding that each component tracks its own clock—you get predictable, evenly-spaced control updates while allowing Home Assistant’s event loop to manage timing drifts gracefully.```
 
-
 ---
 
 ## 📚 Extended documentation

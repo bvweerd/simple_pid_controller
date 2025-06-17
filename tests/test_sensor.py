@@ -50,23 +50,33 @@ async def test_pid_contribution_native_value_rounding_and_none(hass, config_entr
     handle.last_contributions = (0.1234, 1.9876, 2.5555)
     coordinator = PIDDataCoordinator(hass, "test", lambda: 0, interval=1)
 
-    # Map contribution key to expected index
+    # Map contribution keys to expected values
     mapping = [
-        ("p", round(0.1234, 2)),
-        ("i", round(1.9876, 2)),
-        ("d", round(2.5555, 2)),
+        ("pid_p_contrib", round(0.1234, 2)),
+        ("pid_i_contrib", round(1.9876, 2)),
+        ("pid_d_contrib", round(2.5555, 2)),
+        ("error", -25),
+        ("unknown_key", None),  # Should return None
     ]
+
     for key, expected in mapping:
         sensor = PIDContributionSensor(
-            hass, config_entry, key, f"pid_{key}_contrib", coordinator
+            hass,
+            config_entry,
+            key,
+            f"sensor.{config_entry.entry_id}_{key}",
+            coordinator,
         )
-        # Override internal handle to use test handle
-        sensor._handle = handle
+        sensor._handle = handle  # inject mock handle
         assert sensor.native_value == expected
 
     # Unknown key should return None
     sensor_none = PIDContributionSensor(
-        hass, config_entry, "x", "pid_x_contrib", coordinator
+        hass,
+        config_entry,
+        "x",
+        "sensor.{config_entry.entry_id}_pid_x_contrib",
+        coordinator,
     )
     sensor_none._handle = handle
     assert sensor_none.native_value is None
