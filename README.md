@@ -16,6 +16,7 @@
   - [Manual Tuning](#1-manual-trial--error)
   - [Ziegler–Nichols Method](#2-zieglernichols-method)
 - [PID Calculation Frequency and Sample Time](#pid-calculation-frequency-and-sample-time)
+- [More details and extended documentation]{#more-details-and-extended-documentation)
 - [Example PID Graph](#example-pid-graph)
 - [Support & Development](#support--development)
 - [Service Actions](#service-actions)
@@ -179,6 +180,14 @@ This integration recalculates the PID output at a fixed, user-configurable inter
 
 By using a single **Sample Time** for both scheduling and calculation—and understanding that each component tracks its own clock—you get predictable, evenly-spaced control updates while allowing Home Assistant’s event loop to manage timing drifts gracefully.```
 
+
+---
+
+## 📚 More details and extended documentation
+
+The integration is based on simple-pid [https://pypi.org/project/simple-pid/](https://pypi.org/project/simple-pid/)
+
+Read the user guide here: [https://simple-pid.readthedocs.io/en/latest/user_guide.html#user-guide](https://simple-pid.readthedocs.io/en/latest/user_guide.html#user-guide)
 
 ---
 

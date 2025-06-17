@@ -7,7 +7,11 @@
         "description": "Enter a name and choose the sensor to drive the PID loop.",
         "data": {
           "name": "Name",
-          "sensor_entity_id": "Sensor Entity"
+          "sensor_entity_id": "Sensor Entity",
+          "input_range_min": "Minimum Input Range",
+          "input_range_max": "Maximum Input Range",
+          "output_range_min": "Minimum Output Range",
+          "output_range_max": "Maximum Output Range"
         }
       }
     },
@@ -16,7 +20,8 @@
     },
     "error": {
       "already_configured": "A configuration with this name already exists.",
-	  "range_min_max": "Minimum must be lower than maximum."
+	  "input_range_min_max": "Minimum must be lower than maximum.",
+	  "output_range_min_max": "Minimum must be lower than maximum."
     }
   },
   "options": {
@@ -26,8 +31,10 @@
         "description": "Modify the sensor entity and range used by the controller.",
         "data": {
           "sensor_entity_id": "Sensor Entity",
-          "range_min": "Minimum Range",
-          "range_max": "Maximum Range"
+          "input_range_min": "Minimum Input Range",
+          "input_range_max": "Maximum Input Range",
+          "output_range_min": "Minimum Output Range",
+          "output_range_max": "Maximum Output Range"
         }
       }
     },

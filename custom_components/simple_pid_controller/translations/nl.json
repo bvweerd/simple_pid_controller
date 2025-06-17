@@ -7,8 +7,11 @@
         "description": "Voer een naam in en kies de sensor als input voor de PID.",
         "data": {
           "name": "Naam",
-          "sensor_entity_id": "Sensor naam"
-        }
+          "sensor_entity_id": "Sensor naam",
+          "input_range_min": "Minimum Input Bereik",
+          "input_range_max": "Maximum Input Bereik",
+          "output_range_min": "Minimum Output Bereik",
+          "output_range_max": "Maximum Output Bereik"        }
       }
     },
     "abort": {
@@ -16,7 +19,8 @@
     },
     "error": {
       "already_configured": "Er bestaat al een configuratie met deze naam.",
-	  "range_min_max": "Minimum moet lager zijn dan maximum."
+	  "input_range_min_max": "Minimum moet lager zijn dan maximum.",
+	  "output_range_min_max": "Minimum moet lager zijn dan maximum."
     }
   },
   "options": {
@@ -26,8 +30,10 @@
         "description": "Wijzig de sensor en het bereik dat door de PID-regelaar wordt gebruikt.",
         "data": {
           "sensor_entity_id": "Sensor naam",
-          "range_min": "Minimum bereik",
-          "range_max": "Maximum bereik"
+          "input_range_min": "Minimum Input Bereik",
+          "input_range_max": "Maximum Input Bereik",
+          "output_range_min": "Minimum Output Bereik",
+          "output_range_max": "Maximum Output Bereik"
         }
       }
     },

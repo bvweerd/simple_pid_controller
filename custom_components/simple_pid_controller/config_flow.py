@@ -21,10 +21,14 @@ from .const import (
     CONF_NAME,
     DEFAULT_NAME,
     CONF_SENSOR_ENTITY_ID,
-    CONF_RANGE_MIN,
-    CONF_RANGE_MAX,
-    DEFAULT_RANGE_MIN,
-    DEFAULT_RANGE_MAX,
+    CONF_INPUT_RANGE_MIN,
+    CONF_INPUT_RANGE_MAX,
+    CONF_OUTPUT_RANGE_MIN,
+    CONF_OUTPUT_RANGE_MAX,
+    DEFAULT_INPUT_RANGE_MIN,
+    DEFAULT_INPUT_RANGE_MAX,
+    DEFAULT_OUTPUT_RANGE_MIN,
+    DEFAULT_OUTPUT_RANGE_MAX,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,12 +58,18 @@ class PIDControllerFlowHandler(ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_SENSOR_ENTITY_ID): selector(
                     {"entity": {"domain": "sensor"}}
                 ),
-                vol.Optional(CONF_RANGE_MIN, default=DEFAULT_RANGE_MIN): vol.Coerce(
-                    float
-                ),
-                vol.Optional(CONF_RANGE_MAX, default=DEFAULT_RANGE_MAX): vol.Coerce(
-                    float
-                ),
+                vol.Optional(
+                    CONF_INPUT_RANGE_MIN, default=DEFAULT_INPUT_RANGE_MIN
+                ): vol.Coerce(float),
+                vol.Optional(
+                    CONF_INPUT_RANGE_MAX, default=DEFAULT_INPUT_RANGE_MAX
+                ): vol.Coerce(float),
+                vol.Optional(
+                    CONF_OUTPUT_RANGE_MIN, default=DEFAULT_OUTPUT_RANGE_MIN
+                ): vol.Coerce(float),
+                vol.Optional(
+                    CONF_OUTPUT_RANGE_MAX, default=DEFAULT_OUTPUT_RANGE_MAX
+                ): vol.Coerce(float),
             }
         )
 
@@ -67,11 +77,29 @@ class PIDControllerFlowHandler(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_NAME: user_input[CONF_NAME]})
 
             # Validate that range_min < range_max
-            min_val = user_input.get(CONF_RANGE_MIN)
-            max_val = user_input.get(CONF_RANGE_MAX)
-            if min_val is not None and max_val is not None and min_val >= max_val:
+            input_min_val = user_input.get(CONF_INPUT_RANGE_MIN)
+            input_max_val = user_input.get(CONF_INPUT_RANGE_MAX)
+            if (
+                input_min_val is not None
+                and input_max_val is not None
+                and input_min_val >= input_max_val
+            ):
                 return self.async_show_form(
-                    step_id="user", data_schema=schema, errors={"base": "range_min_max"}
+                    step_id="user",
+                    data_schema=schema,
+                    errors={"base": "input_range_min_max"},
+                )
+            output_min_val = user_input.get(CONF_OUTPUT_RANGE_MIN)
+            output_max_val = user_input.get(CONF_OUTPUT_RANGE_MAX)
+            if (
+                output_min_val is not None
+                and output_max_val is not None
+                and output_min_val >= output_max_val
+            ):
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=schema,
+                    errors={"base": "output_range_min_max"},
                 )
 
             return self.async_create_entry(
@@ -79,8 +107,10 @@ class PIDControllerFlowHandler(ConfigFlow, domain=DOMAIN):
                 data={
                     CONF_NAME: user_input[CONF_NAME],
                     CONF_SENSOR_ENTITY_ID: user_input[CONF_SENSOR_ENTITY_ID],
-                    CONF_RANGE_MIN: user_input[CONF_RANGE_MIN],
-                    CONF_RANGE_MAX: user_input[CONF_RANGE_MAX],
+                    CONF_INPUT_RANGE_MIN: user_input[CONF_INPUT_RANGE_MIN],
+                    CONF_INPUT_RANGE_MAX: user_input[CONF_INPUT_RANGE_MAX],
+                    CONF_OUTPUT_RANGE_MIN: user_input[CONF_OUTPUT_RANGE_MIN],
+                    CONF_OUTPUT_RANGE_MAX: user_input[CONF_OUTPUT_RANGE_MAX],
                 },
             )
 
@@ -103,8 +133,18 @@ class PIDControllerOptionsFlowHandler(OptionsFlow):
         current_sensor = self.config_entry.options.get(
             CONF_SENSOR_ENTITY_ID
         ) or self.config_entry.data.get(CONF_SENSOR_ENTITY_ID)
-        current_min = self.config_entry.options.get(CONF_RANGE_MIN, DEFAULT_RANGE_MIN)
-        current_max = self.config_entry.options.get(CONF_RANGE_MAX, DEFAULT_RANGE_MAX)
+        current_input_min = self.config_entry.options.get(
+            CONF_INPUT_RANGE_MIN, DEFAULT_INPUT_RANGE_MIN
+        )
+        current_input_max = self.config_entry.options.get(
+            CONF_INPUT_RANGE_MAX, DEFAULT_INPUT_RANGE_MAX
+        )
+        current_output_min = self.config_entry.options.get(
+            CONF_OUTPUT_RANGE_MIN, DEFAULT_OUTPUT_RANGE_MIN
+        )
+        current_output_max = self.config_entry.options.get(
+            CONF_OUTPUT_RANGE_MAX, DEFAULT_OUTPUT_RANGE_MAX
+        )
 
         options_schema = vol.Schema(
             {
@@ -113,12 +153,20 @@ class PIDControllerOptionsFlowHandler(OptionsFlow):
                     default=current_sensor,
                 ): selector({"entity": {"domain": "sensor"}}),
                 vol.Required(
-                    CONF_RANGE_MIN,
-                    default=current_min,
+                    CONF_INPUT_RANGE_MIN,
+                    default=current_input_min,
                 ): vol.Coerce(float),
                 vol.Required(
-                    CONF_RANGE_MAX,
-                    default=current_max,
+                    CONF_INPUT_RANGE_MAX,
+                    default=current_input_max,
+                ): vol.Coerce(float),
+                vol.Required(
+                    CONF_OUTPUT_RANGE_MIN,
+                    default=current_output_min,
+                ): vol.Coerce(float),
+                vol.Required(
+                    CONF_OUTPUT_RANGE_MAX,
+                    default=current_output_max,
                 ): vol.Coerce(float),
             }
         )
@@ -126,13 +174,29 @@ class PIDControllerOptionsFlowHandler(OptionsFlow):
         # If the user has submitted the form, create the entry
         if user_input is not None:
             # Validate that range_min < range_max
-            min_val = user_input.get(CONF_RANGE_MIN)
-            max_val = user_input.get(CONF_RANGE_MAX)
-            if min_val is not None and max_val is not None and min_val >= max_val:
+            input_min_val = user_input.get(CONF_INPUT_RANGE_MIN)
+            input_max_val = user_input.get(CONF_INPUT_RANGE_MAX)
+            if (
+                input_min_val is not None
+                and input_max_val is not None
+                and input_min_val >= input_max_val
+            ):
                 return self.async_show_form(
                     step_id="init",
                     data_schema=options_schema,
-                    errors={"base": "range_min_max"},
+                    errors={"base": "input_range_min_max"},
+                )
+            output_min_val = user_input.get(CONF_OUTPUT_RANGE_MIN)
+            output_max_val = user_input.get(CONF_OUTPUT_RANGE_MAX)
+            if (
+                output_min_val is not None
+                and output_max_val is not None
+                and output_min_val >= output_max_val
+            ):
+                return self.async_show_form(
+                    step_id="init",
+                    data_schema=options_schema,
+                    errors={"base": "output_range_min_max"},
                 )
 
             return self.async_create_entry(
