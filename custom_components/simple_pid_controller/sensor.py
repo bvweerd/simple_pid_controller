@@ -34,9 +34,12 @@ async def async_setup_entry(
     handle: PIDDeviceHandle = entry.runtime_data.handle
 
     # Init PID with default values
-    pid = PID(1.0, 0.1, 0.05, setpoint=50)
+    setpoint = handle.get_number("setpoint")
+    starting_output = handle.get_number("starting_output")
+    
+    pid = PID(1.0, 0.0, 0.0, setpoint=setpoint, starting_output=starting_output)
     pid.sample_time = 10.0
-    pid.output_limits = (-10.0, 10.0)
+    pid.output_limits = (0.0, 100.0)
 
     async def update_pid():
         """Update the PID output using current sensor and parameter values."""
@@ -59,6 +62,7 @@ async def async_setup_entry(
         # adapt PID settings
         pid.tunings = (kp, ki, kd)
         pid.setpoint = setpoint
+
         pid.sample_time = sample_time
         if windup_protection:
             pid.output_limits = (out_min, out_max)
