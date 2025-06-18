@@ -78,7 +78,7 @@ async def async_setup_entry(
             pid.components[0],
             pid.components[1],
             pid.components[2],
-            last_i - pid.components[1],
+            pid.components[1] - last_i,
         )
 
         _LOGGER.debug(
