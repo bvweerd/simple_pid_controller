@@ -47,7 +47,7 @@ async def test_pid_contribution_native_value_rounding_and_none(hass, config_entr
     """Test that PIDContributionSensor.native_value rounds correctly and returns None for unknown key."""
     handle = config_entry.runtime_data.handle
     # Provide known contributions
-    handle.last_contributions = (0.1234, 1.9876, 2.5555)
+    handle.last_contributions = (0.1234, 1.9876, 2.5555, 3.3789)
     coordinator = PIDDataCoordinator(hass, "test", lambda: 0, interval=1)
 
     # Map contribution keys to expected values
@@ -56,6 +56,7 @@ async def test_pid_contribution_native_value_rounding_and_none(hass, config_entr
         ("pid_i_contrib", round(1.9876, 2)),
         ("pid_d_contrib", round(2.5555, 2)),
         ("error", -25),
+        ("pid_i_delta", round(3.3789, 2)),
         ("unknown_key", None),  # Should return None
     ]
 
