@@ -69,12 +69,7 @@ async def async_setup_entry(
 
         output = pid(input_value)
 
-        # Calculate contributions
-        p_contrib = kp * (setpoint - input_value) if not p_on_m else -kp * input_value
-        i_contrib = pid._integral * ki
-        d_contrib = pid._last_output - output if pid._last_output is not None else 0.0
-
-        handle.last_contributions = (p_contrib, i_contrib, d_contrib)
+        handle.last_contributions = pid.components
 
         _LOGGER.debug(
             "PID input=%.2f setpoint=%.2f kp=%.2f ki=%.2f kd=%.2f => output=%.2f [P=%.2f, I=%.2f, D=%.2f]",
@@ -84,9 +79,9 @@ async def async_setup_entry(
             ki,
             kd,
             output,
-            p_contrib,
-            i_contrib,
-            d_contrib,
+            pid.components[0],
+            pid.components[1],
+            pid.components[2],
         )
 
         if coordinator.update_interval.total_seconds() != pid.sample_time:
