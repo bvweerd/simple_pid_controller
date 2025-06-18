@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from datetime import timedelta
 from simple_pid import PID
@@ -32,10 +33,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up PID output and diagnostic sensors."""
     handle: PIDDeviceHandle = entry.runtime_data.handle
+    handle.init_phase = True
 
-    # Init PID with default values
-    pid = PID(1.0, 0.1, 0.05, setpoint=50)
+    pid = PID(1.0, 0.0, 0.0, setpoint=0, auto_mode=False)
     pid.sample_time = 10.0
+
     pid.output_limits = (-10.0, 10.0)
     handle.last_contributions = (0, 0, 0, 0)
 
@@ -50,6 +52,7 @@ async def async_setup_entry(
         ki = handle.get_number("ki")
         kd = handle.get_number("kd")
         setpoint = handle.get_number("setpoint")
+        starting_output = handle.get_number("starting_output")
         sample_time = handle.get_number("sample_time")
         out_min = handle.get_number("output_min")
         out_max = handle.get_number("output_max")
@@ -60,12 +63,20 @@ async def async_setup_entry(
         # adapt PID settings
         pid.tunings = (kp, ki, kd)
         pid.setpoint = setpoint
+
         pid.sample_time = sample_time
         if windup_protection:
             pid.output_limits = (out_min, out_max)
         else:
             pid.output_limits = (None, None)
-        pid.auto_mode = auto_mode
+
+        if handle.init_phase:
+            handle.init_phase = False
+            pid.set_auto_mode(True, last_output=handle.last_known_output)
+            pid.set_auto_mode(True, last_output=starting_output)
+        else:
+            pid.auto_mode = auto_mode
+
         pid.proportional_on_measurement = p_on_m
 
         output = pid(input_value)
@@ -164,7 +175,9 @@ async def async_setup_entry(
         )
 
 
-class PIDOutputSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
+class PIDOutputSensor(
+    CoordinatorEntity[PIDDataCoordinator], RestoreEntity, SensorEntity
+):
     """Sensor representing the PID output."""
 
     def __init__(
@@ -179,6 +192,16 @@ class PIDOutputSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
 
         self._attr_native_unit_of_measurement = "%"
         self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._handle = entry.runtime_data.handle
+
+    async def async_added_to_hass(self):
+        await super().async_added_to_hass()
+        if (state := await self.async_get_last_state()) is not None:
+            try:
+                value = float(state.state)
+                self._handle.last_known_output = value
+            except (ValueError, TypeError):
+                self._handle.last_known_output = 0.0
 
     @property
     def native_value(self) -> float | None:
