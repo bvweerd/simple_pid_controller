@@ -37,7 +37,9 @@ async def async_setup_entry(
 
     pid = PID(1.0, 0.0, 0.0, setpoint=0, auto_mode=False)
     pid.sample_time = 10.0
-    pid.output_limits = (0.0, 100.0)
+
+    pid.output_limits = (-10.0, 10.0)
+    handle.last_contributions = (0, 0, 0, 0)
 
     async def update_pid():
         """Update the PID output using current sensor and parameter values."""
@@ -79,24 +81,29 @@ async def async_setup_entry(
 
         output = pid(input_value)
 
-        # Calculate contributions
-        p_contrib = kp * (setpoint - input_value) if not p_on_m else -kp * input_value
-        i_contrib = pid._integral * ki
-        d_contrib = pid._last_output - output if pid._last_output is not None else 0.0
+        # save last I contribution
+        last_i = handle.last_contributions[1]
 
-        handle.last_contributions = (p_contrib, i_contrib, d_contrib)
+        # save all latest contributions
+        handle.last_contributions = (
+            pid.components[0],
+            pid.components[1],
+            pid.components[2],
+            pid.components[1] - last_i,
+        )
 
         _LOGGER.debug(
-            "PID input=%.2f setpoint=%.2f kp=%.2f ki=%.2f kd=%.2f => output=%.2f [P=%.2f, I=%.2f, D=%.2f]",
+            "PID input=%s setpoint=%s kp=%s ki=%s kd=%s => output=%s [P=%s, I=%s, D=%s, dI=%s]",
             input_value,
-            setpoint,
-            kp,
-            ki,
-            kd,
+            pid.setpoint,
+            pid.Kp,
+            pid.Ki,
+            pid.Kd,
             output,
-            p_contrib,
-            i_contrib,
-            d_contrib,
+            handle.last_contributions[0],
+            handle.last_contributions[1],
+            handle.last_contributions[2],
+            handle.last_contributions[3],
         )
 
         if coordinator.update_interval.total_seconds() != pid.sample_time:
@@ -136,6 +143,7 @@ async def async_setup_entry(
                 hass, entry, "pid_d_contrib", "D contribution", coordinator
             ),
             PIDContributionSensor(hass, entry, "error", "Error", coordinator),
+            PIDContributionSensor(hass, entry, "pid_i_delta", "I delta", coordinator),
         ]
     )
 
@@ -218,7 +226,7 @@ class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity)
         BasePIDEntity.__init__(self, hass, entry, key, name)
 
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
-        # self._attr_entity_registry_enabled_default = False
+        self._attr_entity_registry_enabled_default = False
         self._attr_state_class = SensorStateClass.MEASUREMENT
         self._key = key
         self._handle = entry.runtime_data.handle
@@ -239,5 +247,6 @@ class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity)
             "pid_i_contrib": contributions[1],
             "pid_d_contrib": contributions[2],
             "error": error,
+            "pid_i_delta": contributions[3],
         }.get(self._key)
         return round(value, 2) if value is not None else None
