@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from datetime import timedelta
 from simple_pid import PID
@@ -69,6 +70,7 @@ async def async_setup_entry(
 
         if handle.init_phase:
             handle.init_phase = False
+            pid.set_auto_mode(True, last_output=handle.last_known_output)
             pid.set_auto_mode(True, last_output=starting_output)
         else:
             pid.auto_mode = auto_mode
@@ -165,7 +167,9 @@ async def async_setup_entry(
         )
 
 
-class PIDOutputSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
+class PIDOutputSensor(
+    CoordinatorEntity[PIDDataCoordinator], RestoreEntity, SensorEntity
+):
     """Sensor representing the PID output."""
 
     def __init__(
@@ -180,6 +184,16 @@ class PIDOutputSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
 
         self._attr_native_unit_of_measurement = "%"
         self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._handle = entry.runtime_data.handle
+
+    async def async_added_to_hass(self):
+        await super().async_added_to_hass()
+        if (state := await self.async_get_last_state()) is not None:
+            try:
+                value = float(state.state)
+                self._handle.last_known_output = value
+            except (ValueError, TypeError):
+                self._handle.last_known_output = 0.0
 
     @property
     def native_value(self) -> float | None:
