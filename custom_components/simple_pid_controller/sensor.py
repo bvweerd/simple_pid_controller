@@ -72,12 +72,16 @@ async def async_setup_entry(
         handle.last_contributions = pid.components
 
         _LOGGER.debug(
-            f"PID input={input_value:.2f} setpoint={setpoint:.2f} "
-            f"kp={kp:.2f} ki={ki:.2f} kd={kd:.2f} => "
-            f"output={output:.2f if output is not None else 'n/a'} "
-            f"[P={p_contrib:.2f if p_contrib is not None else 'n/a'}, "
-            f"I={i_contrib:.2f if i_contrib is not None else 'n/a'}, "
-            f"D={d_contrib:.2f if d_contrib is not None else 'n/a'}]"
+            "PID input=%s setpoint=%s kp=%s ki=%s kd=%s => output=%s [P=%s, I=%s, D=%s]",
+            input_value,
+            pid.setpoint,
+            pid.Kp,
+            pid.Ki,
+            pid.Kd,
+            output,
+            last_contributions[0],
+            last_contributions[1],
+            last_contributions[2],
         )
 
         if coordinator.update_interval.total_seconds() != pid.sample_time:
