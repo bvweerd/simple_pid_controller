@@ -37,7 +37,8 @@ async def async_setup_entry(
     pid = PID(1.0, 0.1, 0.05, setpoint=50)
     pid.sample_time = 10.0
     pid.output_limits = (-10.0, 10.0)
-
+    handle.last_contributions = (0,0,0,0)
+    
     async def update_pid():
         """Update the PID output using current sensor and parameter values."""
         input_value = handle.get_input_sensor_value()
@@ -69,10 +70,15 @@ async def async_setup_entry(
 
         output = pid(input_value)
 
+        # save last I contribution
+        last_i = handle.last_contributions[1]
+        
+        #save all latest contributions
         handle.last_contributions = pid.components
-
+        handle.last_contributions[3] = last_i - handle.last_contributions[1]
+        
         _LOGGER.debug(
-            "PID input=%s setpoint=%s kp=%s ki=%s kd=%s => output=%s [P=%s, I=%s, D=%s]",
+            "PID input=%s setpoint=%s kp=%s ki=%s kd=%s => output=%s [P=%s, I=%s, D=%s, dI=%s]",
             input_value,
             pid.setpoint,
             pid.Kp,
@@ -82,6 +88,7 @@ async def async_setup_entry(
             handle.last_contributions[0],
             handle.last_contributions[1],
             handle.last_contributions[2],
+            handle.last_contributions[3],
         )
 
         if coordinator.update_interval.total_seconds() != pid.sample_time:
@@ -121,6 +128,9 @@ async def async_setup_entry(
                 hass, entry, "pid_d_contrib", "D contribution", coordinator
             ),
             PIDContributionSensor(hass, entry, "error", "Error", coordinator),
+            PIDContributionSensor(
+                hass, entry, "pid_i_delta", "I delta", coordinator
+            ),
         ]
     )
 
@@ -212,5 +222,6 @@ class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity)
             "pid_i_contrib": contributions[1],
             "pid_d_contrib": contributions[2],
             "error": error,
+            "pid_i_delta": contributions[3],
         }.get(self._key)
         return round(value, 2) if value is not None else None
