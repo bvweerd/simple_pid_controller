@@ -79,9 +79,9 @@ async def async_setup_entry(
             pid.Ki,
             pid.Kd,
             output,
-            last_contributions[0],
-            last_contributions[1],
-            last_contributions[2],
+            handle.last_contributions[0],
+            handle.last_contributions[1],
+            handle.last_contributions[2],
         )
 
         if coordinator.update_interval.total_seconds() != pid.sample_time:
