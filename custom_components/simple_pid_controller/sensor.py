@@ -203,7 +203,7 @@ class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity)
         BasePIDEntity.__init__(self, hass, entry, key, name)
 
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
-        # self._attr_entity_registry_enabled_default = False
+        self._attr_entity_registry_enabled_default = False
         self._attr_state_class = SensorStateClass.MEASUREMENT
         self._key = key
         self._handle = entry.runtime_data.handle
