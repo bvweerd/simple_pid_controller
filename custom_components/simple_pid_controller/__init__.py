@@ -94,20 +94,17 @@ class PIDDeviceHandle:
                 )
         return None
 
-    def get_select(self, key: str) -> float | None:
-        """Return the current value of the number entity, or None."""
+    def get_select(self, key: str) -> str | None:
+        """Return the current value of the select entity, or None."""
         entity_id = self._get_entity_id("select", key)
         if not entity_id:
             return None
         state = self.hass.states.get(entity_id)
         _LOGGER.debug("get_select(%s) → %s = %s", key, entity_id, state and state.state)
+
         if state and state.state not in ("unknown", "unavailable"):
-            try:
-                return state.state
-            except ValueError:
-                _LOGGER.error(
-                    "Could not parse state '%s' of %s", state.state, entity_id
-                )
+            return state.state  # Selects geven strings terug, geen conversie nodig
+
         return None
 
     def get_switch(self, key: str) -> bool:

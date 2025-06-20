@@ -72,26 +72,20 @@ async def async_setup_entry(
         else:
             pid.output_limits = (None, None)
 
+        _LOGGER.debug("Start mode = %s (type: %s)", start_mode, type(start_mode))
         if (handle.init_phase and auto_mode) or (not pid.auto_mode and auto_mode):
             handle.init_phase = False
             if start_mode == "Zero start":
                 pid.set_auto_mode(True, 0)
             elif start_mode == "Last known value":
-                pid.set_auto_mode(True, last_output=handle.last_known_output)
+                pid.set_auto_mode(True, handle.last_known_output)
             elif start_mode == "Startup value":
-                pid.set_auto_mode(True, last_output=starting_output)
+                pid.set_auto_mode(True, starting_output)
             else:
                 pid.set_auto_mode(True)
         else:
             pid.auto_mode = auto_mode
             handle.init_phase = False
-
-        # if handle.init_phase:
-        #    handle.init_phase = False
-        #    #pid.set_auto_mode(True, last_output=handle.last_known_output)
-        #    pid.set_auto_mode(True, last_output=starting_output)
-        # else:
-        #    pid.auto_mode = auto_mode
 
         pid.proportional_on_measurement = p_on_m
 

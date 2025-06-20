@@ -15,6 +15,9 @@ async def test_pid_output_and_contributions_update(hass, config_entry):
     handle = config_entry.runtime_data.handle
 
     handle.get_input_sensor_value = lambda: 10.0
+    handle.get_select = lambda key: {
+        "start_mode": "Startup value",
+    }[key]
     handle.get_number = lambda key: {
         "kp": 1.0,
         "ki": 0.1,

@@ -1,5 +1,6 @@
 from homeassistant.components.select import SelectEntity
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.entity import EntityCategory
 
 from .entity import BasePIDEntity
 
@@ -25,6 +26,7 @@ class PIDStartModeSelect(BasePIDEntity, SelectEntity, RestoreEntity):
         super().__init__(hass, entry, key, name)
         self._attr_options = START_MODE_OPTIONS
         self._attr_current_option = START_MODE_OPTIONS[0]
+        self._attr_entity_category = EntityCategory.CONFIG
         self.coordinator = coordinator  # if needed later
 
     async def async_select_option(self, option: str) -> None:
