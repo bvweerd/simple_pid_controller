@@ -34,8 +34,7 @@ async def async_setup_entry(
     handle: PIDDeviceHandle = entry.runtime_data.handle
 
     # Init PID with default values
-    pid = PID(1.0, 0.1, 0.05, setpoint=50)
-    pid.sample_time = 10.0
+    pid = PID(1.0, 0.1, 0.05, setpoint=50, sample_time=None)
     pid.output_limits = (-10.0, 10.0)
     handle.last_contributions = (0, 0, 0, 0)
 
@@ -60,7 +59,6 @@ async def async_setup_entry(
         # adapt PID settings
         pid.tunings = (kp, ki, kd)
         pid.setpoint = setpoint
-        pid.sample_time = sample_time
         if windup_protection:
             pid.output_limits = (out_min, out_max)
         else:
@@ -95,11 +93,9 @@ async def async_setup_entry(
             handle.last_contributions[3],
         )
 
-        if coordinator.update_interval.total_seconds() != pid.sample_time:
-            _LOGGER.debug(
-                "Updating coordinator interval to %.2f seconds", pid.sample_time
-            )
-            coordinator.update_interval = timedelta(seconds=pid.sample_time)
+        if coordinator.update_interval.total_seconds() != sample_time:
+            _LOGGER.debug("Updating coordinator interval to %.2f seconds", sample_time)
+            coordinator.update_interval = timedelta(seconds=sample_time)
 
         return output
 
