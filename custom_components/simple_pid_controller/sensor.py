@@ -97,9 +97,7 @@ async def async_setup_entry(
         )
 
         if coordinator.update_interval.total_seconds() != sample_time:
-            _LOGGER.debug(
-                "Updating coordinator interval to %.2f seconds", sample_time
-            )
+            _LOGGER.debug("Updating coordinator interval to %.2f seconds", sample_time)
             coordinator.update_interval = timedelta(seconds=sample_time)
 
         return output
