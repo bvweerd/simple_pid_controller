@@ -152,7 +152,7 @@ async def test_update_pid_output_limits_none_when_windup_protection_disabled(
 
     # Dummy PID to inspect output_limits
     class DummyPID:
-        def __init__(self, kp, ki, kd, setpoint):
+        def __init__(self, kp, ki, kd, setpoint, sample_time=None):
             self._proportional = 1.0
             self._integral = 1.0
             self._last_output = None
