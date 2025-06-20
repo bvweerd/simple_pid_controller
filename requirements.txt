@@ -1,5 +1,5 @@
 asyncio
-pytest
+pytest==8.3.5
 pytest-cov
 pytest-homeassistant-custom-component
 simple-pid==2.0.1

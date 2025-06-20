@@ -15,11 +15,15 @@ async def test_pid_output_and_contributions_update(hass, config_entry):
     handle = config_entry.runtime_data.handle
 
     handle.get_input_sensor_value = lambda: 10.0
+    handle.get_select = lambda key: {
+        "start_mode": "Startup value",
+    }[key]
     handle.get_number = lambda key: {
         "kp": 1.0,
         "ki": 0.1,
         "kd": 0.01,
         "setpoint": 20.0,
+        "starting_output": 50.0,
         "sample_time": sample_time,
         "output_min": 0.0,
         "output_max": 100.0,
@@ -160,7 +164,7 @@ async def test_update_pid_output_limits_none_when_windup_protection_disabled(
             self.setpoint = setpoint
             self.sample_time = 1.0
             self.output_limits = (0.0, 0.0)
-            self.auto_mode = True
+            self.auto_mode = auto_mode
             self.proportional_on_measurement = False
 
         def __call__(self, input_value):
