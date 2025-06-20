@@ -34,9 +34,6 @@ async def async_setup_entry(
     handle: PIDDeviceHandle = entry.runtime_data.handle
 
     # Init PID with default values
-    # The sample_time parameter is just used to filter inputs, but we handle
-    # sending new inputs at the correct times ourselves so it would just
-    # filter out legitimate inputs.
     pid = PID(1.0, 0.1, 0.05, setpoint=50, sample_time=None)
     pid.output_limits = (-10.0, 10.0)
     handle.last_contributions = (0, 0, 0, 0)
