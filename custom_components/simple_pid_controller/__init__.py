@@ -27,7 +27,12 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.NUMBER, Platform.SWITCH]
+PLATFORMS: list[Platform] = [
+    Platform.SENSOR,
+    Platform.NUMBER,
+    Platform.SWITCH,
+    Platform.SELECT,
+]
 
 
 @dataclass
@@ -86,6 +91,22 @@ class PIDDeviceHandle:
             except ValueError:
                 _LOGGER.error(
                     "Could not parse state '%s' of %s as float", state.state, entity_id
+                )
+        return None
+
+    def get_select(self, key: str) -> float | None:
+        """Return the current value of the number entity, or None."""
+        entity_id = self._get_entity_id("select", key)
+        if not entity_id:
+            return None
+        state = self.hass.states.get(entity_id)
+        _LOGGER.debug("get_select(%s) → %s = %s", key, entity_id, state and state.state)
+        if state and state.state not in ("unknown", "unavailable"):
+            try:
+                return state.state
+            except ValueError:
+                _LOGGER.error(
+                    "Could not parse state '%s' of %s", state.state, entity_id
                 )
         return None
 
