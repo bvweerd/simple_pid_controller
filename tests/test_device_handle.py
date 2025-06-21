@@ -100,3 +100,38 @@ async def test_get_switch_returns_true_when_no_entity_configured(hass, config_en
     # Force no  entity_id
     handle._get_entity_id = lambda platform, key: None
     assert handle.get_switch("any_key") is True
+
+
+@pytest.mark.parametrize(
+    "state_value, expected",
+    [
+        ("Zero start", "Zero start"),  # valid select option
+        ("unknown", None),  # invalid
+        ("unavailable", None),  # invalid
+        (None, None),  # no state
+    ],
+)
+def test_get_select_various_states(
+    monkeypatch, hass, config_entry, state_value, expected
+):
+    """Test PIDDeviceHandle.get_select behavior for valid and invalid entity states."""
+
+    fake_eid = "select.pid_entry_start_mode"
+
+    # Inject fake state
+    if state_value is not None:
+        hass.states.async_set(fake_eid, state_value)
+
+    # Patch entity_registry.async_get(hass) → returns dummy registry object
+    class DummyRegistry:
+        def async_get_entity_id(self, platform, domain, unique_id):
+            if domain == DOMAIN and unique_id.endswith("start_mode"):
+                return fake_eid
+            return None
+
+    monkeypatch.setattr(er, "async_get", lambda hass: DummyRegistry())
+
+    handle = PIDDeviceHandle(hass, config_entry)
+    result = handle.get_select("start_mode")
+
+    assert result == expected

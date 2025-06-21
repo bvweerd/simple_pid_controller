@@ -6,7 +6,7 @@ from pytest_homeassistant_custom_component.common import async_fire_time_changed
 
 @pytest.mark.asyncio
 async def test_pid_start_modes(hass, config_entry):
-    """Vergelijk het effect van verschillende startmodi op de PID-uitgang."""
+    """Check start modes."""
 
     sample_time = 5
     base_input = 40.0

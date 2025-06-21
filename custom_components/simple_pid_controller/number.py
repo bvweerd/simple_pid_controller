@@ -97,7 +97,7 @@ CONTROL_NUMBER_ENTITIES = [
         "entity_category": EntityCategory.CONFIG,
     },
     {
-        "name": "Starting Output",
+        "name": "Startup Value",
         "key": "starting_output",
         "unit": "",
         "step": 1.0,

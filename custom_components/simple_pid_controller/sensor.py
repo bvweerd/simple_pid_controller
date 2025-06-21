@@ -72,7 +72,9 @@ async def async_setup_entry(
             handle.pid.output_limits = (None, None)
 
         _LOGGER.debug("Start mode = %s (type: %s)", start_mode, type(start_mode))
-        if (handle.init_phase and auto_mode) or (not handle.pid.auto_mode and auto_mode):
+        if (handle.init_phase and auto_mode) or (
+            not handle.pid.auto_mode and auto_mode
+        ):
             handle.init_phase = False
             if start_mode == "Zero start":
                 handle.pid.set_auto_mode(True, 0)
@@ -182,6 +184,11 @@ async def async_setup_entry(
     for key in ["auto_mode", "proportional_on_measurement", "windup_protection"]:
         hass.bus.async_listen(
             "state_changed", make_listener(f"switch.{entry.entry_id}_{key}")
+        )
+
+    for key in ["start_mode"]:
+        hass.bus.async_listen(
+            "state_changed", make_listener(f"select.{entry.entry_id}_{key}")
         )
 
 
