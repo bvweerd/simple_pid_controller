@@ -8,10 +8,7 @@ from pytest_homeassistant_custom_component.common import async_fire_time_changed
     "start_mode,expected_output",
     [
         ("Zero start", 0.0),
-        (
-            "Last known value",
-            0.0,
-        ),  # default `last_known_output` = None → fallback naar 0
+        ("Last known value", 80.0),
         ("Startup value", 50.0),
     ],
 )
@@ -22,14 +19,15 @@ async def test_pid_start_modes(hass, config_entry, start_mode, expected_output):
 
     handle = config_entry.runtime_data.handle
     handle.init_phase = True  # simulate init
+    handle.last_known_output = 80
 
-    handle.get_input_sensor_value = lambda: 10.0
+    handle.get_input_sensor_value = lambda: 50.0
     handle.get_select = lambda key: start_mode if key == "start_mode" else None
     handle.get_number = lambda key: {
         "kp": 1.0,
         "ki": 0.1,
         "kd": 0.01,
-        "setpoint": 20.0,
+        "setpoint": 50.0,
         "starting_output": 50.0,
         "sample_time": sample_time,
         "output_min": 0.0,
@@ -62,4 +60,4 @@ async def test_pid_start_modes(hass, config_entry, start_mode, expected_output):
     elif start_mode == "Zero start":
         assert output == pytest.approx(0.0, abs=1.0)
     elif start_mode == "Last known value":
-        assert output == pytest.approx(0.0, abs=1.0)
+        assert output == pytest.approx(80.0, abs=1.0)
