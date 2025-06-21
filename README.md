@@ -15,7 +15,6 @@
 - [PID Tuning Guide](#pid-tuning-guide)
   - [Manual Tuning](#1-manual-trial--error)
   - [Ziegler–Nichols Method](#2-zieglernichols-method)
-- [PID Calculation Frequency and Sample Time](#pid-calculation-frequency-and-sample-time)
 - [More details and extended documentation](#extended-documentation)
 - [Example PID Graph](#example-pid-graph)
 - [Support & Development](#support--development)
@@ -143,13 +142,6 @@ A PID controller continuously corrects the difference between a **setpoint** and
 </details>
 
 ---
-
-## PID Calculation Frequency and Sample Time
-
-This integration recalculates the PID output at a fixed, user-configurable interval to ensure timely and consistent control updates. Internally, both the PID loop and Home Assistant’s data coordinator use the same **Sample Time**, but they each maintain their own timer, so slight differences can occur.
-
-- **Sample Time**  
-  The minimum number of seconds between successive PID computations. For example, if you set `sample_time: 5`, both the PID controller and the update coordinator are scheduled to fire every 5 seconds.
 
 ### How it works in practice
 
