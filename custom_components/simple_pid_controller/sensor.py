@@ -36,9 +36,9 @@ async def async_setup_entry(
     handle.init_phase = True
 
     # Init PID with default values
-    pid = PID(1.0, 0.1, 0.05, setpoint=50, sample_time=None)
+    handle.pid = PID(1.0, 0.1, 0.05, setpoint=50, sample_time=None)
 
-    pid.output_limits = (-10.0, 10.0)
+    handle.pid.output_limits = (-10.0, 10.0)
     handle.last_contributions = (0, 0, 0, 0)
     handle.last_known_output = None
 
@@ -63,32 +63,32 @@ async def async_setup_entry(
         windup_protection = handle.get_switch("windup_protection")
 
         # adapt PID settings
-        pid.tunings = (kp, ki, kd)
-        pid.setpoint = setpoint
+        handle.pid.tunings = (kp, ki, kd)
+        handle.pid.setpoint = setpoint
 
         if windup_protection:
-            pid.output_limits = (out_min, out_max)
+            handle.pid.output_limits = (out_min, out_max)
         else:
-            pid.output_limits = (None, None)
+            handle.pid.output_limits = (None, None)
 
         _LOGGER.debug("Start mode = %s (type: %s)", start_mode, type(start_mode))
-        if (handle.init_phase and auto_mode) or (not pid.auto_mode and auto_mode):
+        if (handle.init_phase and auto_mode) or (not handle.pid.auto_mode and auto_mode):
             handle.init_phase = False
             if start_mode == "Zero start":
-                pid.set_auto_mode(True, 0)
+                handle.pid.set_auto_mode(True, 0)
             elif start_mode == "Last known value":
-                pid.set_auto_mode(True, handle.last_known_output)
+                handle.pid.set_auto_mode(True, handle.last_known_output)
             elif start_mode == "Startup value":
-                pid.set_auto_mode(True, starting_output)
+                handle.pid.set_auto_mode(True, starting_output)
             else:
-                pid.set_auto_mode(True)
+                handle.pid.set_auto_mode(True)
         else:
-            pid.auto_mode = auto_mode
+            handle.pid.auto_mode = auto_mode
             handle.init_phase = False
 
-        pid.proportional_on_measurement = p_on_m
+        handle.pid.proportional_on_measurement = p_on_m
 
-        output = pid(input_value)
+        output = handle.pid(input_value)
 
         # save last know output
         handle.last_known_output = output
@@ -98,19 +98,19 @@ async def async_setup_entry(
 
         # save all latest contributions
         handle.last_contributions = (
-            pid.components[0],
-            pid.components[1],
-            pid.components[2],
-            pid.components[1] - last_i,
+            handle.pid.components[0],
+            handle.pid.components[1],
+            handle.pid.components[2],
+            handle.pid.components[1] - last_i,
         )
 
         _LOGGER.debug(
             "PID input=%s setpoint=%s kp=%s ki=%s kd=%s => output=%s [P=%s, I=%s, D=%s, dI=%s]",
             input_value,
-            pid.setpoint,
-            pid.Kp,
-            pid.Ki,
-            pid.Kd,
+            handle.pid.setpoint,
+            handle.pid.Kp,
+            handle.pid.Ki,
+            handle.pid.Kd,
             output,
             handle.last_contributions[0],
             handle.last_contributions[1],
