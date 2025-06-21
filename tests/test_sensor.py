@@ -151,39 +151,69 @@ async def test_update_pid_raises_on_missing_input(hass, config_entry):
 async def test_update_pid_output_limits_none_when_windup_protection_disabled(
     monkeypatch, hass, config_entry
 ):
-    """Line 68: update_pid should set output_limits to (None, None) when windup_protection is False."""
-    from custom_components.simple_pid_controller import sensor as sensor_module
+    """Test output_limits (None, None)"""
 
-    # Dummy PID to inspect output_limits
+    # Dummy PID class
     class DummyPID:
-        def __init__(self, kp, ki, kd, setpoint, sample_time=None):
-            self._proportional = 1.0
-            self._integral = 1.0
-            self._last_output = None
-            self.tunings = (kp, ki, kd)
+        def __init__(self, kp=0, ki=0, kd=0, setpoint=0, sample_time=None):
+            self.Kp = kp
+            self.Ki = ki
+            self.Kd = kd
             self.setpoint = setpoint
-            self.sample_time = 1.0
-            self.output_limits = (0.0, 0.0)
-            self.auto_mode = auto_mode
+            self.sample_time = sample_time
+            self.auto_mode = False
             self.proportional_on_measurement = False
+            self.tunings = (kp, ki, kd)
+            self.output_limits = (123, 456)  # dummy init waarde
+            self._output = 42.0
+            self.components = (1.0, 2.0, 3.0)  # dummy voor sensor.py
+
+        def set_auto_mode(self, enabled, last_output=None):
+            self.auto_mode = enabled
+            if last_output is not None:
+                self._output = last_output
 
         def __call__(self, input_value):
-            return 0.0
+            return self._output
+
+    # Patch the PID in sensor-module
+    from custom_components.simple_pid_controller import sensor as sensor_module
 
     monkeypatch.setattr(sensor_module, "PID", DummyPID)
+
+    # init handle
     handle = config_entry.runtime_data.handle
-    # Provide valid input and parameters
-    handle.get_input_sensor_value = lambda: 1.0
-    handle.get_number = lambda key: 0.0
-    # windup_protection False, other switches True
+    handle.last_contributions = (0.0, 0.0, 0.0, 0.0)
+    handle.last_known_output = 0.0
+    handle.get_input_sensor_value = lambda: 10.0
+    handle.get_number = lambda key: {
+        "kp": 1.0,
+        "ki": 0.1,
+        "kd": 0.01,
+        "setpoint": 5.0,
+        "starting_output": 0.0,
+        "sample_time": 5.0,
+        "output_min": 0.0,
+        "output_max": 100.0,
+    }.get(key, 0.0)
     handle.get_switch = lambda key: False if key == "windup_protection" else True
-    entities: list = []
+    handle.get_select = lambda key: "Zero start" if key == "start_mode" else None
+
+    # Set-up components and trigger update
+    entities = []
     await async_setup_entry(hass, config_entry, lambda e: entities.extend(e))
     coordinator = entities[0].coordinator
-    # Execute update_method
     await coordinator.update_method()
-    # Extract pid from closure
-    freevars = coordinator.update_method.__code__.co_freevars
-    pid_idx = freevars.index("pid")
-    pid = coordinator.update_method.__closure__[pid_idx].cell_contents
+
+    # Extract thee DummyPID from closure of update_method
+    closure_vars = {
+        var: cell.cell_contents
+        for var, cell in zip(
+            coordinator.update_method.__code__.co_freevars,
+            coordinator.update_method.__closure__,
+        )
+    }
+    pid = closure_vars["handle"].pid
+
+    # check output_limits
     assert pid.output_limits == (None, None)

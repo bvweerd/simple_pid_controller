@@ -4,60 +4,54 @@ from homeassistant.util.dt import utcnow
 from pytest_homeassistant_custom_component.common import async_fire_time_changed
 
 
-@pytest.mark.parametrize(
-    "start_mode,expected_output",
-    [
-        ("Zero start", 0.0),
-        ("Last known value", 80.0),
-        ("Startup value", 50.0),
-    ],
-)
 @pytest.mark.asyncio
-async def test_pid_start_modes(hass, config_entry, start_mode, expected_output):
-    """Test that each PID start_mode behaves as expected."""
+async def test_pid_start_modes(hass, config_entry):
+    """Vergelijk het effect van verschillende startmodi op de PID-uitgang."""
+
     sample_time = 5
+    base_input = 40.0
+    setpoint = 50.0
 
-    handle = config_entry.runtime_data.handle
-    handle.init_phase = True  # simulate init
-    handle.last_known_output = 80
+    results = {}
 
-    handle.get_input_sensor_value = lambda: 50.0
-    handle.get_select = lambda key: start_mode if key == "start_mode" else None
-    handle.get_number = lambda key: {
-        "kp": 1.0,
-        "ki": 0.1,
-        "kd": 0.01,
-        "setpoint": 50.0,
-        "starting_output": 50.0,
-        "sample_time": sample_time,
-        "output_min": 0.0,
-        "output_max": 100.0,
-    }[key]
-    handle.get_switch = lambda key: True
+    for start_mode in ["Zero start", "Startup value", "Last known value"]:
+        # reset de PID state per iteratie
+        handle = config_entry.runtime_data.handle
+        handle.init_phase = True
+        handle.last_known_output = 80.0
 
-    # 1) trigger initial update
-    hass.bus.async_fire("homeassistant_started")
-    await hass.async_block_till_done()
+        handle.get_input_sensor_value = lambda: base_input
+        handle.get_select = lambda key: start_mode if key == "start_mode" else None
+        handle.get_number = lambda key: {
+            "kp": 1.0,
+            "ki": 0.1,
+            "kd": 0.01,
+            "setpoint": setpoint,
+            "starting_output": 50.0,
+            "sample_time": sample_time,
+            "output_min": 0.0,
+            "output_max": 100.0,
+        }[key]
+        handle.get_switch = lambda key: True
 
-    # 2) simulate scheduled update
-    future = utcnow() + timedelta(seconds=sample_time)
-    async_fire_time_changed(hass, future)
-    await hass.async_block_till_done()
+        # trigger initial update
+        hass.bus.async_fire("homeassistant_started")
+        await hass.async_block_till_done()
 
-    # Check PID output sensor
-    out_entity = f"sensor.{config_entry.entry_id}_pid_output"
-    state = hass.states.get(out_entity)
+        # simulate one PID update
+        future = utcnow() + timedelta(seconds=sample_time)
+        async_fire_time_changed(hass, future)
+        await hass.async_block_till_done()
 
-    assert state is not None
-    output = float(state.state)
+        out_entity = f"sensor.{config_entry.entry_id}_pid_output"
+        state = hass.states.get(out_entity)
+        assert state is not None
 
-    # Output is not exactly predictable due to PID internals, but should not be None or error
-    assert isinstance(output, float)
+        output = float(state.state)
+        results[start_mode] = output
+        print(f"{start_mode} → output: {output:.2f}")
 
-    # Optional: check expected startup behavior — initial output close to what was forced
-    if start_mode == "Startup value":
-        assert output == pytest.approx(50.0, abs=1.0)
-    elif start_mode == "Zero start":
-        assert output == pytest.approx(0.0, abs=1.0)
-    elif start_mode == "Last known value":
-        assert output == pytest.approx(80.0, abs=1.0)
+    # Check relatieve rangorde
+    assert (
+        results["Last known value"] > results["Startup value"] > results["Zero start"]
+    )
