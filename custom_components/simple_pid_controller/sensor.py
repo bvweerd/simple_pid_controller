@@ -71,7 +71,7 @@ async def async_setup_entry(
             handle.pid.output_limits = (None, None)
 
         _LOGGER.debug("Start mode = %s (type: %s)", start_mode, type(start_mode))
-        if not handle.pid.auto_mode and auto_mode):
+        if not handle.pid.auto_mode and auto_mode:
             if start_mode == "Zero start":
                 handle.pid.set_auto_mode(True, 0)
             elif start_mode == "Last known value":
