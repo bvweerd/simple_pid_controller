@@ -159,13 +159,15 @@ async def test_update_pid_output_limits_none_when_windup_protection_disabled(
 
     # Dummy PID class
     class DummyPID:
-        def __init__(self, kp=0, ki=0, kd=0, setpoint=0, sample_time=None):
+        def __init__(
+            self, kp=0, ki=0, kd=0, setpoint=0, sample_time=None, auto_mode=False
+        ):
             self.Kp = kp
             self.Ki = ki
             self.Kd = kd
             self.setpoint = setpoint
             self.sample_time = sample_time
-            self.auto_mode = False
+            self.auto_mode = auto_mode
             self.proportional_on_measurement = False
             self.tunings = (kp, ki, kd)
             self.output_limits = (123, 456)  # dummy init waarde
@@ -269,13 +271,15 @@ async def test_update_pid_invalid_start_mode_defaults(monkeypatch, hass, config_
 
     # Dummy PID class matching existing tests
     class DummyPID:
-        def __init__(self, kp=0, ki=0, kd=0, setpoint=0, sample_time=None):
+        def __init__(
+            self, kp=0, ki=0, kd=0, setpoint=0, sample_time=None, auto_mode=False
+        ):
             self.Kp = kp
             self.Ki = ki
             self.Kd = kd
             self.setpoint = setpoint
             self.sample_time = sample_time
-            self.auto_mode = False
+            self.auto_mode = auto_mode
             self.proportional_on_measurement = False
             self.tunings = (kp, ki, kd)
             self.output_limits = (123, 456)
