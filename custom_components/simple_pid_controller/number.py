@@ -96,6 +96,14 @@ CONTROL_NUMBER_ENTITIES = [
         "default": 1,
         "entity_category": EntityCategory.CONFIG,
     },
+    {
+        "name": "Startup Value",
+        "key": "starting_output",
+        "unit": "",
+        "step": 1.0,
+        "default": 0.0,
+        "entity_category": EntityCategory.CONFIG,
+    },
 ]
 
 
@@ -181,6 +189,8 @@ class ControlParameterNumber(RestoreNumber):
 
         if self._key == "setpoint":
             min_val, max_val = input_range_min, input_range_max
+        elif self._key == "starting_output":
+            min_val, max_val = output_range_min, output_range_max
         elif self._key == "output_min":
             min_val, max_val = output_range_min, output_range_max
         elif self._key == "output_max":
@@ -204,6 +214,10 @@ class ControlParameterNumber(RestoreNumber):
         if self._key == "setpoint":
             self._attr_native_value = input_range_min + (
                 input_range_max - input_range_min
+            ) * float(desc["default"])
+        elif self._key == "starting_output":
+            self._attr_native_value = output_range_min + (
+                output_range_max - output_range_min
             ) * float(desc["default"])
         elif self._key == "output_min":
             self._attr_native_value = output_range_min

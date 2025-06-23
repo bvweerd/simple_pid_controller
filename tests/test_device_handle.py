@@ -100,3 +100,48 @@ async def test_get_switch_returns_true_when_no_entity_configured(hass, config_en
     # Force no  entity_id
     handle._get_entity_id = lambda platform, key: None
     assert handle.get_switch("any_key") is True
+
+
+@pytest.mark.parametrize(
+    "state_value, expected",
+    [
+        ("Zero start", "Zero start"),  # valid select option
+        ("unknown", None),  # invalid
+        ("unavailable", None),  # invalid
+        (None, None),  # no state
+    ],
+)
+def test_get_select_various_states(
+    monkeypatch, hass, config_entry, state_value, expected
+):
+    """Test PIDDeviceHandle.get_select behavior for valid and invalid entity states."""
+
+    fake_eid = "select.pid_entry_start_mode"
+
+    # Inject fake state
+    if state_value is not None:
+        hass.states.async_set(fake_eid, state_value)
+
+    # Patch entity_registry.async_get(hass) → returns dummy registry object
+    class DummyRegistry:
+        def async_get_entity_id(self, platform, domain, unique_id):
+            if domain == DOMAIN and unique_id.endswith("start_mode"):
+                return fake_eid
+            return None
+
+    monkeypatch.setattr(er, "async_get", lambda hass: DummyRegistry())
+
+    handle = PIDDeviceHandle(hass, config_entry)
+    result = handle.get_select("start_mode")
+
+    assert result == expected
+
+
+def test_get_select_no_entity(monkeypatch, hass, config_entry):
+    """If _get_entity_id returns None, get_select should return None."""
+    # Patch de registry zo dat er geen entity_id wordt gevonden
+    monkeypatch.setattr(er, "async_get", lambda hass_: DummyRegistry(None))
+
+    handle = PIDDeviceHandle(hass, config_entry)
+    # Key mag willekeurig zijn, er is immers geen entity
+    assert handle.get_select("nonexistent_key") is None
