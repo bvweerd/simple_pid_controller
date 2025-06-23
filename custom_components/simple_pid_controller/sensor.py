@@ -36,7 +36,7 @@ async def async_setup_entry(
     handle.init_phase = True
 
     # Init PID with default values
-    handle.pid = PID(1.0, 0.1, 0.05, setpoint=50, sample_time=None)
+    handle.pid = PID(1.0, 0.1, 0.05, setpoint=50, sample_time=None, auto_mode=False)
 
     handle.pid.output_limits = (-10.0, 10.0)
     handle.last_contributions = (0, 0, 0, 0)
