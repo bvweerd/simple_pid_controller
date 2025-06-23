@@ -1,0 +1,6 @@
+bug:
+  - "error"
+  - "fail"
+feature:
+  - "feature request"
+  - "enhancement"

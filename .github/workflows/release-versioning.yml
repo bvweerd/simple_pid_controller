@@ -9,6 +9,9 @@ on:
   release:
     types: [published]
 
+permissions:
+  contents: write
+  
 jobs:
   bump-release:
     # Zorg dat we alleen in deze job de tag-push afhandelen
