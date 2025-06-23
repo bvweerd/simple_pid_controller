@@ -33,10 +33,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up PID output and diagnostic sensors."""
     handle: PIDDeviceHandle = entry.runtime_data.handle
-    handle.init_phase = True
 
     # Init PID with default values
-    handle.pid = PID(1.0, 0.1, 0.05, setpoint=50, sample_time=None)
+    handle.pid = PID(1.0, 0.1, 0.05, setpoint=50, sample_time=None, auto_mode=False)
 
     handle.pid.output_limits = (-10.0, 10.0)
     handle.last_contributions = (0, 0, 0, 0)
@@ -72,10 +71,7 @@ async def async_setup_entry(
             handle.pid.output_limits = (None, None)
 
         _LOGGER.debug("Start mode = %s (type: %s)", start_mode, type(start_mode))
-        if (handle.init_phase and auto_mode) or (
-            not handle.pid.auto_mode and auto_mode
-        ):
-            handle.init_phase = False
+        if not handle.pid.auto_mode and auto_mode):
             if start_mode == "Zero start":
                 handle.pid.set_auto_mode(True, 0)
             elif start_mode == "Last known value":
@@ -86,7 +82,6 @@ async def async_setup_entry(
                 handle.pid.set_auto_mode(True)
         else:
             handle.pid.auto_mode = auto_mode
-            handle.init_phase = False
 
         handle.pid.proportional_on_measurement = p_on_m
 
