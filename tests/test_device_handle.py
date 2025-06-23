@@ -135,3 +135,13 @@ def test_get_select_various_states(
     result = handle.get_select("start_mode")
 
     assert result == expected
+
+
+def test_get_select_no_entity(monkeypatch, hass, config_entry):
+    """If _get_entity_id returns None, get_select should return None."""
+    # Patch de registry zo dat er geen entity_id wordt gevonden
+    monkeypatch.setattr(er, "async_get", lambda hass_: DummyRegistry(None))
+
+    handle = PIDDeviceHandle(hass, config_entry)
+    # Key mag willekeurig zijn, er is immers geen entity
+    assert handle.get_select("nonexistent_key") is None
