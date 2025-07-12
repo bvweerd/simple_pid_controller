@@ -8,7 +8,11 @@ on:
     types: [published]
   schedule:
     - cron: "0 0 * * *"
-    
+
+
+permissions:
+  contents: read
+  
 jobs:
   validate-hacs:
     runs-on: ubuntu-latest
