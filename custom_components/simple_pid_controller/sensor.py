@@ -172,19 +172,22 @@ async def async_setup_entry(
         "output_max",
         "sample_time",
     ]:
-        hass.bus.async_listen(
+        unsub = hass.bus.async_listen(
             "state_changed", make_listener(f"number.{entry.entry_id}_{key}")
         )
+        entry.async_on_unload(unsub)
 
     for key in ["auto_mode", "proportional_on_measurement", "windup_protection"]:
-        hass.bus.async_listen(
+        unsub = hass.bus.async_listen(
             "state_changed", make_listener(f"switch.{entry.entry_id}_{key}")
         )
+        entry.async_on_unload(unsub)
 
     for key in ["start_mode"]:
-        hass.bus.async_listen(
+        unsub = hass.bus.async_listen(
             "state_changed", make_listener(f"select.{entry.entry_id}_{key}")
         )
+        entry.async_on_unload(unsub)
 
 
 class PIDOutputSensor(
