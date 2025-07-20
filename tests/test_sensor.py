@@ -76,7 +76,7 @@ async def test_pid_contribution_native_value_rounding_and_none(hass, config_entr
             f"sensor.{config_entry.entry_id}_{key}",
             coordinator,
         )
-        sensor._handle = handle  # inject mock handle
+        assert sensor._handle is handle
         assert sensor.native_value == expected
 
     # Unknown key should return None
@@ -87,7 +87,7 @@ async def test_pid_contribution_native_value_rounding_and_none(hass, config_entr
         "sensor.{config_entry.entry_id}_pid_x_contrib",
         coordinator,
     )
-    sensor_none._handle = handle
+    assert sensor_none._handle is handle
     assert sensor_none.native_value is None
 
 
@@ -350,7 +350,7 @@ def test_pid_contribution_error_when_input_or_setpoint_none(hass, config_entry):
     sensor = PIDContributionSensor(
         hass, config_entry, "error", "Error Sensor", coordinator
     )
-    sensor._handle = handle
+    assert sensor._handle is handle
     assert sensor.native_value == 0
 
     # Case 2: setpoint is None → error = 0
@@ -359,5 +359,5 @@ def test_pid_contribution_error_when_input_or_setpoint_none(hass, config_entry):
     sensor = PIDContributionSensor(
         hass, config_entry, "error", "Error Sensor", coordinator
     )
-    sensor._handle = handle
+    assert sensor._handle is handle
     assert sensor.native_value == 0
