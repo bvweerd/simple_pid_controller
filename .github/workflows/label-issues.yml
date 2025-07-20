@@ -11,6 +11,8 @@ jobs:
     permissions:
       issues: write
     steps:
-      - uses: peaceiris/actions-issue-labeler@v1
+      - uses: github/issue-labeler@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          configuration-path: .github/labeler.yml
+
