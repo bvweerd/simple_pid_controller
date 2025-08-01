@@ -1,0 +1,80 @@
+{
+  "title": "Simple PID Controller",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configura Simple PID Controller",
+        "description": "Inserisci un nome e scegli il sensore per pilotare il loop PID.",
+        "data": {
+          "name": "Nome",
+          "sensor_entity_id": "Entità Sensore",
+          "input_range_min": "Intervallo di Ingresso Minimo",
+          "input_range_max": "Intervallo di Ingresso Massimo",
+          "output_range_min": "Intervallo di Uscita Minimo",
+          "output_range_max": "Intervallo di Uscita Massimo"
+        }
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "È consentita una sola istanza con questo nome."
+    },
+    "error": {
+      "already_configured": "Esiste già una configurazione con questo nome.",
+      "input_range_min_max": "Il valore minimo deve essere inferiore a quello massimo.",
+      "output_range_min_max": "Il valore minimo deve essere inferiore a quello massimo."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Modifica Opzioni Controllor PID",
+        "description": "Modifica l'entità sensore e l'intervallo utilizzati dal controllore.",
+        "data": {
+          "sensor_entity_id": "Entità Sensore",
+          "input_range_min": "Intervallo di Ingresso Minimo",
+          "input_range_max": "Intervallo di Ingresso Massimo",
+          "output_range_min": "Intervallo di Uscita Minimo",
+          "output_range_max": "Intervallo di Uscita Massimo"
+        }
+      }
+    },
+    "error": {
+      "range_min_max": "Il valore minimo deve essere inferiore a quello massimo."
+    }
+  },
+  "entity": {
+    "number": {
+      "kp": {
+        "name": "Kp"
+      },
+      "ki": {
+        "name": "Ki"
+      },
+      "kd": {
+        "name": "Kd"
+      },
+      "setpoint": {
+        "name": "Set Point"
+      },
+      "output": {
+        "name": "Uscita"
+      }
+    },
+    "switch": {
+        "auto_mode": {
+            "name": "Modalità Automatica"
+        },
+        "proportional_on_measurement": {
+            "name": "Proporzionale sulla Misura"
+        },
+        "windup_protection": {
+            "name": "Protezione Anti-Windup"
+        }
+    },
+    "sensor": {
+        "current_value": {
+            "name": "Valore Attuale"
+        }
+    }
+  }
+}

@@ -1,6 +1,8 @@
-# Simple PID Controller
+# Simple PID Heater Cooler Controller
 
-> The Simple PID Controller is a Home Assistant integration for real-time PID control with UI-based tuning and diagnostics.
+The **Simple PID Heater Cooler Controller** is a Home Assistant integration forked from the [Simple PID Controller](https://github.com/bvweerd/simple_pid_controller).  
+It extends the original functionality by supporting both heating and cooling modes, while maintaining real-time PID control with UI-based tuning and diagnostics.
+
 
 ---
 
@@ -45,6 +47,7 @@
 | Switch   | `Auto Mode`               | Toggle automatic control                |
 | Switch   | `Proportional on Measurement` | Change proportional mode         |
 | Switch   | `Windup Protection`       | Toggle windup protection                |
+| Switch   | `Cooling Mode`            | Toggle heating/cooling mode             |
 
 
 > 💡 All entities are editable via the UI in **Settings > Devices & Services > [Your Controller] > Options**.
@@ -180,7 +183,7 @@ Here's an example output showing the controller responding to a setpoint:
 
 ## 🛠️ Support & Development
 
-- **GitHub Repository**: [https://github.com/bvweerd/simple_pid_controller](https://github.com/bvweerd/simple_pid_controller)
+- **GitHub Repository**: [https://github.com/kriptos1970/simple_pid_controller](https://github.com/kriptos1970/simple_pid_controller)
 - **Issues & Bugs**: [Report here](https://github.com/bvweerd/simple_pid_controller/issues)
 
 ---
