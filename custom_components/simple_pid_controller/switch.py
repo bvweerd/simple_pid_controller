@@ -24,6 +24,11 @@ SWITCH_ENTITIES = [
         "name": "Windup Protection",
         "default_state": True,
     },
+    {
+        "key": "cooling_mode",
+        "name": "Cooling Mode",
+        "default_state": True,
+    },    
 ]
 
 
