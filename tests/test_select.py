@@ -130,3 +130,27 @@ async def test_async_added_to_hass_restores_previous_state(
 
     # Assert
     assert select._attr_current_option == expected_option
+
+
+@pytest.mark.asyncio
+async def test_async_added_to_hass_invalid_last_state(hass, config_entry, monkeypatch):
+    """Ensure invalid last state does not override default option."""
+    coordinator = config_entry.runtime_data.coordinator
+    select = PIDStartModeSelect(
+        hass, config_entry, "start_mode", "PID Start Mode", coordinator
+    )
+
+    class LastState:
+        state = "invalid_option"
+
+    async def fake_get_last_state():
+        return LastState
+
+    monkeypatch.setattr(select, "async_get_last_state", fake_get_last_state)
+
+    default_option = START_MODE_OPTIONS[0]
+    assert select._attr_current_option == default_option
+
+    await select.async_added_to_hass()
+
+    assert select._attr_current_option == default_option

@@ -1,5 +1,8 @@
 name: Run Pre-Commit
 
+permissions:
+  contents: write
+  
 on:
   push:
     branches:
@@ -11,9 +14,6 @@ on:
       - main
   workflow_dispatch:
 
-permissions:
-  contents: write
-  
 jobs:
   test:
     env:
@@ -28,7 +28,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.13"
+          python-version: "3.12"
           cache: 'pip' # caching pip dependencies
 
       - name: Install dependencies
@@ -39,4 +39,21 @@ jobs:
           
       - name: Run pre-commit hooks
         run: |
-          pre-commit run --all-files
+          # Pre-commit exits with code 1 when it makes changes. We don't want
+          # the workflow to fail in that case, so ignore the exit code.
+          pre-commit run --all-files || true
+
+      - name: Commit and push changes
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: apply pre-commit fixes"
+            git push
+          fi

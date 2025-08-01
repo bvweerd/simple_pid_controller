@@ -4,3 +4,9 @@ bug:
 feature:
   - "feature request"
   - "enhancement"
+documentation:
+  - "docs"
+  - "documentation"
+maintenance:
+  - "dependabot"
+

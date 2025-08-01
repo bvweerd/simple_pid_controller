@@ -76,7 +76,7 @@ async def test_pid_contribution_native_value_rounding_and_none(hass, config_entr
             f"sensor.{config_entry.entry_id}_{key}",
             coordinator,
         )
-        sensor._handle = handle  # inject mock handle
+        assert sensor._handle is handle
         assert sensor.native_value == expected
 
     # Unknown key should return None
@@ -87,7 +87,7 @@ async def test_pid_contribution_native_value_rounding_and_none(hass, config_entr
         "sensor.{config_entry.entry_id}_pid_x_contrib",
         coordinator,
     )
-    sensor_none._handle = handle
+    assert sensor_none._handle is handle
     assert sensor_none.native_value is None
 
 
@@ -350,7 +350,7 @@ def test_pid_contribution_error_when_input_or_setpoint_none(hass, config_entry):
     sensor = PIDContributionSensor(
         hass, config_entry, "error", "Error Sensor", coordinator
     )
-    sensor._handle = handle
+    assert sensor._handle is handle
     assert sensor.native_value == 0
 
     # Case 2: setpoint is None → error = 0
@@ -359,5 +359,44 @@ def test_pid_contribution_error_when_input_or_setpoint_none(hass, config_entry):
     sensor = PIDContributionSensor(
         hass, config_entry, "error", "Error Sensor", coordinator
     )
-    sensor._handle = handle
+    assert sensor._handle is handle
     assert sensor.native_value == 0
+
+
+@pytest.mark.asyncio
+async def test_update_pid_adjusts_update_interval(hass, config_entry, monkeypatch):
+    """Ensure coordinator.update_interval updates when sample_time changes."""
+
+    monkeypatch.setattr(PIDDataCoordinator, "_schedule_refresh", lambda self, *_: None)
+
+    handle = config_entry.runtime_data.handle
+
+    sample_time = 5
+
+    handle.get_input_sensor_value = lambda: 10.0
+    handle.get_select = lambda key: {"start_mode": "Startup value"}[key]
+    handle.get_number = lambda key: {
+        "kp": 1.0,
+        "ki": 0.1,
+        "kd": 0.01,
+        "setpoint": 20.0,
+        "starting_output": 0.0,
+        "sample_time": sample_time,
+        "output_min": 0.0,
+        "output_max": 100.0,
+    }[key]
+    handle.get_switch = lambda key: True
+
+    entities = []
+    await async_setup_entry(hass, config_entry, lambda e: entities.extend(e))
+    coordinator = entities[0].coordinator
+
+    assert coordinator.update_interval.total_seconds() == 10
+
+    await coordinator.update_method()
+    assert coordinator.update_interval == timedelta(seconds=sample_time)
+
+    sample_time = 15
+    await coordinator.update_method()
+    assert coordinator.update_interval == timedelta(seconds=sample_time)
+

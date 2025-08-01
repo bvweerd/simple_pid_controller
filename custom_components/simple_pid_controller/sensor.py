@@ -172,19 +172,22 @@ async def async_setup_entry(
         "output_max",
         "sample_time",
     ]:
-        hass.bus.async_listen(
+        unsub = hass.bus.async_listen(
             "state_changed", make_listener(f"number.{entry.entry_id}_{key}")
         )
+        entry.async_on_unload(unsub)
 
     for key in ["auto_mode", "proportional_on_measurement", "windup_protection"]:
-        hass.bus.async_listen(
+        unsub = hass.bus.async_listen(
             "state_changed", make_listener(f"switch.{entry.entry_id}_{key}")
         )
+        entry.async_on_unload(unsub)
 
     for key in ["start_mode"]:
-        hass.bus.async_listen(
+        unsub = hass.bus.async_listen(
             "state_changed", make_listener(f"select.{entry.entry_id}_{key}")
         )
+        entry.async_on_unload(unsub)
 
 
 class PIDOutputSensor(
@@ -204,16 +207,15 @@ class PIDOutputSensor(
 
         self._attr_native_unit_of_measurement = "%"
         self._attr_state_class = SensorStateClass.MEASUREMENT
-        self.handle = entry.runtime_data.handle
 
     async def async_added_to_hass(self):
         await super().async_added_to_hass()
         if (state := await self.async_get_last_state()) is not None:
             try:
                 value = float(state.state)
-                self.handle.last_known_output = value
+                self._handle.last_known_output = value
             except (ValueError, TypeError):
-                self.handle.last_known_output = 0.0
+                self._handle.last_known_output = 0.0
 
     @property
     def native_value(self) -> float | None:
@@ -241,7 +243,6 @@ class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity)
         self._attr_entity_registry_enabled_default = False
         self._attr_state_class = SensorStateClass.MEASUREMENT
         self._key = key
-        self._handle = entry.runtime_data.handle
 
     @property
     def native_value(self):
