@@ -1,6 +1,5 @@
 {
-  "name": "Simple PID Controller",
+  "name": "Simple PID Heater Cooler",
   "render_readme": true,
-  "zip_release": true,
-  "filename": "simple_pid_controller.zip"
+  "zip_release": false,
 }
