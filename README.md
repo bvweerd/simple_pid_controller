@@ -183,7 +183,7 @@ Here's an example output showing the controller responding to a setpoint:
 
 ## 🛠️ Support & Development
 
-- **GitHub Repository**: [https://github.com/bvweerd/simple_pid_controller](https://github.com/bvweerd/simple_pid_controller)
+- **GitHub Repository**: [https://github.com/kriptos1970/simple_pid_controller](https://github.com/kriptos1970/simple_pid_controller)
 - **Issues & Bugs**: [Report here](https://github.com/bvweerd/simple_pid_controller/issues)
 
 ---
