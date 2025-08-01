@@ -60,6 +60,7 @@ async def async_setup_entry(
         auto_mode = handle.get_switch("auto_mode")
         p_on_m = handle.get_switch("proportional_on_measurement")
         windup_protection = handle.get_switch("windup_protection")
+        cooling_mode = handle.get_switch("cooling_mode")
 
         # adapt PID settings
         handle.pid.tunings = (kp, ki, kd)
@@ -86,6 +87,8 @@ async def async_setup_entry(
         handle.pid.proportional_on_measurement = p_on_m
 
         output = handle.pid(input_value)
+        if cooling_mode:
+            output = out_max + out_min - output
 
         # save last know output
         handle.last_known_output = output
