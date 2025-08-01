@@ -88,7 +88,7 @@ async def async_setup_entry(
 
         output = handle.pid(input_value)
         if cooling_mode:
-            output = out_max - output
+            output = out_max + out_min - output
             
         # save last know output
         handle.last_known_output = output
