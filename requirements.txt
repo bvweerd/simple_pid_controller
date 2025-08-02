@@ -1,4 +1,5 @@
-pytest
+asyncio
+pytest==8.3.5
 pytest-cov
-pytest-homeassistant-custom-component==0.13.266
+pytest-homeassistant-custom-component
 simple-pid==2.0.1
