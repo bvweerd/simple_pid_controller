@@ -50,7 +50,9 @@ async def test_autotune_switch_sets_gains_and_turns_off(
 
     # Turn on autotune switch
     entity_id = f"switch.{config_entry.entry_id}_autotune"
-    await hass.services.async_call("switch", "turn_on", {"entity_id": entity_id}, blocking=True)
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": entity_id}, blocking=True
+    )
 
     coordinator = config_entry.runtime_data.coordinator
     await coordinator.update_method()

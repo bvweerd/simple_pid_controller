@@ -36,8 +36,8 @@ async def test_pid_start_modes(hass, config_entry):
             "output_min": 0.0,
             "output_max": 100.0,
         }[key]
-        handle.get_switch = (
-            lambda key, default=True: False if key == "autotune" else True
+        handle.get_switch = lambda key, default=True: (
+            False if key == "autotune" else True
         )
 
         # trigger initial update
