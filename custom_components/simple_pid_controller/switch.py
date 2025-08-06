@@ -24,6 +24,11 @@ SWITCH_ENTITIES = [
         "name": "Windup Protection",
         "default_state": True,
     },
+    {
+        "key": "autotune",
+        "name": "Autotune",
+        "default_state": False,
+    },
 ]
 
 
