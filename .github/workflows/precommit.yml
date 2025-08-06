@@ -1,4 +1,4 @@
-name: Run Pre-Commit
+name: Run Code Quality Check
 
 permissions:
   contents: write
@@ -16,6 +16,7 @@ on:
 
 jobs:
   test:
+    name: "Code Quality Check"
     env:
       PYTHONPATH: .
     runs-on: ubuntu-latest
@@ -55,5 +56,6 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "chore: apply pre-commit fixes"
-            git push
+            BRANCH="${GITHUB_HEAD_REF:-${GITHUB_REF_NAME}}"
+            git push origin "HEAD:${BRANCH}"
           fi

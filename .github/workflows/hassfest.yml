@@ -16,6 +16,7 @@ permissions:
   
 jobs:
   hassfest:
+    name: "Hassfest"
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
