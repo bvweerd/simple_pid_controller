@@ -68,6 +68,7 @@ class PIDDeviceHandle:
             CONF_SENSOR_ENTITY_ID, entry.data.get(CONF_SENSOR_ENTITY_ID)
         )
         self.last_contributions = (None, None, None)  # (P, I, D)
+        self.autotune = None  # runtime data for relay autotune
 
     def _get_entity_id(self, platform: str, key: str) -> str | None:
         """Lookup the real entity_id in the registry by unique_id == '<entry_id>_<key>'."""
@@ -107,16 +108,22 @@ class PIDDeviceHandle:
 
         return None
 
-    def get_switch(self, key: str) -> bool:
-        """Return True/False of switch entity, default True if missing."""
+    def get_switch(self, key: str, default: bool = True) -> bool:
+        """Return True/False of switch entity.
+
+        If the entity does not exist or its state is ``unknown``/``unavailable``,
+        ``default`` will be returned. Existing switches default to ``True`` but
+        callers can pass ``default=False`` for switches that should not enable
+        behaviour implicitly when missing (e.g. autotune).
+        """
         entity_id = self._get_entity_id("switch", key)
         if not entity_id:
-            return True
+            return default
         state = self.hass.states.get(entity_id)
         _LOGGER.debug("get_switch(%s) → %s = %s", key, entity_id, state and state.state)
         if state and state.state not in ("unknown", "unavailable"):
             return state.state == "on"
-        return True
+        return default
 
     def get_input_sensor_value(self) -> float | None:
         """Return the input value from configured sensor."""

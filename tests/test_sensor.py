@@ -32,7 +32,9 @@ async def test_pid_output_and_contributions_update(hass, config_entry):
         "output_min": 0.0,
         "output_max": 100.0,
     }[key]
-    handle.get_switch = lambda key: True
+    handle.get_switch = (
+        lambda key, default=True: False if key == "autotune" else True
+    )
 
     # 1) trigger initial update
     hass.bus.async_fire("homeassistant_started")
@@ -98,7 +100,9 @@ async def test_listeners_trigger_refresh_sensor(hass, config_entry, monkeypatch)
     handle = config_entry.runtime_data.handle
     handle.get_input_sensor_value = lambda: 0.0
     handle.get_number = lambda key: 0.0
-    handle.get_switch = lambda key: True
+    handle.get_switch = (
+        lambda key, default=True: False if key == "autotune" else True
+    )
 
     # Capture listeners
     listeners = []
@@ -141,7 +145,9 @@ async def test_update_pid_raises_on_missing_input(hass, config_entry):
     handle.get_input_sensor_value = lambda: None
     # Provide defaults for numbers and switches
     handle.get_number = lambda key: 0.0
-    handle.get_switch = lambda key: True
+    handle.get_switch = (
+        lambda key, default=True: False if key == "autotune" else True
+    )
     # Setup entry to get coordinator with update_method
     entities: list = []
     await async_setup_entry(hass, config_entry, lambda e: entities.extend(e))
@@ -202,7 +208,11 @@ async def test_update_pid_output_limits_none_when_windup_protection_disabled(
         "output_min": 0.0,
         "output_max": 100.0,
     }.get(key, 0.0)
-    handle.get_switch = lambda key: False if key == "windup_protection" else True
+    handle.get_switch = (
+        lambda key, default=True: False
+        if key in ("windup_protection", "autotune")
+        else True
+    )
     handle.get_select = lambda key: "Zero start" if key == "start_mode" else None
 
     # Set-up components and trigger update
@@ -312,7 +322,9 @@ async def test_update_pid_invalid_start_mode_defaults(monkeypatch, hass, config_
         "output_min": 0.0,
         "output_max": 100.0,
     }[key]
-    handle.get_switch = lambda key: True
+    handle.get_switch = (
+        lambda key, default=True: False if key == "autotune" else True
+    )
     handle.get_select = lambda key: "Invalid Mode" if key == "start_mode" else None
 
     # Run setup and trigger one PID update
@@ -385,7 +397,9 @@ async def test_update_pid_adjusts_update_interval(hass, config_entry, monkeypatc
         "output_min": 0.0,
         "output_max": 100.0,
     }[key]
-    handle.get_switch = lambda key: True
+    handle.get_switch = (
+        lambda key, default=True: False if key == "autotune" else True
+    )
 
     entities = []
     await async_setup_entry(hass, config_entry, lambda e: entities.extend(e))

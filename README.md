@@ -29,6 +29,7 @@
 - **Diagnostics** for P, I, and D terms (optional).
 - **Switch** to toggle auto mode and proportional-on-measurement.
 - **Configurable** output limits, setpoint, and sample time.
+- **Autotuner** based on the relay method for automatic gain estimation with a dedicated switch to trigger tuning.
 
 ### Included Entities
 
@@ -45,6 +46,7 @@
 | Switch   | `Auto Mode`               | Toggle automatic control                |
 | Switch   | `Proportional on Measurement` | Change proportional mode         |
 | Switch   | `Windup Protection`       | Toggle windup protection                |
+| Switch   | `Autotune`                | Start relay-based autotuning            |
 
 
 > 💡 All entities are editable via the UI in **Settings > Devices & Services > [Your Controller] > Options**.
@@ -104,6 +106,7 @@ The controller’s setpoint range defaults to **0.0 – 100.0**. To customize th
 | Switch   | `Auto Mode`                   | Enable/disable PID automation.                     |
 | Switch   | `Proportional on Measurement` | Use measurement instead of error for P term.       |
 | Switch   | `Windup Protection`           | Toggle windup protection                           |
+| Switch   | `Autotune`                    | Trigger relay autotuning of PID gains              |
 
 ---
 

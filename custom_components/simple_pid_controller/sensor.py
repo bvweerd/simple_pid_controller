@@ -19,6 +19,7 @@ from typing import Any
 from . import PIDDeviceHandle
 from .entity import BasePIDEntity
 from .coordinator import PIDDataCoordinator
+from .autotune import RelayAutoTuner
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -47,16 +48,69 @@ async def async_setup_entry(
         if input_value is None:
             raise ValueError("Input sensor not available")
 
-        # Read parameters from UI
+        sample_time = handle.get_number("sample_time")
+        out_min = handle.get_number("output_min")
+        out_max = handle.get_number("output_max")
+
+        if handle.get_switch("autotune", default=False):
+            relay_amplitude = abs(out_max - out_min) / 2.0
+            if handle.autotune is None:
+                handle.autotune = {
+                    "data": [],
+                    "sign": 1,
+                    "relay": relay_amplitude,
+                    "out_min": out_min,
+                    "out_max": out_max,
+                }
+            handle.autotune["data"].append(input_value)
+            output = (
+                handle.autotune["out_max"]
+                if handle.autotune["sign"] > 0
+                else handle.autotune["out_min"]
+            )
+            handle.autotune["sign"] *= -1
+            handle.last_known_output = output
+            try:
+                kp, ki, kd = RelayAutoTuner.tune(
+                    handle.autotune["data"], sample_time, handle.autotune["relay"]
+                )
+            except ValueError:
+                pass
+            else:
+                for key, value in (("kp", kp), ("ki", ki), ("kd", kd)):
+                    entity_id = handle._get_entity_id("number", key)
+                    if entity_id:
+                        await hass.services.async_call(
+                            "number",
+                            "set_value",
+                            {"entity_id": entity_id, "value": value},
+                            blocking=True,
+                        )
+                entity_id = handle._get_entity_id("switch", "autotune")
+                if entity_id:
+                    await hass.services.async_call(
+                        "switch",
+                        "turn_off",
+                        {"entity_id": entity_id},
+                        blocking=True,
+                    )
+                handle.autotune = None
+
+            if coordinator.update_interval.total_seconds() != sample_time:
+                _LOGGER.debug(
+                    "Updating coordinator interval to %.2f seconds", sample_time
+                )
+                coordinator.update_interval = timedelta(seconds=sample_time)
+
+            return output
+
+        # Read parameters from UI for normal PID operation
         kp = handle.get_number("kp")
         ki = handle.get_number("ki")
         kd = handle.get_number("kd")
         setpoint = handle.get_number("setpoint")
         starting_output = handle.get_number("starting_output")
         start_mode = handle.get_select("start_mode")
-        sample_time = handle.get_number("sample_time")
-        out_min = handle.get_number("output_min")
-        out_max = handle.get_number("output_max")
         auto_mode = handle.get_switch("auto_mode")
         p_on_m = handle.get_switch("proportional_on_measurement")
         windup_protection = handle.get_switch("windup_protection")
@@ -177,7 +231,12 @@ async def async_setup_entry(
         )
         entry.async_on_unload(unsub)
 
-    for key in ["auto_mode", "proportional_on_measurement", "windup_protection"]:
+    for key in [
+        "auto_mode",
+        "proportional_on_measurement",
+        "windup_protection",
+        "autotune",
+    ]:
         unsub = hass.bus.async_listen(
             "state_changed", make_listener(f"switch.{entry.entry_id}_{key}")
         )
