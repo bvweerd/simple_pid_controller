@@ -399,4 +399,3 @@ async def test_update_pid_adjusts_update_interval(hass, config_entry, monkeypatc
     sample_time = 15
     await coordinator.update_method()
     assert coordinator.update_interval == timedelta(seconds=sample_time)
-

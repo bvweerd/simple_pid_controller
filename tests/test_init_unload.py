@@ -4,8 +4,16 @@ import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from custom_components.simple_pid_controller import async_setup_entry, async_unload_entry
-from custom_components.simple_pid_controller.const import DOMAIN, CONF_SENSOR_ENTITY_ID, CONF_NAME
+from custom_components.simple_pid_controller import (
+    async_setup_entry,
+    async_unload_entry,
+)
+from custom_components.simple_pid_controller.const import (
+    DOMAIN,
+    CONF_SENSOR_ENTITY_ID,
+    CONF_NAME,
+)
+
 
 @pytest.fixture
 async def skip_setup_integration():
