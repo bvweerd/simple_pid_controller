@@ -43,7 +43,7 @@ def _enable_custom_integrations(enable_custom_integrations):
     """Enable loading of custom integrations in custom_components/"""  # noqa: F811
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 async def setup_integration(hass, config_entry):
     """Set up the integration automatically for each test."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)

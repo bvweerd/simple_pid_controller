@@ -1,3 +1,4 @@
+import pytest
 from custom_components.simple_pid_controller.diagnostics import (
     async_get_config_entry_diagnostics,
 )
@@ -12,6 +13,7 @@ from custom_components.simple_pid_controller.const import (
 )
 
 
+@pytest.mark.usefixtures("setup_integration")
 async def test_config_entry_diagnostics(hass, config_entry):
     """Test that diagnostics returns correct data for config entry."""
     result = await async_get_config_entry_diagnostics(hass, config_entry)
