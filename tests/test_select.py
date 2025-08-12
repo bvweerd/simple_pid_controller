@@ -8,6 +8,7 @@ from custom_components.simple_pid_controller.select import (
 )
 
 
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.asyncio
 async def test_pid_start_modes(hass, config_entry):
     """Check start modes."""
@@ -61,6 +62,7 @@ async def test_pid_start_modes(hass, config_entry):
     )
 
 
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.asyncio
 async def test_async_select_option_applies_only_valid_options(
     hass, config_entry, monkeypatch
@@ -96,6 +98,7 @@ async def test_async_select_option_applies_only_valid_options(
     ), "async_write_ha_state should not be called for an invalid option"
 
 
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "last_state, expected_option",
@@ -132,6 +135,7 @@ async def test_async_added_to_hass_restores_previous_state(
     assert select._attr_current_option == expected_option
 
 
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.asyncio
 async def test_async_added_to_hass_invalid_last_state(hass, config_entry, monkeypatch):
     """Ensure invalid last state does not override default option."""

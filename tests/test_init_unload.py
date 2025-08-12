@@ -15,12 +15,7 @@ from custom_components.simple_pid_controller.const import (
 )
 
 
-@pytest.fixture
-async def skip_setup_integration():
-    """Override autouse setup so tests can call setup manually."""
-    yield
-
-
+@pytest.mark.usefixtures("setup_integration")
 async def test_setup_and_unload_entry(hass, config_entry):
     """Test setting up and tearing down the entry."""
     # runtime_data should exist…
@@ -49,7 +44,6 @@ async def test_setup_and_unload_entry(hass, config_entry):
     assert DOMAIN not in hass.data
 
 
-@pytest.mark.usefixtures("skip_setup_integration")
 @pytest.mark.asyncio
 async def test_setup_entry_not_ready_when_sensor_missing(hass, caplog):
     """async_setup_entry should raise when the sensor state is missing."""

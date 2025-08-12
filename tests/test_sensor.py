@@ -11,6 +11,7 @@ from custom_components.simple_pid_controller.sensor import async_setup_entry
 from custom_components.simple_pid_controller import sensor as sensor_module
 
 
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.asyncio
 async def test_pid_output_and_contributions_update(hass, config_entry):
     """Test that PID output and contribution sensors update on Home Assistant start."""
@@ -50,6 +51,7 @@ async def test_pid_output_and_contributions_update(hass, config_entry):
     assert float(state.state) != 0
 
 
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.asyncio
 async def test_pid_contribution_native_value_rounding_and_none(hass, config_entry):
     """Test that PIDContributionSensor.native_value rounds correctly and returns None for unknown key."""
@@ -91,6 +93,7 @@ async def test_pid_contribution_native_value_rounding_and_none(hass, config_entr
     assert sensor_none.native_value is None
 
 
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.asyncio
 async def test_listeners_trigger_refresh_sensor(hass, config_entry, monkeypatch):
     """Lines 131-132: coordinator.async_request_refresh called on sensor state change."""
@@ -133,6 +136,7 @@ async def test_listeners_trigger_refresh_sensor(hass, config_entry, monkeypatch)
     ), "Coordinator.async_request_refresh was not called on sensor state change"
 
 
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.asyncio
 async def test_update_pid_raises_on_missing_input(hass, config_entry):
     """Line 47: update_pid should raise ValueError when input sensor unavailable."""
@@ -151,6 +155,7 @@ async def test_update_pid_raises_on_missing_input(hass, config_entry):
     assert "Input sensor not available" in str(excinfo.value)
 
 
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.asyncio
 async def test_update_pid_output_limits_none_when_windup_protection_disabled(
     monkeypatch, hass, config_entry
@@ -225,6 +230,7 @@ async def test_update_pid_output_limits_none_when_windup_protection_disabled(
     assert pid.output_limits == (None, None)
 
 
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "restored_state, expected_last_known",
@@ -265,6 +271,7 @@ async def test_async_added_to_hass_restores_last_known_output(
     assert handle.last_known_output == expected_last_known
 
 
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.asyncio
 async def test_update_pid_invalid_start_mode_defaults(monkeypatch, hass, config_entry):
     """Line 86: invalid start_mode calls set_auto_mode(True) without changing output."""
@@ -338,6 +345,7 @@ async def test_update_pid_invalid_start_mode_defaults(monkeypatch, hass, config_
     assert pid._output == 42.0
 
 
+@pytest.mark.usefixtures("setup_integration")
 def test_pid_contribution_error_when_input_or_setpoint_none(hass, config_entry):
     """Line 258: native_value for 'error' should be 0 when input or setpoint is None."""
     handle = config_entry.runtime_data.handle
@@ -363,6 +371,7 @@ def test_pid_contribution_error_when_input_or_setpoint_none(hass, config_entry):
     assert sensor.native_value == 0
 
 
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.asyncio
 async def test_update_pid_adjusts_update_interval(hass, config_entry, monkeypatch):
     """Ensure coordinator.update_interval updates when sample_time changes."""

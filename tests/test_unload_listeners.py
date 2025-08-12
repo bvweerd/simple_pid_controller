@@ -3,12 +3,7 @@ import pytest
 from custom_components.simple_pid_controller.sensor import async_setup_entry
 
 
-@pytest.fixture(autouse=True)
-async def skip_setup_integration():
-    """Override autouse setup from conftest; tests will setup manually."""
-    yield
-
-
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.asyncio
 async def test_listeners_removed_after_unload(hass, config_entry, monkeypatch):
     """Ensure state change listeners are unsubscribed when the entry unloads."""
