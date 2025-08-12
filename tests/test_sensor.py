@@ -153,39 +153,12 @@ async def test_update_pid_raises_on_missing_input(hass, config_entry):
 
 @pytest.mark.asyncio
 async def test_update_pid_output_limits_none_when_windup_protection_disabled(
-    monkeypatch, hass, config_entry
+    monkeypatch, hass, config_entry, dummy_pid_class
 ):
     """Test output_limits (None, None)"""
 
-    # Dummy PID class
-    class DummyPID:
-        def __init__(
-            self, kp=0, ki=0, kd=0, setpoint=0, sample_time=None, auto_mode=False
-        ):
-            self.Kp = kp
-            self.Ki = ki
-            self.Kd = kd
-            self.setpoint = setpoint
-            self.sample_time = sample_time
-            self.auto_mode = auto_mode
-            self.proportional_on_measurement = False
-            self.tunings = (kp, ki, kd)
-            self.output_limits = (123, 456)  # dummy init waarde
-            self._output = 42.0
-            self.components = (1.0, 2.0, 3.0)  # dummy voor sensor.py
-
-        def set_auto_mode(self, enabled, last_output=None):
-            self.auto_mode = enabled
-            if last_output is not None:
-                self._output = last_output
-
-        def __call__(self, input_value):
-            return self._output
-
     # Patch the PID in sensor-module
-    from custom_components.simple_pid_controller import sensor as sensor_module
-
-    monkeypatch.setattr(sensor_module, "PID", DummyPID)
+    monkeypatch.setattr(sensor_module, "PID", dummy_pid_class)
 
     # init handle
     handle = config_entry.runtime_data.handle
@@ -266,36 +239,13 @@ async def test_async_added_to_hass_restores_last_known_output(
 
 
 @pytest.mark.asyncio
-async def test_update_pid_invalid_start_mode_defaults(monkeypatch, hass, config_entry):
+async def test_update_pid_invalid_start_mode_defaults(
+    monkeypatch, hass, config_entry, dummy_pid_class
+):
     """Line 86: invalid start_mode calls set_auto_mode(True) without changing output."""
 
-    # Dummy PID class matching existing tests
-    class DummyPID:
-        def __init__(
-            self, kp=0, ki=0, kd=0, setpoint=0, sample_time=None, auto_mode=False
-        ):
-            self.Kp = kp
-            self.Ki = ki
-            self.Kd = kd
-            self.setpoint = setpoint
-            self.sample_time = sample_time
-            self.auto_mode = auto_mode
-            self.proportional_on_measurement = False
-            self.tunings = (kp, ki, kd)
-            self.output_limits = (123, 456)
-            self._output = 42.0
-            self.components = (1.0, 2.0, 3.0)
-
-        def set_auto_mode(self, enabled, last_output=None):
-            self.auto_mode = enabled
-            if last_output is not None:
-                self._output = last_output
-
-        def __call__(self, input_value):
-            return self._output
-
     # Patch the PID class in the sensor module
-    monkeypatch.setattr(sensor_module, "PID", DummyPID)
+    monkeypatch.setattr(sensor_module, "PID", dummy_pid_class)
 
     # Prepare the handle
     handle = config_entry.runtime_data.handle
