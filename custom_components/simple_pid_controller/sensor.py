@@ -262,4 +262,4 @@ class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity)
             "error": error,
             "pid_i_delta": contributions[3],
         }.get(self._key)
-        return round(value, 2) if value is not None else None
+        return round(value, 3) if value is not None else None
