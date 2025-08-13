@@ -62,11 +62,11 @@ async def test_pid_contribution_native_value_rounding_and_none(hass, config_entr
 
     # Map contribution keys to expected values
     mapping = [
-        ("pid_p_contrib", round(0.1234, 2)),
-        ("pid_i_contrib", round(1.9876, 2)),
-        ("pid_d_contrib", round(2.5555, 2)),
+        ("pid_p_contrib", round(0.1234, 3)),
+        ("pid_i_contrib", round(1.9876, 3)),
+        ("pid_d_contrib", round(2.5555, 3)),
         ("error", -25),
-        ("pid_i_delta", round(3.3789, 2)),
+        ("pid_i_delta", round(3.3789, 3)),
         ("unknown_key", None),  # Should return None
     ]
 
