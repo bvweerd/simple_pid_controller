@@ -64,7 +64,7 @@ PID_NUMBER_ENTITIES = [
         "key": "sample_time",
         "unit": "s",
         "min": 0.01,
-        "max": 60.0,
+        "max": 600.0,
         "step": 0.01,
         "default": 10.0,
         "entity_category": EntityCategory.CONFIG,
