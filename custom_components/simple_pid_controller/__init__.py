@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import logging
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, config_validation as cv
 from dataclasses import dataclass
+import voluptuous as vol
 from .coordinator import PIDDataCoordinator
+from .select import START_MODE_OPTIONS
 
 from .const import (
     DOMAIN,
@@ -33,6 +35,8 @@ PLATFORMS: list[Platform] = [
     Platform.SWITCH,
     Platform.SELECT,
 ]
+
+SERVICE_SET_OUTPUT = "set_output"
 
 
 @dataclass
@@ -149,6 +153,59 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(entry.add_update_listener(_async_update_options_listener))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    if not hass.services.has_service(DOMAIN, SERVICE_SET_OUTPUT):
+
+        async def async_set_output(call: ServiceCall) -> None:
+            entity_id = call.data[ATTR_ENTITY_ID]
+            start_mode = call.data.get("start_mode")
+            value = call.data.get("value")
+
+            registry = er.async_get(hass)
+            entity_entry = registry.async_get(entity_id)
+            if entity_entry is None:
+                raise ValueError(f"Entity {entity_id} not found")
+
+            cfg_entry = hass.config_entries.async_get_entry(
+                entity_entry.config_entry_id
+            )
+            if cfg_entry is None or cfg_entry.domain != DOMAIN:
+                raise ValueError(f"Entity {entity_id} does not belong to {DOMAIN}")
+
+            handle = cfg_entry.runtime_data.handle
+            coordinator = cfg_entry.runtime_data.coordinator
+
+            if start_mode == "Zero start":
+                output = 0.0
+            elif start_mode == "Last known value":
+                output = handle.last_known_output or 0.0
+            elif start_mode == "Startup value":
+                output = handle.get_number("starting_output") or 0.0
+            else:
+                output = value
+
+            handle.pid.reset()
+            handle.pid.set_auto_mode(True, output)
+            handle.last_known_output = output
+            if coordinator:
+                coordinator.async_set_updated_data(output)
+
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_SET_OUTPUT,
+            async_set_output,
+            schema=vol.All(
+                vol.Schema(
+                    {
+                        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+                        vol.Optional("start_mode"): vol.In(START_MODE_OPTIONS),
+                        vol.Optional("value"): vol.Coerce(float),
+                    }
+                ),
+                cv.has_at_least_one_key("start_mode", "value"),
+            ),
+        )
+
     return True
 
 
@@ -157,6 +214,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         # reset runtime_data zodat tests slagen
         entry.runtime_data = None
+        if not hass.config_entries.async_entries(DOMAIN):
+            hass.services.async_remove(DOMAIN, SERVICE_SET_OUTPUT)
     return unload_ok
 
 

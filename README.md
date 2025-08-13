@@ -185,7 +185,34 @@ Here's an example output showing the controller responding to a setpoint:
 
 ---
 
-## 🔧 Service Actions 
-This Integration does **not** expose any custom services. All interactions are performed via UI-based entities.
+## 🔧 Service Actions
 
+### `simple_pid_controller.set_output`
+
+Reset the PID controller and force its output to a specific value.
+
+Parameters:
+- **entity_id** – PID output sensor to control.
+- **start_mode** – optional; one of `Zero start`, `Last known value`, or `Startup value`.
+- **value** – optional; custom numeric output (-100 to 100) used when no start mode is selected.
+
+Either `start_mode` or `value` must be provided.
+
+This service can be called from Developer Tools → Services or from automations. Examples:
+
+```yaml
+service: simple_pid_controller.set_output
+target:
+  entity_id: sensor.heater_pid_output
+data:
+  start_mode: "Last known value"
+```
+
+```yaml
+service: simple_pid_controller.set_output
+target:
+  entity_id: sensor.heater_pid_output
+data:
+  value: 25
+```
 
