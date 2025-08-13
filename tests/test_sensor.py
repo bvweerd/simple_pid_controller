@@ -78,6 +78,10 @@ async def test_pid_contribution_native_value_rounding_and_none(hass, config_entr
             f"sensor.{config_entry.entry_id}_{key}",
             coordinator,
         )
+        sensor.entity_id = f"sensor.{config_entry.entry_id.lower()}_{key}"
+        await sensor.async_added_to_hass()
+        await sensor.async_update_ha_state(force_refresh=True)
+
         assert sensor._handle is handle
         assert sensor.native_value == expected
 
@@ -89,8 +93,14 @@ async def test_pid_contribution_native_value_rounding_and_none(hass, config_entr
         "sensor.{config_entry.entry_id}_pid_x_contrib",
         coordinator,
     )
+    sensor_none.entity_id = "sensor.pid_x_contrib"
+    await sensor_none.async_added_to_hass()
+    await sensor_none.async_update_ha_state(force_refresh=True)
+
     assert sensor_none._handle is handle
     assert sensor_none.native_value is None
+
+    await coordinator.async_shutdown()
 
 
 @pytest.mark.usefixtures("setup_integration")
