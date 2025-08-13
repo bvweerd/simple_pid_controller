@@ -306,6 +306,44 @@ async def test_update_pid_invalid_start_mode_defaults(
 
 
 @pytest.mark.usefixtures("setup_integration")
+@pytest.mark.asyncio
+async def test_update_pid_uses_last_known_value(
+    monkeypatch, hass, config_entry, dummy_pid_class
+):
+    """Line 78: start_mode 'Last known value' uses handle.last_known_output."""
+
+    monkeypatch.setattr(sensor_module, "PID", dummy_pid_class)
+
+    handle = config_entry.runtime_data.handle
+    handle.last_known_output = 73.5
+    handle.last_contributions = (0.0, 0.0, 0.0, 0.0)
+    handle.get_input_sensor_value = lambda: 10.0
+    handle.get_number = lambda key: {
+        "kp": 1.0,
+        "ki": 0.1,
+        "kd": 0.01,
+        "setpoint": 5.0,
+        "starting_output": 0.0,
+        "sample_time": 5.0,
+        "output_min": 0.0,
+        "output_max": 100.0,
+    }[key]
+    handle.get_switch = lambda key: True
+    handle.get_select = lambda key: "Last known value" if key == "start_mode" else None
+
+    entities = []
+    await sensor_module.async_setup_entry(
+        hass, config_entry, lambda e: entities.extend(e)
+    )
+    coordinator = entities[0].coordinator
+    await coordinator.update_method()
+
+    pid = handle.pid
+    assert pid.auto_mode is True
+    assert pid._output == handle.last_known_output
+
+
+@pytest.mark.usefixtures("setup_integration")
 def test_pid_contribution_error_when_input_or_setpoint_none(hass, config_entry):
     """Line 258: native_value for 'error' should be 0 when input or setpoint is None."""
     handle = config_entry.runtime_data.handle
