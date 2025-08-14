@@ -1,6 +1,6 @@
 import pytest
 import voluptuous as vol
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, call
 
 from custom_components.simple_pid_controller import DOMAIN, SERVICE_SET_OUTPUT
 
@@ -133,7 +133,7 @@ async def test_output_not_overwritten_when_auto_mode_off(
     state = hass.states.get(entity_id)
     assert state is not None
     assert float(state.state) == 123.0
-    mock_set_auto.assert_called_once_with(False, 123.0)
+    mock_set_auto.assert_not_called()
 
     assert mock_refresh.await_count == 1
     await coordinator.async_request_refresh()
@@ -171,5 +171,6 @@ async def test_set_output_restarts_pid_and_coordinator(hass, config_entry, monke
     state = hass.states.get(entity_id)
     assert state is not None
     assert float(state.state) == 55.0
-    mock_set_auto.assert_called_once_with(True, 55.0)
+    assert mock_set_auto.call_count == 2
+    mock_set_auto.assert_has_calls([call(False), call(True, 55.0)])
     mock_refresh.assert_awaited_once()
