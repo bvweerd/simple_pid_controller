@@ -45,8 +45,8 @@ PRESET_OPTIONS = ["zero_start", "last_known_value", "startup_value"]
 SET_OUTPUT_SCHEMA = vol.Schema(
     {
         vol.Required("entity_id"): cv.entity_id,
-        vol.Exclusive(ATTR_VALUE, "target"): vol.Coerce(float),
-        vol.Exclusive(ATTR_PRESET, "target"): vol.In(PRESET_OPTIONS),
+        vol.Optional(ATTR_VALUE): vol.Coerce(float),
+        vol.Optional(ATTR_PRESET): vol.In(PRESET_OPTIONS),
     }
 )
 
@@ -179,7 +179,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             out_min = dev_handle.get_number("output_min") or 0.0
             out_max = dev_handle.get_number("output_max") or 0.0
 
-            if preset is None and value is None:
+            if (preset is None and value is None) or (
+                preset is not None and value is not None
+            ):
                 raise HomeAssistantError("Either preset or value required")
 
             if preset is not None:
