@@ -8,7 +8,7 @@ set_output:
   fields:
     preset:
       name: Preset
-      description: Use a preset output: zero_start, last_known_value or startup_value.
+      description: "Use a preset output: zero_start, last_known_value or startup_value."
       selector:
         select:
           options:
