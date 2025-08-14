@@ -212,8 +212,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 vol.Schema(
                     {
                         vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-                        vol.Optional("start_mode"): vol.In(START_MODE_OPTIONS),
-                        vol.Optional("value"): vol.Coerce(float),
+                        vol.Exclusive("start_mode", "set_output"): vol.In(
+                            START_MODE_OPTIONS
+                        ),
+                        vol.Exclusive("value", "set_output"): vol.Coerce(float),
                     }
                 ),
                 cv.has_at_least_one_key("start_mode", "value"),
