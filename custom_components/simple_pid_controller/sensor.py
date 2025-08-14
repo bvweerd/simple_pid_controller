@@ -37,7 +37,10 @@ async def async_setup_entry(
     # Init PID with default values
     handle.pid = PID(1.0, 0.1, 0.05, setpoint=50, sample_time=None, auto_mode=False)
 
-    handle.pid.output_limits = (-10.0, 10.0)
+    handle.pid.output_limits = (
+        handle.output_range_min,
+        handle.output_range_max,
+    )
     handle.last_contributions = (0, 0, 0, 0)
     handle.last_known_output = None
 
