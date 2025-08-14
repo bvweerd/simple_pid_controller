@@ -200,7 +200,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
             handle.last_known_output = output
             if coordinator:
+                if hasattr(handle, "pid"):
+                    if handle.pid.auto_mode:
+                        handle.pid.set_auto_mode(False)
+                        handle.pid.set_auto_mode(True, output)
                 coordinator.async_set_updated_data(output)
+                await coordinator.async_request_refresh()
 
         hass.services.async_register(
             DOMAIN,
