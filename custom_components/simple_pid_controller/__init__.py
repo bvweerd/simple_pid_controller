@@ -198,8 +198,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     )
                 output = value
 
-            handle.pid.reset()
-            handle.pid.set_auto_mode(True, output)
             handle.last_known_output = output
             if coordinator:
                 coordinator.async_set_updated_data(output)
