@@ -204,6 +204,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             dev_handle.last_known_output = target
             coordinator: PIDDataCoordinator = config_entry.runtime_data.coordinator
             if dev_handle.pid.auto_mode:
+                dev_handle.pid.set_auto_mode(False)
                 dev_handle.pid.set_auto_mode(True, target)
                 await coordinator.async_request_refresh()
             else:
