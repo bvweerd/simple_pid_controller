@@ -8,6 +8,7 @@ from custom_components.simple_pid_controller.sensor import (
 )
 from custom_components.simple_pid_controller.coordinator import PIDDataCoordinator
 from custom_components.simple_pid_controller.sensor import async_setup_entry
+from custom_components.simple_pid_controller import async_unload_entry
 from custom_components.simple_pid_controller import sensor as sensor_module
 
 
@@ -145,6 +146,8 @@ async def test_listeners_trigger_refresh_sensor(hass, config_entry, monkeypatch)
         called
     ), "Coordinator.async_request_refresh was not called on sensor state change"
 
+    await async_unload_entry(hass, config_entry)
+
 
 @pytest.mark.usefixtures("setup_integration")
 @pytest.mark.asyncio
@@ -163,6 +166,8 @@ async def test_update_pid_raises_on_missing_input(hass, config_entry):
     with pytest.raises(ValueError) as excinfo:
         await coordinator.update_method()
     assert "Input sensor not available" in str(excinfo.value)
+
+    await async_unload_entry(hass, config_entry)
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -193,10 +198,7 @@ async def test_update_pid_output_limits_none_when_windup_protection_disabled(
     handle.get_switch = lambda key: False if key == "windup_protection" else True
     handle.get_select = lambda key: "Zero start" if key == "start_mode" else None
 
-    # Set-up components and trigger update
-    entities = []
-    await async_setup_entry(hass, config_entry, lambda e: entities.extend(e))
-    coordinator = entities[0].coordinator
+    coordinator = config_entry.runtime_data.coordinator
     await coordinator.update_method()
 
     # Extract thee DummyPID from closure of update_method
@@ -211,6 +213,8 @@ async def test_update_pid_output_limits_none_when_windup_protection_disabled(
 
     # check output_limits
     assert pid.output_limits == (None, None)
+
+    await coordinator.async_shutdown()
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -304,6 +308,8 @@ async def test_update_pid_invalid_start_mode_defaults(
     assert pid.auto_mode is True
     assert pid._output == 42.0
 
+    await async_unload_entry(hass, config_entry)
+
 
 @pytest.mark.usefixtures("setup_integration")
 @pytest.mark.asyncio
@@ -341,6 +347,8 @@ async def test_update_pid_uses_last_known_value(
     pid = handle.pid
     assert pid.auto_mode is True
     assert pid._output == handle.last_known_output
+
+    await async_unload_entry(hass, config_entry)
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -406,3 +414,5 @@ async def test_update_pid_adjusts_update_interval(hass, config_entry, monkeypatc
     sample_time = 15
     await coordinator.update_method()
     assert coordinator.update_interval == timedelta(seconds=sample_time)
+
+    await async_unload_entry(hass, config_entry)

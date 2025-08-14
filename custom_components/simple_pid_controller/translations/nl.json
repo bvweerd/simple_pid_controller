@@ -76,4 +76,21 @@
       }
     }
   }
+  ,
+  "services": {
+    "set_output": {
+      "name": "Stel PID-uitgang in",
+      "description": "Stelt de uitgang van de PID-regelaar in of reset deze.",
+      "fields": {
+        "preset": {
+          "name": "Voorinstelling",
+          "description": "Kies een startwaarde: zero_start, last_known_value of startup_value."
+        },
+        "value": {
+          "name": "Waarde",
+          "description": "Handmatige uitgangswaarde binnen output_min en output_max."
+        }
+      }
+    }
+  }
 }
