@@ -163,6 +163,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.runtime_data = MyData(handle=handle)
 
     if not hass.services.has_service(DOMAIN, SERVICE_SET_OUTPUT):
+
         async def async_set_output(call: ServiceCall) -> None:
             entity_id: str = call.data["entity_id"]
             preset: str | None = call.data.get(ATTR_PRESET)
@@ -205,6 +206,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             dev_handle.last_known_output = target
             coordinator: PIDDataCoordinator = config_entry.runtime_data.coordinator
             if dev_handle.pid.auto_mode:
+                dev_handle.pid.set_auto_mode(False)
                 dev_handle.pid.set_auto_mode(True, target)
                 await coordinator.async_request_refresh()
             else:
