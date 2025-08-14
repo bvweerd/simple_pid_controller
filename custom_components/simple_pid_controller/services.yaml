@@ -5,9 +5,8 @@ set_output:
     entity:
       integration: simple_pid_controller
       domain: sensor
-  fields:
-    start_mode:
-      name: Start mode
+  oneOf:
+    - name: Start mode
       description: Use one of the predefined start modes.
       example: Zero start
       selector:
