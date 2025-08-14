@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import MagicMock, AsyncMock
+from unittest.mock import MagicMock, AsyncMock, call
 from custom_components.simple_pid_controller.const import DOMAIN
 
 
@@ -58,5 +58,5 @@ async def test_set_output_preset_startup(monkeypatch, hass, config_entry):
     )
 
     assert handle.last_known_output == 0.4
-    mock_set.assert_called_with(True, 0.4)
+    assert mock_set.call_args_list == [call(False), call(True, 0.4)]
     assert mock_refresh.await_count == 1
