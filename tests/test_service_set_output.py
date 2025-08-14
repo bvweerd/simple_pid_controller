@@ -73,9 +73,54 @@ async def test_set_output_respects_zero_min(hass, config_entry):
 
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_OUTPUT,
-            {"value": -5.0},
-            target={"entity_id": entity_id},
-            blocking=True,
-        )
+        DOMAIN,
+        SERVICE_SET_OUTPUT,
+        {"value": -5.0},
+        target={"entity_id": entity_id},
+        blocking=True,
+    )
+
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.asyncio
+async def test_output_not_overwritten_when_auto_mode_off(hass, config_entry):
+    """Output remains unchanged after coordinator refresh when auto_mode is off."""
+    entity_id = f"sensor.{config_entry.entry_id}_pid_output"
+    handle = config_entry.runtime_data.handle
+
+    handle.get_input_sensor_value = lambda: 10.0
+    handle.get_number = lambda key: {
+        "kp": 1.0,
+        "ki": 0.1,
+        "kd": 0.01,
+        "setpoint": 20.0,
+        "starting_output": 0.0,
+        "sample_time": 5.0,
+        "output_min": 0.0,
+        "output_max": 200.0,
+    }[key]
+    handle.get_select = lambda key: "Zero start"
+    handle.get_switch = lambda key: False if key == "auto_mode" else True
+
+    coordinator = config_entry.runtime_data.coordinator
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_OUTPUT,
+        {"value": 123.0},
+        target={"entity_id": entity_id},
+        blocking=True,
+    )
+
+    assert handle.last_known_output == 123.0
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert float(state.state) == 123.0
+
+    await coordinator.async_request_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert float(state.state) == 123.0
+    assert handle.last_known_output == 123.0

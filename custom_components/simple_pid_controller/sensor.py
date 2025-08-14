@@ -86,37 +86,45 @@ async def async_setup_entry(
         else:
             handle.pid.auto_mode = auto_mode
 
-        handle.pid.proportional_on_measurement = p_on_m
+        # When PID is in manual mode (auto_mode disabled), skip calculations
+        if not auto_mode:
+            _LOGGER.debug(
+                "PID auto_mode disabled; keeping last output %s",
+                handle.last_known_output,
+            )
+            output = handle.last_known_output
+        else:
+            handle.pid.proportional_on_measurement = p_on_m
 
-        output = handle.pid(input_value)
+            output = handle.pid(input_value)
 
-        # save last know output
-        handle.last_known_output = output
+            # save last know output
+            handle.last_known_output = output
 
-        # save last I contribution
-        last_i = handle.last_contributions[1]
+            # save last I contribution
+            last_i = handle.last_contributions[1]
 
-        # save all latest contributions
-        handle.last_contributions = (
-            handle.pid.components[0],
-            handle.pid.components[1],
-            handle.pid.components[2],
-            handle.pid.components[1] - last_i,
-        )
+            # save all latest contributions
+            handle.last_contributions = (
+                handle.pid.components[0],
+                handle.pid.components[1],
+                handle.pid.components[2],
+                handle.pid.components[1] - last_i,
+            )
 
-        _LOGGER.debug(
-            "PID input=%s setpoint=%s kp=%s ki=%s kd=%s => output=%s [P=%s, I=%s, D=%s, dI=%s]",
-            input_value,
-            handle.pid.setpoint,
-            handle.pid.Kp,
-            handle.pid.Ki,
-            handle.pid.Kd,
-            output,
-            handle.last_contributions[0],
-            handle.last_contributions[1],
-            handle.last_contributions[2],
-            handle.last_contributions[3],
-        )
+            _LOGGER.debug(
+                "PID input=%s setpoint=%s kp=%s ki=%s kd=%s => output=%s [P=%s, I=%s, D=%s, dI=%s]",
+                input_value,
+                handle.pid.setpoint,
+                handle.pid.Kp,
+                handle.pid.Ki,
+                handle.pid.Kd,
+                output,
+                handle.last_contributions[0],
+                handle.last_contributions[1],
+                handle.last_contributions[2],
+                handle.last_contributions[3],
+            )
 
         if coordinator.update_interval.total_seconds() != sample_time:
             _LOGGER.debug("Updating coordinator interval to %.2f seconds", sample_time)
