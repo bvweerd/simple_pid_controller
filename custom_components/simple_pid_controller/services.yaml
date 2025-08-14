@@ -1,0 +1,25 @@
+set_output:
+  name: Set PID output
+  description: Reset the PID controller and set its output to the selected value.
+  target:
+    entity:
+      integration: simple_pid_controller
+      domain: sensor
+  fields:
+    start_mode:
+      name: Start mode
+      description: Use one of the predefined start modes.
+      example: Zero start
+      selector:
+        select:
+          options:
+            - Zero start
+            - Last known value
+            - Startup value
+    value:
+      name: Value
+      description: Custom output value to apply when no start_mode is provided.
+      example: 10
+      selector:
+        number:
+          mode: box
