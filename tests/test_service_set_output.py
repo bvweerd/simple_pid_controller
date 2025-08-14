@@ -93,9 +93,7 @@ async def test_set_output_respects_zero_min(hass, config_entry):
 
 @pytest.mark.usefixtures("setup_integration")
 @pytest.mark.asyncio
-async def test_output_not_overwritten_when_auto_mode_off(
-    hass, config_entry, monkeypatch
-):
+async def test_output_not_overwritten_when_auto_mode_off(hass, config_entry, monkeypatch):
     """Output remains unchanged after coordinator refresh when auto_mode is off."""
     entity_id = f"sensor.{config_entry.entry_id}_pid_output"
     handle = config_entry.runtime_data.handle
@@ -114,6 +112,9 @@ async def test_output_not_overwritten_when_auto_mode_off(
     handle.get_select = lambda key: "Zero start"
     handle.get_switch = lambda key: False if key == "auto_mode" else True
 
+    handle.pid.auto_mode = False
+    mock_set_auto = MagicMock()
+    monkeypatch.setattr(handle.pid, "set_auto_mode", mock_set_auto)
     coordinator = config_entry.runtime_data.coordinator
     mock_refresh = AsyncMock()
     monkeypatch.setattr(coordinator, "async_request_refresh", mock_refresh)
@@ -130,6 +131,7 @@ async def test_output_not_overwritten_when_auto_mode_off(
     state = hass.states.get(entity_id)
     assert state is not None
     assert float(state.state) == 123.0
+    mock_set_auto.assert_called_once_with(False, 123.0)
 
     assert mock_refresh.await_count == 1
     await coordinator.async_request_refresh()
@@ -149,7 +151,7 @@ async def test_set_output_restarts_pid_and_coordinator(hass, config_entry, monke
     entity_id = f"sensor.{config_entry.entry_id}_pid_output"
     handle = config_entry.runtime_data.handle
     coordinator = config_entry.runtime_data.coordinator
-
+    handle.pid.auto_mode = True
     mock_set_auto = MagicMock()
     monkeypatch.setattr(handle.pid, "set_auto_mode", mock_set_auto)
     mock_refresh = AsyncMock()
