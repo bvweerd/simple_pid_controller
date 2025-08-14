@@ -1,13 +1,11 @@
 set_output:
   name: Set PID output
   description: Set or reset the PID controller output.
+  target:
+    entity:
+      integration: simple_pid_controller
+      domain: sensor
   fields:
-    entity_id:
-      name: PID output sensor
-      description: Target PID controller entity.
-      selector:
-        entity:
-          domain: sensor
     preset:
       name: Preset
       description: Use a preset output: zero_start, last_known_value or startup_value.
