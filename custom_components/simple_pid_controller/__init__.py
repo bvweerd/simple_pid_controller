@@ -163,6 +163,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.runtime_data = MyData(handle=handle)
 
     if not hass.services.has_service(DOMAIN, SERVICE_SET_OUTPUT):
+
         async def async_set_output(call: ServiceCall) -> None:
             entity_id: str = call.data["entity_id"]
             preset: str | None = call.data.get(ATTR_PRESET)
