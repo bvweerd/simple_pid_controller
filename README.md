@@ -196,7 +196,7 @@ Parameters:
 - **start_mode** – optional; one of `Zero start`, `Last known value`, or `Startup value`.
 - **value** – optional; custom numeric output used when no start mode is selected. The value must fall within the current Output Min and Output Max range (default 0–100).
 
-Either `start_mode` or `value` must be provided.
+Exactly one of `start_mode` or `value` must be provided.
 
 This service can be called from Developer Tools → Services or from automations. Examples:
 

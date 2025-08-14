@@ -18,8 +18,17 @@ set_output:
             - Startup value
     value:
       name: Value
-      description: Custom output value to apply when no start_mode is provided.
+      description: Custom output value to apply when no start mode is provided.
       example: 10
       selector:
         number:
           mode: box
+  oneOf:
+    - name: Start mode
+      description: Use one of the predefined start modes.
+      required:
+        - start_mode
+    - name: Custom value
+      description: Custom output value to apply when no start mode is selected.
+      required:
+        - value
