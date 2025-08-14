@@ -194,7 +194,7 @@ Reset the PID controller and force its output to a specific value.
 Parameters:
 - **entity_id** – PID output sensor to control.
 - **start_mode** – optional; one of `Zero start`, `Last known value`, or `Startup value`.
-- **value** – optional; custom numeric output (-100 to 100) used when no start mode is selected.
+- **value** – optional; custom numeric output used when no start mode is selected. The value must fall within the current Output Min and Output Max range (default 0–100).
 
 Either `start_mode` or `value` must be provided.
 

@@ -59,3 +59,23 @@ async def test_set_output_value_out_of_range(hass, config_entry):
             target={"entity_id": entity_id},
             blocking=True,
         )
+
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.asyncio
+async def test_set_output_respects_zero_min(hass, config_entry):
+    """Ensure zero output_min doesn't fall back to range minimum."""
+    entity_id = f"sensor.{config_entry.entry_id}_pid_output"
+    handle = config_entry.runtime_data.handle
+    handle.output_range_min = -10.0
+    handle.output_range_max = 10.0
+    handle.get_number = lambda key: {"output_min": 0.0, "output_max": 10.0}.get(key)
+
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_OUTPUT,
+            {"value": -5.0},
+            target={"entity_id": entity_id},
+            blocking=True,
+        )
