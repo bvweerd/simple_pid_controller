@@ -73,12 +73,12 @@ async def test_set_output_respects_zero_min(hass, config_entry):
 
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_OUTPUT,
-        {"value": -5.0},
-        target={"entity_id": entity_id},
-        blocking=True,
-    )
+            DOMAIN,
+            SERVICE_SET_OUTPUT,
+            {"value": -5.0},
+            target={"entity_id": entity_id},
+            blocking=True,
+        )
 
 
 @pytest.mark.usefixtures("setup_integration")
