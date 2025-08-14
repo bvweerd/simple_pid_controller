@@ -185,7 +185,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 out_min = handle.get_number("output_min") or handle.output_range_min
                 out_max = handle.get_number("output_max") or handle.output_range_max
                 if value is None:
-                    raise vol.Invalid("Value must be provided when no start_mode is set")
+                    raise vol.Invalid(
+                        "Value must be provided when no start_mode is set"
+                    )
                 if value < out_min or value > out_max:
                     raise vol.Invalid(
                         f"value {value} outside output range [{out_min}, {out_max}]"
