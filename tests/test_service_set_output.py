@@ -1,4 +1,5 @@
 import pytest
+import voluptuous as vol
 
 from custom_components.simple_pid_controller import DOMAIN, SERVICE_SET_OUTPUT
 
@@ -43,3 +44,18 @@ async def test_set_output_custom_value(hass, config_entry):
     state = hass.states.get(entity_id)
     assert state is not None
     assert float(state.state) == 7.5
+
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.asyncio
+async def test_set_output_value_out_of_range(hass, config_entry):
+    """Service raises error when value is outside configured range."""
+    entity_id = f"sensor.{config_entry.entry_id}_pid_output"
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_OUTPUT,
+            {"value": 150.0},
+            target={"entity_id": entity_id},
+            blocking=True,
+        )
