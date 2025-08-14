@@ -48,6 +48,9 @@ async def setup_integration(hass, config_entry):
     """Set up the integration automatically for each test."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+    yield
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
 
 @pytest.fixture
