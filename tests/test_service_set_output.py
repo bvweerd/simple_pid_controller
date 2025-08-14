@@ -63,6 +63,21 @@ async def test_set_output_value_out_of_range(hass, config_entry):
 
 @pytest.mark.usefixtures("setup_integration")
 @pytest.mark.asyncio
+async def test_set_output_both_values_fail(hass, config_entry):
+    """Providing both start_mode and value should raise an error."""
+    entity_id = f"sensor.{config_entry.entry_id}_pid_output"
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_OUTPUT,
+            {"start_mode": "Zero start", "value": 5.0},
+            target={"entity_id": entity_id},
+            blocking=True,
+        )
+
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.asyncio
 async def test_set_output_respects_zero_min(hass, config_entry):
     """Ensure zero output_min doesn't fall back to range minimum."""
     entity_id = f"sensor.{config_entry.entry_id}_pid_output"
