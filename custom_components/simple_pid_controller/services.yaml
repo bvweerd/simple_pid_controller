@@ -8,24 +8,26 @@ set_output:
   oneOf:
     - name: Start mode
       description: Use one of the predefined start modes.
-      fields:
-        start_mode:
-          name: Start mode
-          description: Use one of the predefined start modes.
-          example: Zero start
-          selector:
-            select:
-              options:
-                - Zero start
-                - Last known value
-                - Startup value
+      example: Zero start
+      selector:
+        select:
+          options:
+            - Zero start
+            - Last known value
+            - Startup value
+    value:
+      name: Value
+      description: Custom output value to apply when no start mode is provided.
+      example: 10
+      selector:
+        number:
+          mode: box
+  oneOf:
+    - name: Start mode
+      description: Use one of the predefined start modes.
+      required:
+        - start_mode
     - name: Custom value
       description: Custom output value to apply when no start mode is selected.
-      fields:
-        value:
-          name: Value
-          description: Custom output value to apply when no start mode is provided.
-          example: 10
-          selector:
-            number:
-              mode: box
+      required:
+        - value
