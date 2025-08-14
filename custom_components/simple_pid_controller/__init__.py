@@ -157,7 +157,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not hass.services.has_service(DOMAIN, SERVICE_SET_OUTPUT):
 
         async def async_set_output(call: ServiceCall) -> None:
-            entity_id = call.data[ATTR_ENTITY_ID]
+            entity_id = call.data[ATTR_ENTITY_ID][0]
             start_mode = call.data.get("start_mode")
             value = call.data.get("value")
 
@@ -197,7 +197,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             schema=vol.All(
                 vol.Schema(
                     {
-                        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+                        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
                         vol.Optional("start_mode"): vol.In(START_MODE_OPTIONS),
                         vol.Optional("value"): vol.Coerce(float),
                     }
