@@ -93,7 +93,9 @@ async def test_set_output_respects_zero_min(hass, config_entry):
 
 @pytest.mark.usefixtures("setup_integration")
 @pytest.mark.asyncio
-async def test_output_not_overwritten_when_auto_mode_off(hass, config_entry, monkeypatch):
+async def test_output_not_overwritten_when_auto_mode_off(
+    hass, config_entry, monkeypatch
+):
     """Output remains unchanged after coordinator refresh when auto_mode is off."""
     entity_id = f"sensor.{config_entry.entry_id}_pid_output"
     handle = config_entry.runtime_data.handle
