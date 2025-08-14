@@ -14,7 +14,8 @@ async def test_set_output_start_mode(hass, config_entry):
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_OUTPUT,
-        {"entity_id": entity_id, "start_mode": "Startup value"},
+        {"start_mode": "Startup value"},
+        target={"entity_id": entity_id},
         blocking=True,
     )
 
@@ -32,7 +33,8 @@ async def test_set_output_custom_value(hass, config_entry):
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_OUTPUT,
-        {"entity_id": entity_id, "value": 7.5},
+        {"value": 7.5},
+        target={"entity_id": entity_id},
         blocking=True,
     )
 
