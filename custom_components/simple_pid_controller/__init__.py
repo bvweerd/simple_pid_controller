@@ -218,6 +218,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 await coordinator.async_request_refresh()
             else:
                 coordinator.async_set_updated_data(target)
+                # Update the internal PID output when in manual mode so that
+                # future calls to the controller return the newly set target.
+                dev_handle.pid._last_output = target
 
         hass.services.async_register(
             DOMAIN, SERVICE_SET_OUTPUT, async_set_output, schema=SET_OUTPUT_SCHEMA

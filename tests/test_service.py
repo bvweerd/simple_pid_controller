@@ -22,6 +22,9 @@ async def test_set_output_manual(hass, config_entry):
 
     assert handle.last_known_output == 0.5
     assert coordinator.data == 0.5
+    # Ensure that the PID controller's internal output is updated when
+    # auto mode is disabled.
+    assert handle.pid._last_output == 0.5
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -44,6 +47,7 @@ async def test_set_output_manual_target(hass, config_entry):
 
     assert handle.last_known_output == 0.5
     assert coordinator.data == 0.5
+    assert handle.pid._last_output == 0.5
 
 
 @pytest.mark.usefixtures("setup_integration")
