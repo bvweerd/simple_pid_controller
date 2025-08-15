@@ -197,6 +197,17 @@ The integration provides a `simple_pid_controller.set_output` service to adjust 
 
 - When **Auto Mode** is off, the last output value is updated to the chosen value.
 - When **Auto Mode** is on, the PID restarts from the new value and the coordinator refreshes.
+- Exactly one PID output sensor entity must be targeted.
+
+Example using `target`:
+
+```yaml
+service: simple_pid_controller.set_output
+target:
+  entity_id: sensor.spid_x_pid_output
+data:
+  value: 200
+```
 
 Example using `target`:
 
