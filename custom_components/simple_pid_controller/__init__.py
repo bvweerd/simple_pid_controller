@@ -4,11 +4,14 @@ from __future__ import annotations
 
 import logging
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.const import Platform, ATTR_ENTITY_ID
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from dataclasses import dataclass
+import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
+
 from .coordinator import PIDDataCoordinator
 
 from .const import (
@@ -33,6 +36,19 @@ PLATFORMS: list[Platform] = [
     Platform.SWITCH,
     Platform.SELECT,
 ]
+
+SERVICE_SET_OUTPUT = "set_output"
+ATTR_VALUE = "value"
+ATTR_PRESET = "preset"
+PRESET_OPTIONS = ["zero_start", "last_known_value", "startup_value"]
+
+SET_OUTPUT_SCHEMA = cv.make_entity_service_schema(
+    {
+        vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Optional(ATTR_VALUE): vol.Coerce(float),
+        vol.Optional(ATTR_PRESET): vol.In(PRESET_OPTIONS),
+    }
+)
 
 
 @dataclass
@@ -68,6 +84,7 @@ class PIDDeviceHandle:
             CONF_SENSOR_ENTITY_ID, entry.data.get(CONF_SENSOR_ENTITY_ID)
         )
         self.last_contributions = (None, None, None)  # (P, I, D)
+        self.last_known_output = None
 
     def _get_entity_id(self, platform: str, key: str) -> str | None:
         """Lookup the real entity_id in the registry by unique_id == '<entry_id>_<key>'."""
@@ -145,6 +162,70 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     handle = PIDDeviceHandle(hass, entry)
     entry.runtime_data = MyData(handle=handle)
 
+    if not hass.services.has_service(DOMAIN, SERVICE_SET_OUTPUT):
+
+        async def async_set_output(call: ServiceCall) -> None:
+            entity_id: str | list[str] | None = call.data.get(ATTR_ENTITY_ID)
+            if entity_id is None:
+                raise HomeAssistantError("entity_id is required")
+            if isinstance(entity_id, list):
+                if len(entity_id) != 1:
+                    raise HomeAssistantError("Exactly one entity_id is required")
+                entity_id = entity_id[0]
+            preset: str | None = call.data.get(ATTR_PRESET)
+            value: float | None = call.data.get(ATTR_VALUE)
+
+            registry = er.async_get(hass)
+            ent = registry.async_get(entity_id)
+            if ent is None:
+                raise HomeAssistantError(f"Unknown entity {entity_id}")
+            config_entry = hass.config_entries.async_get_entry(ent.config_entry_id)
+            if config_entry is None or config_entry.runtime_data is None:
+                raise HomeAssistantError("PID controller not loaded")
+            dev_handle: PIDDeviceHandle = config_entry.runtime_data.handle
+            out_min = dev_handle.get_number("output_min") or 0.0
+            out_max = dev_handle.get_number("output_max") or 0.0
+
+            if (preset is None and value is None) or (
+                preset is not None and value is not None
+            ):
+                raise HomeAssistantError("Either preset or value required")
+
+            if preset is not None:
+                if preset == "zero_start":
+                    target = 0.0
+                elif preset == "last_known_value":
+                    target = dev_handle.last_known_output or 0.0
+                elif preset == "startup_value":
+                    target = dev_handle.get_number("starting_output") or 0.0
+                else:
+                    raise HomeAssistantError("Invalid preset")
+            else:
+                target = value
+                if target is None:
+                    raise HomeAssistantError("Value required")
+                if target < out_min or target > out_max:
+                    raise HomeAssistantError(
+                        f"Value {target} out of range {out_min}-{out_max}"
+                    )
+
+            dev_handle.last_known_output = target
+            coordinator: PIDDataCoordinator = config_entry.runtime_data.coordinator
+            if dev_handle.pid.auto_mode:
+                dev_handle.pid.set_auto_mode(False)
+                dev_handle.pid.set_auto_mode(True, target)
+                coordinator.async_set_updated_data(target)
+                await coordinator.async_request_refresh()
+            else:
+                coordinator.async_set_updated_data(target)
+                # Update the internal PID output when in manual mode so that
+                # future calls to the controller return the newly set target.
+                dev_handle.pid._last_output = target
+
+        hass.services.async_register(
+            DOMAIN, SERVICE_SET_OUTPUT, async_set_output, schema=SET_OUTPUT_SCHEMA
+        )
+
     # register updatelistener for optionsflow
     entry.async_on_unload(entry.add_update_listener(_async_update_options_listener))
 
@@ -157,6 +238,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         # reset runtime_data zodat tests slagen
         entry.runtime_data = None
+        if not hass.config_entries.async_entries(DOMAIN):
+            hass.services.async_remove(DOMAIN, SERVICE_SET_OUTPUT)
     return unload_ok
 
 
