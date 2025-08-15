@@ -209,5 +209,15 @@ data:
   value: 200
 ```
 
+Example using `target`:
+
+```yaml
+action: simple_pid_controller.set_output
+target:
+  entity_id: sensor.spid_x_pid_output
+data:
+  value: 200
+```
+
 
 

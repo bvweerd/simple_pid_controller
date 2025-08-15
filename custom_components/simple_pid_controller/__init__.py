@@ -44,6 +44,7 @@ PRESET_OPTIONS = ["zero_start", "last_known_value", "startup_value"]
 
 SET_OUTPUT_SCHEMA = cv.make_entity_service_schema(
     {
+        vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
         vol.Optional(ATTR_VALUE): vol.Coerce(float),
         vol.Optional(ATTR_PRESET): vol.In(PRESET_OPTIONS),
     }
@@ -213,6 +214,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if dev_handle.pid.auto_mode:
                 dev_handle.pid.set_auto_mode(False)
                 dev_handle.pid.set_auto_mode(True, target)
+                coordinator.async_set_updated_data(target)
                 await coordinator.async_request_refresh()
             else:
                 coordinator.async_set_updated_data(target)
