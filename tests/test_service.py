@@ -25,6 +25,26 @@ async def test_set_output_manual(hass, config_entry):
 
 @pytest.mark.usefixtures("setup_integration")
 @pytest.mark.asyncio
+async def test_set_output_manual_target(hass, config_entry):
+    handle = config_entry.runtime_data.handle
+    coordinator = config_entry.runtime_data.coordinator
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_output",
+        {"value": 0.5},
+        target={
+            "entity_id": f"sensor.{config_entry.entry_id.lower()}_pid_output",
+        },
+        blocking=True,
+    )
+
+    assert handle.last_known_output == 0.5
+    assert coordinator.data == 0.5
+
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.asyncio
 async def test_set_output_preset_startup(monkeypatch, hass, config_entry):
     handle = config_entry.runtime_data.handle
     coordinator = config_entry.runtime_data.coordinator

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import Platform, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -44,7 +44,7 @@ PRESET_OPTIONS = ["zero_start", "last_known_value", "startup_value"]
 
 SET_OUTPUT_SCHEMA = vol.Schema(
     {
-        vol.Required("entity_id"): cv.entity_id,
+        vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
         vol.Optional(ATTR_VALUE): vol.Coerce(float),
         vol.Optional(ATTR_PRESET): vol.In(PRESET_OPTIONS),
     }
@@ -165,7 +165,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not hass.services.has_service(DOMAIN, SERVICE_SET_OUTPUT):
 
         async def async_set_output(call: ServiceCall) -> None:
-            entity_id: str = call.data["entity_id"]
+            entity_id: str | None = call.data.get(ATTR_ENTITY_ID)
+            if entity_id is None:
+                raise HomeAssistantError("entity_id is required")
             preset: str | None = call.data.get(ATTR_PRESET)
             value: float | None = call.data.get(ATTR_VALUE)
 
