@@ -191,12 +191,23 @@ The integration provides a `simple_pid_controller.set_output` service to adjust 
 ### `simple_pid_controller.set_output`
 | Field | Description |
 |-------|-------------|
-| `entity_id` | PID output sensor entity to control |
+| `entity_id` | PID output sensor entity to control (may be provided via `target`) |
 | `preset` | Optional preset: `zero_start`, `last_known_value`, or `startup_value` |
 | `value` | Optional manual value between configured `Output Min` and `Output Max` |
 
 - When **Auto Mode** is off, the last output value is updated to the chosen value.
 - When **Auto Mode** is on, the PID restarts from the new value and the coordinator refreshes.
+- Exactly one PID output sensor entity must be targeted.
+
+Example using `target`:
+
+```yaml
+service: simple_pid_controller.set_output
+target:
+  entity_id: sensor.spid_x_pid_output
+data:
+  value: 200
+```
 
 
 
