@@ -77,4 +77,21 @@
 		}
     }
   }
+  ,
+  "services": {
+    "set_output": {
+      "name": "Set PID output",
+      "description": "Set or reset the PID controller output.",
+      "fields": {
+        "preset": {
+          "name": "Preset",
+          "description": "Use a preset output: zero_start, last_known_value or startup_value."
+        },
+        "value": {
+          "name": "Value",
+          "description": "Manual output value between output_min and output_max."
+        }
+      }
+    }
+  }
 }

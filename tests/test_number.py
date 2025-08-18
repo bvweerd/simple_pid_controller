@@ -14,6 +14,7 @@ from custom_components.simple_pid_controller.const import (
 )
 
 
+@pytest.mark.usefixtures("setup_integration")
 async def test_number_platform(hass, config_entry):
     """Check that all Number entities from PID_NUMBER_ENTITIES are created."""
 
@@ -21,6 +22,7 @@ async def test_number_platform(hass, config_entry):
     assert len(numbers) == len(PID_NUMBER_ENTITIES) + len(CONTROL_NUMBER_ENTITIES)
 
 
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.parametrize("desc", PID_NUMBER_ENTITIES)
 async def test_number_entity_attributes(hass, config_entry, desc):
     entity_id = f"number.{config_entry.entry_id}_{desc['key']}"
@@ -42,6 +44,7 @@ async def test_number_entity_attributes(hass, config_entry, desc):
     # assert state.name == desc.get("name", state.name)
 
 
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.parametrize(
     "last_value, expected",
     [
@@ -69,6 +72,7 @@ async def test_async_added_to_hass_clamps_pid_value(
     assert num.native_value == expected
 
 
+@pytest.mark.usefixtures("setup_integration")
 async def test_async_added_to_hass_clamps_control_value(
     hass, config_entry, monkeypatch
 ):
@@ -105,6 +109,7 @@ async def test_async_added_to_hass_clamps_control_value(
         assert num.native_value == mid
 
 
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.parametrize(
     "clazz, desc, sample_value",
     [
@@ -133,6 +138,7 @@ async def test_async_set_native_value_triggers_write(
     assert write_calls, "async_write_ha_state was not called"
 
 
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.parametrize(
     "invalid_key, expected_min, expected_max",
     [

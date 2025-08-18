@@ -5,6 +5,7 @@ from custom_components.simple_pid_controller.switch import (
 )
 
 
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.asyncio
 async def test_switch_operations(hass, config_entry):
     """Test that each switch entity is created and can be toggled on/off."""
@@ -34,6 +35,7 @@ async def test_switch_operations(hass, config_entry):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("last_state, expected", [("on", True), ("off", False)])
+@pytest.mark.usefixtures("setup_integration")
 async def test_async_added_to_hass_restores_previous_state(
     hass, config_entry, monkeypatch, last_state, expected
 ):

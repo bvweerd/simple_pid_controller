@@ -5,7 +5,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity, DeviceInfo
 
 from .const import DOMAIN
-from . import PIDDeviceHandle
 
 
 class BasePIDEntity(Entity):
@@ -21,7 +20,7 @@ class BasePIDEntity(Entity):
         """Initialize the base PID entity."""
         self.hass = hass
         self._entry = entry
-        self._handle = PIDDeviceHandle(hass, entry)
+        self._handle = entry.runtime_data.handle
         self._key = key
 
         # Common entity attributes

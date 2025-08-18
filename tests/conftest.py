@@ -7,15 +7,49 @@ import custom_components.simple_pid_controller.sensor as sensor_mod
 from homeassistant.const import CONF_NAME
 
 
+@pytest.fixture
+def dummy_pid_class():
+    """Return a Dummy PID class used for testing."""
+
+    class DummyPID:
+        def __init__(
+            self, kp=0, ki=0, kd=0, setpoint=0, sample_time=None, auto_mode=False
+        ):
+            self.Kp = kp
+            self.Ki = ki
+            self.Kd = kd
+            self.setpoint = setpoint
+            self.sample_time = sample_time
+            self.auto_mode = auto_mode
+            self.proportional_on_measurement = False
+            self.tunings = (kp, ki, kd)
+            self.output_limits = (123, 456)
+            self._output = 42.0
+            self.components = (1.0, 2.0, 3.0)
+
+        def set_auto_mode(self, enabled, last_output=None):
+            self.auto_mode = enabled
+            if last_output is not None:
+                self._output = last_output
+
+        def __call__(self, input_value):
+            return self._output
+
+    return DummyPID
+
+
 @pytest.fixture(autouse=True)
 def _enable_custom_integrations(enable_custom_integrations):
     """Enable loading of custom integrations in custom_components/"""  # noqa: F811
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 async def setup_integration(hass, config_entry):
     """Set up the integration automatically for each test."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    yield
+    await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
 

@@ -1,5 +1,6 @@
 asyncio
-pytest==8.3.5
+simple-pid==2.0.1
+pytest
 pytest-cov
 pytest-homeassistant-custom-component
-simple-pid==2.0.1
+syrupy

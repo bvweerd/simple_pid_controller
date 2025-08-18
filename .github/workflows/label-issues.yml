@@ -7,10 +7,13 @@ on:
       - edited
 jobs:
   label_issues:
+    name: "Automatically Label Issues"
     runs-on: ubuntu-latest
     permissions:
       issues: write
     steps:
-      - uses: peaceiris/actions-issue-labeler@v1
+      - uses: github/issue-labeler@v3.4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          configuration-path: .github/labeler.yml
+

@@ -8,9 +8,11 @@ from custom_components.simple_pid_controller.sensor import (
 )
 from custom_components.simple_pid_controller.coordinator import PIDDataCoordinator
 from custom_components.simple_pid_controller.sensor import async_setup_entry
+from custom_components.simple_pid_controller import async_unload_entry
 from custom_components.simple_pid_controller import sensor as sensor_module
 
 
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.asyncio
 async def test_pid_output_and_contributions_update(hass, config_entry):
     """Test that PID output and contribution sensors update on Home Assistant start."""
@@ -50,6 +52,7 @@ async def test_pid_output_and_contributions_update(hass, config_entry):
     assert float(state.state) != 0
 
 
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.asyncio
 async def test_pid_contribution_native_value_rounding_and_none(hass, config_entry):
     """Test that PIDContributionSensor.native_value rounds correctly and returns None for unknown key."""
@@ -60,11 +63,11 @@ async def test_pid_contribution_native_value_rounding_and_none(hass, config_entr
 
     # Map contribution keys to expected values
     mapping = [
-        ("pid_p_contrib", round(0.1234, 2)),
-        ("pid_i_contrib", round(1.9876, 2)),
-        ("pid_d_contrib", round(2.5555, 2)),
+        ("pid_p_contrib", round(0.1234, 3)),
+        ("pid_i_contrib", round(1.9876, 3)),
+        ("pid_d_contrib", round(2.5555, 3)),
         ("error", -25),
-        ("pid_i_delta", round(3.3789, 2)),
+        ("pid_i_delta", round(3.3789, 3)),
         ("unknown_key", None),  # Should return None
     ]
 
@@ -76,7 +79,11 @@ async def test_pid_contribution_native_value_rounding_and_none(hass, config_entr
             f"sensor.{config_entry.entry_id}_{key}",
             coordinator,
         )
-        sensor._handle = handle  # inject mock handle
+        sensor.entity_id = f"sensor.{config_entry.entry_id.lower()}_{key}"
+        await sensor.async_added_to_hass()
+        await sensor.async_update_ha_state(force_refresh=True)
+
+        assert sensor._handle is handle
         assert sensor.native_value == expected
 
     # Unknown key should return None
@@ -87,10 +94,17 @@ async def test_pid_contribution_native_value_rounding_and_none(hass, config_entr
         "sensor.{config_entry.entry_id}_pid_x_contrib",
         coordinator,
     )
-    sensor_none._handle = handle
+    sensor_none.entity_id = "sensor.pid_x_contrib"
+    await sensor_none.async_added_to_hass()
+    await sensor_none.async_update_ha_state(force_refresh=True)
+
+    assert sensor_none._handle is handle
     assert sensor_none.native_value is None
 
+    await coordinator.async_shutdown()
 
+
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.asyncio
 async def test_listeners_trigger_refresh_sensor(hass, config_entry, monkeypatch):
     """Lines 131-132: coordinator.async_request_refresh called on sensor state change."""
@@ -132,7 +146,10 @@ async def test_listeners_trigger_refresh_sensor(hass, config_entry, monkeypatch)
         called
     ), "Coordinator.async_request_refresh was not called on sensor state change"
 
+    await async_unload_entry(hass, config_entry)
 
+
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.asyncio
 async def test_update_pid_raises_on_missing_input(hass, config_entry):
     """Line 47: update_pid should raise ValueError when input sensor unavailable."""
@@ -150,42 +167,18 @@ async def test_update_pid_raises_on_missing_input(hass, config_entry):
         await coordinator.update_method()
     assert "Input sensor not available" in str(excinfo.value)
 
+    await async_unload_entry(hass, config_entry)
 
+
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.asyncio
 async def test_update_pid_output_limits_none_when_windup_protection_disabled(
-    monkeypatch, hass, config_entry
+    monkeypatch, hass, config_entry, dummy_pid_class
 ):
     """Test output_limits (None, None)"""
 
-    # Dummy PID class
-    class DummyPID:
-        def __init__(
-            self, kp=0, ki=0, kd=0, setpoint=0, sample_time=None, auto_mode=False
-        ):
-            self.Kp = kp
-            self.Ki = ki
-            self.Kd = kd
-            self.setpoint = setpoint
-            self.sample_time = sample_time
-            self.auto_mode = auto_mode
-            self.proportional_on_measurement = False
-            self.tunings = (kp, ki, kd)
-            self.output_limits = (123, 456)  # dummy init waarde
-            self._output = 42.0
-            self.components = (1.0, 2.0, 3.0)  # dummy voor sensor.py
-
-        def set_auto_mode(self, enabled, last_output=None):
-            self.auto_mode = enabled
-            if last_output is not None:
-                self._output = last_output
-
-        def __call__(self, input_value):
-            return self._output
-
     # Patch the PID in sensor-module
-    from custom_components.simple_pid_controller import sensor as sensor_module
-
-    monkeypatch.setattr(sensor_module, "PID", DummyPID)
+    monkeypatch.setattr(sensor_module, "PID", dummy_pid_class)
 
     # init handle
     handle = config_entry.runtime_data.handle
@@ -205,10 +198,7 @@ async def test_update_pid_output_limits_none_when_windup_protection_disabled(
     handle.get_switch = lambda key: False if key == "windup_protection" else True
     handle.get_select = lambda key: "Zero start" if key == "start_mode" else None
 
-    # Set-up components and trigger update
-    entities = []
-    await async_setup_entry(hass, config_entry, lambda e: entities.extend(e))
-    coordinator = entities[0].coordinator
+    coordinator = config_entry.runtime_data.coordinator
     await coordinator.update_method()
 
     # Extract thee DummyPID from closure of update_method
@@ -224,7 +214,10 @@ async def test_update_pid_output_limits_none_when_windup_protection_disabled(
     # check output_limits
     assert pid.output_limits == (None, None)
 
+    await coordinator.async_shutdown()
 
+
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "restored_state, expected_last_known",
@@ -265,37 +258,15 @@ async def test_async_added_to_hass_restores_last_known_output(
     assert handle.last_known_output == expected_last_known
 
 
+@pytest.mark.usefixtures("setup_integration")
 @pytest.mark.asyncio
-async def test_update_pid_invalid_start_mode_defaults(monkeypatch, hass, config_entry):
+async def test_update_pid_invalid_start_mode_defaults(
+    monkeypatch, hass, config_entry, dummy_pid_class
+):
     """Line 86: invalid start_mode calls set_auto_mode(True) without changing output."""
 
-    # Dummy PID class matching existing tests
-    class DummyPID:
-        def __init__(
-            self, kp=0, ki=0, kd=0, setpoint=0, sample_time=None, auto_mode=False
-        ):
-            self.Kp = kp
-            self.Ki = ki
-            self.Kd = kd
-            self.setpoint = setpoint
-            self.sample_time = sample_time
-            self.auto_mode = auto_mode
-            self.proportional_on_measurement = False
-            self.tunings = (kp, ki, kd)
-            self.output_limits = (123, 456)
-            self._output = 42.0
-            self.components = (1.0, 2.0, 3.0)
-
-        def set_auto_mode(self, enabled, last_output=None):
-            self.auto_mode = enabled
-            if last_output is not None:
-                self._output = last_output
-
-        def __call__(self, input_value):
-            return self._output
-
     # Patch the PID class in the sensor module
-    monkeypatch.setattr(sensor_module, "PID", DummyPID)
+    monkeypatch.setattr(sensor_module, "PID", dummy_pid_class)
 
     # Prepare the handle
     handle = config_entry.runtime_data.handle
@@ -337,7 +308,50 @@ async def test_update_pid_invalid_start_mode_defaults(monkeypatch, hass, config_
     assert pid.auto_mode is True
     assert pid._output == 42.0
 
+    await async_unload_entry(hass, config_entry)
 
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.asyncio
+async def test_update_pid_uses_last_known_value(
+    monkeypatch, hass, config_entry, dummy_pid_class
+):
+    """Line 78: start_mode 'Last known value' uses handle.last_known_output."""
+
+    monkeypatch.setattr(sensor_module, "PID", dummy_pid_class)
+
+    handle = config_entry.runtime_data.handle
+    handle.last_known_output = 73.5
+    handle.last_contributions = (0.0, 0.0, 0.0, 0.0)
+    handle.get_input_sensor_value = lambda: 10.0
+    handle.get_number = lambda key: {
+        "kp": 1.0,
+        "ki": 0.1,
+        "kd": 0.01,
+        "setpoint": 5.0,
+        "starting_output": 0.0,
+        "sample_time": 5.0,
+        "output_min": 0.0,
+        "output_max": 100.0,
+    }[key]
+    handle.get_switch = lambda key: True
+    handle.get_select = lambda key: "Last known value" if key == "start_mode" else None
+
+    entities = []
+    await sensor_module.async_setup_entry(
+        hass, config_entry, lambda e: entities.extend(e)
+    )
+    coordinator = entities[0].coordinator
+    await coordinator.update_method()
+
+    pid = handle.pid
+    assert pid.auto_mode is True
+    assert pid._output == handle.last_known_output
+
+    await async_unload_entry(hass, config_entry)
+
+
+@pytest.mark.usefixtures("setup_integration")
 def test_pid_contribution_error_when_input_or_setpoint_none(hass, config_entry):
     """Line 258: native_value for 'error' should be 0 when input or setpoint is None."""
     handle = config_entry.runtime_data.handle
@@ -350,7 +364,7 @@ def test_pid_contribution_error_when_input_or_setpoint_none(hass, config_entry):
     sensor = PIDContributionSensor(
         hass, config_entry, "error", "Error Sensor", coordinator
     )
-    sensor._handle = handle
+    assert sensor._handle is handle
     assert sensor.native_value == 0
 
     # Case 2: setpoint is None → error = 0
@@ -359,5 +373,46 @@ def test_pid_contribution_error_when_input_or_setpoint_none(hass, config_entry):
     sensor = PIDContributionSensor(
         hass, config_entry, "error", "Error Sensor", coordinator
     )
-    sensor._handle = handle
+    assert sensor._handle is handle
     assert sensor.native_value == 0
+
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.asyncio
+async def test_update_pid_adjusts_update_interval(hass, config_entry, monkeypatch):
+    """Ensure coordinator.update_interval updates when sample_time changes."""
+
+    monkeypatch.setattr(PIDDataCoordinator, "_schedule_refresh", lambda self, *_: None)
+
+    handle = config_entry.runtime_data.handle
+
+    sample_time = 5
+
+    handle.get_input_sensor_value = lambda: 10.0
+    handle.get_select = lambda key: {"start_mode": "Startup value"}[key]
+    handle.get_number = lambda key: {
+        "kp": 1.0,
+        "ki": 0.1,
+        "kd": 0.01,
+        "setpoint": 20.0,
+        "starting_output": 0.0,
+        "sample_time": sample_time,
+        "output_min": 0.0,
+        "output_max": 100.0,
+    }[key]
+    handle.get_switch = lambda key: True
+
+    entities = []
+    await async_setup_entry(hass, config_entry, lambda e: entities.extend(e))
+    coordinator = entities[0].coordinator
+
+    assert coordinator.update_interval.total_seconds() == 10
+
+    await coordinator.update_method()
+    assert coordinator.update_interval == timedelta(seconds=sample_time)
+
+    sample_time = 15
+    await coordinator.update_method()
+    assert coordinator.update_interval == timedelta(seconds=sample_time)
+
+    await async_unload_entry(hass, config_entry)
