@@ -85,6 +85,8 @@ class PIDDeviceHandle:
         )
         self.last_contributions = (None, None, None)  # (P, I, D)
         self.last_known_output = None
+        self.last_update_timestamp: float | None = None
+        self.last_measured_sample_time: float | None = None
 
     def _get_entity_id(self, platform: str, key: str) -> str | None:
         """Lookup the real entity_id in the registry by unique_id == '<entry_id>_<key>'."""
