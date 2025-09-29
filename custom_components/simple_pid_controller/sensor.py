@@ -48,6 +48,8 @@ async def async_setup_entry(
         if input_value is None:
             raise ValueError("Input sensor not available")
 
+        handle.input_history.append(input_value)
+
         # Read parameters from UI
         kp = handle.get_number("kp")
         ki = handle.get_number("ki")
@@ -65,6 +67,15 @@ async def async_setup_entry(
         # adapt PID settings
         handle.pid.tunings = (kp, ki, kd)
         handle.pid.setpoint = setpoint
+
+        handle.pid_parameter_history.append(
+            {
+                "kp": kp,
+                "ki": ki,
+                "kd": kd,
+                "setpoint": setpoint,
+            }
+        )
 
         if windup_protection:
             handle.pid.output_limits = (out_min, out_max)
@@ -97,6 +108,7 @@ async def async_setup_entry(
 
         # save last know output
         handle.last_known_output = output
+        handle.output_history.append(output)
 
         # save last I contribution
         last_i = handle.last_contributions[1]
