@@ -37,7 +37,8 @@ async def async_get_config_entry_diagnostics(
             "history": {
                 "input": list(handle.input_history),
                 "output": list(handle.output_history),
-                "pid_parameters": list(handle.pid_parameter_history),
+                "pid_contributions": list(handle.pid_contribution_history),
+                "sample_time": list(handle.sample_time_history),
             },
         },
     }
