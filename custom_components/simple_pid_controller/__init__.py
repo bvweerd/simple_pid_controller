@@ -90,6 +90,10 @@ class PIDDeviceHandle:
         self.input_history: deque[float] = deque(maxlen=10)
         self.output_history: deque[float] = deque(maxlen=10)
         self.pid_parameter_history: deque[dict[str, float | None]] = deque(maxlen=10)
+        self.pid_contribution_history: deque[dict[str, float | None]] = deque(
+            maxlen=10
+        )
+        self.sample_time_history: deque[float | None] = deque(maxlen=10)
         self.last_update_timestamp: float | None = None
         self.last_measured_sample_time: float | None = None
 
