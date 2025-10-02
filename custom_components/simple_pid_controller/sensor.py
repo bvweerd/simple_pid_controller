@@ -104,6 +104,8 @@ async def async_setup_entry(
             handle.last_measured_sample_time = now - handle.last_update_timestamp
         handle.last_update_timestamp = now
 
+        handle.sample_time_history.append(handle.last_measured_sample_time)
+
         output = handle.pid(input_value)
 
         # save last know output
@@ -119,6 +121,15 @@ async def async_setup_entry(
             handle.pid.components[1],
             handle.pid.components[2],
             handle.pid.components[1] - last_i,
+        )
+
+        handle.pid_contribution_history.append(
+            {
+                "p": handle.last_contributions[0],
+                "i": handle.last_contributions[1],
+                "d": handle.last_contributions[2],
+                "i_delta": handle.last_contributions[3],
+            }
         )
 
         _LOGGER.debug(
