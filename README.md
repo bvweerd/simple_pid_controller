@@ -141,6 +141,22 @@ A PID controller continuously corrects the difference between a **setpoint** and
 
 </details>
 
+### Common pitfalls with the I term
+
+Several reported issues stem from the interaction between the **integral term** and the controller's configured limits. Keep the following points in mind when tuning:
+
+- **Integral sensor shows the clamped output** – The integration exposes a diagnostic entity for the I contribution. When `Output Min`/`Output Max` are set, the value you see in the UI is the clamped contribution after limits are applied. This means that with `Ki = 0` the integral value will simply remain at the boundary (e.g. `Output Min = 3` results in `I = 3`). This is expected behaviour and not a sign that the integral is "stuck".
+- **Choose a suitable start value** – When the controller is initialised it sets the integral term to the configured start value, but still clamps it within your `Output Min`/`Output Max` range. If you want the controller to begin from `0`, select the **PID Start Value** option `zero_start` (or call the `simple_pid_controller.set_output` service with the `preset` parameter) and temporarily widen the output range if needed. Otherwise the integral will be forced to the lowest allowed value.
+- **Ki must be non-zero to change the integral** – Setting `Ki = 0` effectively freezes the integral term. Use a small but non-zero value if you need the controller to move away from the clamp over time. You can combine this with **Windup Protection** (toggle entity) to prevent large overshoots once the setpoint is reached.
+
+If your process requires a non-zero minimum output (for example, EV charging currents that must stay above 6 A), start your tuning with:
+
+1. `PID Start Value = zero_start` so the controller can compute from a neutral baseline.
+2. A modest proportional gain (`Kp`) that does not immediately drive the output below the minimum.
+3. A small integral gain (`Ki`) to let the controller move away from the clamped value without causing overshoot.
+
+These steps help avoid the "integral stuck at minimum" effect while keeping the controller within the bounds your hardware requires.
+
 ---
 
 ### How it works in practice
