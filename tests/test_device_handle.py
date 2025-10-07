@@ -1,5 +1,7 @@
 import pytest
+
 from homeassistant.helpers import entity_registry as er
+
 from custom_components.simple_pid_controller import PIDDeviceHandle
 from custom_components.simple_pid_controller.const import DOMAIN
 
@@ -78,6 +80,60 @@ def test_get_input_sensor_value_invalid(hass, config_entry):
 
     # Should handle gracefully and return None
     assert handle.get_input_sensor_value() is None
+
+
+@pytest.mark.parametrize(
+    "raw, expected",
+    [
+        ("0,32", 0.32),
+        ("-1,5", -1.5),
+        ("1.25", 1.25),
+        ("+0.75", 0.75),
+        ("1,234.56", 1234.56),
+        ("", None),
+        ("abc", None),
+    ],
+)
+def test_coerce_float_handles_decimal_commas(hass, config_entry, raw, expected):
+    """Ensure _coerce_float can parse both dot and comma decimal separators."""
+
+    handle = PIDDeviceHandle(hass, config_entry)
+    assert handle._coerce_float(raw) == expected
+
+
+def test_get_forecast_series_returns_values(hass, config_entry):
+    """Verify that get_forecast_series extracts forecast values correctly."""
+
+    handle = PIDDeviceHandle(hass, config_entry)
+    handle.sensor_entity_id = "sensor.price"
+
+    forecast = [
+        {"datetime": "2025-02-06T00:00:00+00:00", "value": "0,32"},
+        {"datetime": "2025-02-06T01:00:00+00:00", "price": 0.28},
+        {"datetime": "2025-02-06T02:00:00+00:00", "value": "invalid"},
+    ]
+
+    hass.states.async_set(
+        handle.sensor_entity_id,
+        "0.30",
+        {"forecast": forecast, "extra": "ignored"},
+    )
+
+    parsed = handle.get_forecast_series()
+    assert parsed == [
+        {"datetime": "2025-02-06T00:00:00+00:00", "value": 0.32},
+        {"datetime": "2025-02-06T01:00:00+00:00", "value": 0.28},
+    ]
+
+
+def test_get_forecast_series_missing_forecast(hass, config_entry):
+    """If no forecast attribute is present, return an empty list."""
+
+    handle = PIDDeviceHandle(hass, config_entry)
+    handle.sensor_entity_id = "sensor.price"
+    hass.states.async_set(handle.sensor_entity_id, "0.30", {})
+
+    assert handle.get_forecast_series() == []
 
 
 @pytest.mark.parametrize("state", ["unknown", "unavailable"])
