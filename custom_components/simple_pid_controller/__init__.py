@@ -10,6 +10,9 @@ from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from collections import deque
 from dataclasses import dataclass
+import re
+from typing import Any
+
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
@@ -144,17 +147,96 @@ class PIDDeviceHandle:
             return state.state == "on"
         return True
 
+    def _coerce_float(self, value: Any) -> float | None:
+        """Coerce a Home Assistant state or attribute value into a float."""
+        if value is None:
+            return None
+
+        if isinstance(value, (int, float)):
+            return float(value)
+
+        if isinstance(value, str):
+            stripped = value.strip()
+            if not stripped:
+                return None
+
+            cleaned = stripped.replace(" ", "")
+
+            # Support locales that use comma as decimal separator ("0,32").
+            if "," in cleaned and cleaned.count(",") == 1 and "." not in cleaned:
+                cleaned = cleaned.replace(",", ".")
+            elif "," in cleaned and "." in cleaned:
+                # If both comma and dot are present, treat the comma as a thousands
+                # separator, mirroring Python's behaviour for underscores.
+                cleaned = cleaned.replace(",", "")
+
+            # Only allow digits plus an optional leading sign and decimal point.
+            if not re.fullmatch(r"[+-]?(\d+(\.\d*)?|\.\d+)", cleaned):
+                return None
+
+            try:
+                return float(cleaned)
+            except ValueError:
+                return None
+
+        return None
+
     def get_input_sensor_value(self) -> float | None:
         """Return the input value from configured sensor."""
         state = self.hass.states.get(self.sensor_entity_id)
         if state and state.state not in ("unknown", "unavailable"):
-            try:
-                return float(state.state)
-            except ValueError:
-                _LOGGER.warning(
-                    f"Sensor {self.sensor_entity_id} invalid value. PID-calculation skipped."
-                )
+            value = self._coerce_float(state.state)
+            if value is not None:
+                return value
+            _LOGGER.warning(
+                "Sensor %s invalid value '%s'. PID-calculation skipped.",
+                self.sensor_entity_id,
+                state.state,
+            )
         return None
+
+    def get_forecast_series(self) -> list[dict[str, Any]]:
+        """Return forecast entries from the input sensor if available.
+
+        The energy price integrations in Home Assistant expose a ``forecast``
+        attribute that contains a list of dictionaries with at least a
+        ``value``/``price`` entry.  Previously we ignored these entries and only
+        used the current sensor value, causing every point of the planning
+        horizon to use the same price.  This helper extracts all usable
+        forecast values so other parts of the integration can consume them.
+        """
+
+        state = self.hass.states.get(self.sensor_entity_id)
+        if state is None:
+            return []
+
+        raw_forecast = state.attributes.get("forecast")
+        if not isinstance(raw_forecast, list):
+            return []
+
+        parsed: list[dict[str, Any]] = []
+        for item in raw_forecast:
+            if not isinstance(item, dict):
+                continue
+
+            # Electricity price sensors sometimes expose the price under
+            # ``value`` while others use ``price``.  Accept both and ignore
+            # unparseable entries so a single malformed datapoint does not
+            # break the entire forecast.
+            raw_value = item.get("value")
+            if raw_value is None:
+                raw_value = item.get("price")
+
+            value = self._coerce_float(raw_value)
+            if value is None:
+                continue
+
+            parsed.append({
+                "datetime": item.get("datetime") or item.get("time"),
+                "value": value,
+            })
+
+        return parsed
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
