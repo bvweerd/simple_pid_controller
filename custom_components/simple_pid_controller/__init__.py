@@ -231,10 +231,12 @@ class PIDDeviceHandle:
             if value is None:
                 continue
 
-            parsed.append({
-                "datetime": item.get("datetime") or item.get("time"),
-                "value": value,
-            })
+            parsed.append(
+                {
+                    "datetime": item.get("datetime") or item.get("time"),
+                    "value": value,
+                }
+            )
 
         return parsed
 
