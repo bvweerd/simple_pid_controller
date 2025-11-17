@@ -13,6 +13,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from datetime import timedelta
+from time import perf_counter
 from simple_pid import PID
 from typing import Any
 
@@ -47,6 +48,8 @@ async def async_setup_entry(
         if input_value is None:
             raise ValueError("Input sensor not available")
 
+        handle.input_history.append(input_value)
+
         # Read parameters from UI
         kp = handle.get_number("kp")
         ki = handle.get_number("ki")
@@ -64,6 +67,15 @@ async def async_setup_entry(
         # adapt PID settings
         handle.pid.tunings = (kp, ki, kd)
         handle.pid.setpoint = setpoint
+
+        handle.pid_parameter_history.append(
+            {
+                "kp": kp,
+                "ki": ki,
+                "kd": kd,
+                "setpoint": setpoint,
+            }
+        )
 
         if windup_protection:
             handle.pid.output_limits = (out_min, out_max)
@@ -85,10 +97,20 @@ async def async_setup_entry(
 
         handle.pid.proportional_on_measurement = p_on_m
 
+        now = perf_counter()
+        if handle.last_update_timestamp is None:
+            handle.last_measured_sample_time = None
+        else:
+            handle.last_measured_sample_time = now - handle.last_update_timestamp
+        handle.last_update_timestamp = now
+
+        handle.sample_time_history.append(handle.last_measured_sample_time)
+
         output = handle.pid(input_value)
 
         # save last know output
         handle.last_known_output = output
+        handle.output_history.append(output)
 
         # save last I contribution
         last_i = handle.last_contributions[1]
@@ -99,6 +121,15 @@ async def async_setup_entry(
             handle.pid.components[1],
             handle.pid.components[2],
             handle.pid.components[1] - last_i,
+        )
+
+        handle.pid_contribution_history.append(
+            {
+                "p": handle.last_contributions[0],
+                "i": handle.last_contributions[1],
+                "d": handle.last_contributions[2],
+                "i_delta": handle.last_contributions[3],
+            }
         )
 
         _LOGGER.debug(
@@ -151,6 +182,9 @@ async def async_setup_entry(
             ),
             PIDContributionSensor(hass, entry, "error", "Error", coordinator),
             PIDContributionSensor(hass, entry, "pid_i_delta", "I delta", coordinator),
+            PIDSampleTimeSensor(
+                hass, entry, "actual_sample_time", "Actual Sample Time", coordinator
+            ),
         ]
     )
 
@@ -263,3 +297,31 @@ class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity)
             "pid_i_delta": contributions[3],
         }.get(self._key)
         return round(value, 3) if value is not None else None
+
+
+class PIDSampleTimeSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
+    """Sensor exposing the measured sample time between PID updates."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+        key: str,
+        name: str,
+        coordinator: PIDDataCoordinator,
+    ) -> None:
+        super().__init__(coordinator)
+
+        BasePIDEntity.__init__(self, hass, entry, key, name)
+
+        self._attr_entity_category = EntityCategory.DIAGNOSTIC
+        self._attr_entity_registry_enabled_default = False
+        self._attr_state_class = SensorStateClass.MEASUREMENT
+        self._attr_native_unit_of_measurement = "s"
+
+    @property
+    def native_value(self) -> float | None:
+        sample_time = self._handle.last_measured_sample_time
+        if sample_time is None:
+            return None
+        return round(sample_time, 3)
