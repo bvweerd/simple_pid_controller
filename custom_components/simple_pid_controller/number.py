@@ -76,7 +76,7 @@ CONTROL_NUMBER_ENTITIES = [
         "name": "Setpoint",
         "key": "setpoint",
         "unit": "",
-        "step": 1.0,
+        "step": 0.01,
         "default": 0.5,
         "entity_category": None,
     },

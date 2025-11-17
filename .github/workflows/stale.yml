@@ -1,0 +1,57 @@
+name: Mark & close stale issues/PRs
+
+on:
+  schedule:
+    # Dagelijks om 02:17 UTC
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v10
+        with:
+          # ALGEMEEN
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          operations-per-run: 200
+          days-before-stale: 7               # Issues worden 'stale' na 60 dagen inactiviteit
+          days-before-close: 14               # en gesloten 14 dagen later
+          stale-issue-label: "stale"
+          stale-pr-label: "stale"
+          exempt-issue-labels: "pinned,security,backlog,never-stale"
+          exempt-pr-labels: "work-in-progress,never-stale"
+          exempt-all-milestones: true         # Items met milestone overslaan
+          exempt-assignees: ""                # Vul evt. gebruikers in, kommagescheiden
+          remove-stale-when-updated: true
+          ignore-updates: false               # Als iemand reageert of labelt, wordt 'stale' verwijderd
+          ascending: false
+
+          # ISSUES
+          stale-issue-message: |
+            💤 Deze issue heeft 60 dagen geen activiteit gehad en is gemarkeerd als **stale**.
+            Als er binnen 14 dagen geen nieuwe activiteit is, wordt deze automatisch gesloten.
+            Voeg svp een update toe of label met `never-stale` om dit te voorkomen.
+          close-issue-message: |
+            🔒 Deze issue is automatisch gesloten wegens inactiviteit.
+            Als dit nog steeds actueel is, heropen of maak een nieuwe issue met de laatste context. Bedankt!
+
+          # PULL REQUESTS
+          days-before-pr-stale: 30            # PRs iets sneller stale
+          days-before-pr-close: 10
+          stale-pr-message: |
+            💤 Deze pull request is 30 dagen inactief en is gemarkeerd als **stale**.
+            Reageer of push nieuwe commits binnen 10 dagen om sluiten te voorkomen.
+            Label met `never-stale` om uit te sluiten.
+          close-pr-message: |
+            🔒 Deze pull request is automatisch gesloten wegens inactiviteit.
+            Heropen gerust wanneer je verder wilt gaan.
+
+          # FILTERS (optioneel; laat leeg om alles te laten meedraaien)
+          only-labels: ""                      # Bv. "triage" om alleen issues met dat label te targeten
+          any-of-labels: ""                    # Bv. "question,help wanted"
+          exempt-draft-pr: true                # Draft PRs overslaan
