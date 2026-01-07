@@ -239,7 +239,7 @@ class PIDOutputSensor(
 
         BasePIDEntity.__init__(self, hass, entry, key, name)
 
-        self._attr_native_unit_of_measurement = "%"
+        self._attr_native_unit_of_measurement = None
         self._attr_state_class = SensorStateClass.MEASUREMENT
 
     async def async_added_to_hass(self):
