@@ -1,12 +1,23 @@
 bug:
-  - "error"
-  - "fail"
-feature:
-  - "feature request"
-  - "enhancement"
-documentation:
-  - "docs"
-  - "documentation"
-maintenance:
-  - "dependabot"
+  - '(?i)(bug|fout|error|exception|traceback|crash|not working|werkt niet|kapot|broken|failing|AttributeError|ValueError|TypeError|KeyError|ImportError|does not work|stopped working|niet meer)'
 
+enhancement:
+  - '(?i)(feature|enhancement|feature request|verbeter|toevoeg|add support|support for|zou het mogelijk|request|wish|wens|suggestie|suggestion|could you|can you add)'
+
+question:
+  - '(?i)(question|vraag|how to|hoe|how do|what is|wat is|help|uitleg|explain|why|waarom|where|where can|confused|understand)'
+
+documentation:
+  - '(?i)(docs|documentation|readme|example|voorbeeld|uitleg|wiki|manual|how to configure|guide)'
+
+configuration:
+  - '(?i)(config|configuratie|setup|install|yaml|options|settings|instell|configure|option|parameter)'
+
+performance:
+  - '(?i)(slow|traag|performance|memory|geheugen|cpu|hang|freeze|timeout|lagging|delayed|vertraging)'
+
+"home assistant":
+  - '(?i)(home assistant|hass|HA \d+\.\d+|homeassistant|core \d+\.\d+)'
+
+dependencies:
+  - '(?i)(dependency|afhankelijkh|requirement|package|pip|version incompatible|requires|needs version)'
