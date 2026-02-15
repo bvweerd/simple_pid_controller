@@ -1,33 +1,22 @@
-## 📝 What’s Changed?
+## Beschrijving
 
-<!-- Briefly describe the main changes in this PR -->
-- ...
+<!-- Beschrijf kort wat deze PR doet en waarom -->
 
-## 🔍 Why is this Change Needed?
+## Type wijziging
 
-<!-- Explain the reason or motivation behind the change -->
-- ...
+- [ ] `fix:` Bug fix (patch versie bump)
+- [ ] `feat:` Nieuwe feature (minor versie bump)
+- [ ] `feat!:` / `BREAKING CHANGE:` Breaking change (major versie bump)
+- [ ] `chore:` / `docs:` / `ci:` Onderhoud of documentatie (geen versie bump)
 
-## 🧪 How Was This Tested?
+## Checklist
 
-<!-- Describe how you tested the changes -->
-- [ ] Added or updated unit tests
-- [ ] Manually tested in development environment
-- [ ] CI/CD pipeline passed successfully
+- [ ] Commit title volgt [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `chore:`, etc.)
+- [ ] Tests toegevoegd of bijgewerkt waar van toepassing
+- [ ] Documentatie bijgewerkt indien nodig
+- [ ] CI is groen
+- [ ] PR is gericht op de `dev` branch (niet `main`, tenzij hotfix)
 
-## ✅ Checklist
+## Screenshots / Logs (optioneel)
 
-- [ ] Code follows the style guide
-- [ ] All tests are passing
-- [ ] Documentation updated if needed
-- [ ] No breaking changes (or clearly documented)
-
-## 📸 Screenshots / Logs (Optional)
-
-<!-- Add any relevant UI screenshots or logs -->
-_(e.g., Home Assistant UI, terminal output, etc.)_
-
-## 📎 Additional Notes
-
-<!-- Add anything else reviewers should know -->
-- ...
+<!-- Voeg relevante screenshots of logs toe -->
