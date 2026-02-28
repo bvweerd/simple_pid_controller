@@ -32,12 +32,12 @@ jobs:
           configuration: |
             {
               "categories": [
-                { "title": "## ✨ Nieuwe features", "labels": ["enhancement", "feature"] },
+                { "title": "## ✨ New features", "labels": ["enhancement", "feature"] },
                 { "title": "## 🐛 Bug fixes", "labels": ["bug", "fix"] },
-                { "title": "## 📚 Documentatie", "labels": ["documentation"] },
-                { "title": "## 🔧 Overig", "labels": [] }
+                { "title": "## 📚 Documentation", "labels": ["documentation"] },
+                { "title": "## 🔧 Other", "labels": [] }
               ],
-              "template": "#{{CHANGELOG}}\n\n**Volledige changelog**: #{{RELEASE_DIFF}}"
+              "template": "#{{CHANGELOG}}\n\n**Full changelog**: #{{RELEASE_DIFF}}"
             }
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -47,11 +47,11 @@ jobs:
         with:
           files: simple_pid_controller.zip
           body: |
-            ## Installatie via HACS
-            Installeer of update via HACS — de nieuwe versie wordt automatisch aangeboden.
+            ## Installation via HACS
+            Install or update via HACS — the new version will be offered automatically.
 
-            ## Handmatige installatie
-            Download `simple_pid_controller.zip`, pak uit en kopieer `simple_pid_controller/` naar je `custom_components/` map.
+            ## Manual installation
+            Download `simple_pid_controller.zip`, extract and copy `simple_pid_controller/` to your `custom_components/` directory.
 
             ${{ steps.changelog.outputs.changelog }}
           generate_release_notes: false
