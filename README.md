@@ -11,6 +11,7 @@
   - [Manual Installation](#manual-installation)
   - [Removal Instructions](#removal-instructions) 
 - [Configuration](#configuration)
+- [Customizing the Unit of Measurement](#customizing-the-unit-of-measurement)
 - [Entities Overview](#entities-overview)
 - [PID Tuning Guide](#pid-tuning-guide)
   - [Manual Tuning](#1-manual-trial--error)
@@ -88,6 +89,50 @@ The controller is configured through the UI using the Config Flow {% term config
 
 **Default Range:**  
 The controller’s setpoint range defaults to **0.0 – 100.0**. To customize this range, select the integration in **Settings > Devices & Services**, click **Options**, adjust **Range Min** and **Range Max**, and save.
+
+---
+
+## 🏷️ Customizing the Unit of Measurement
+
+The PID output sensor has no fixed unit of measurement, because the output value depends entirely on your application (e.g. %, °C, A, W). Per Home Assistant architecture, units cannot be configured inside the integration itself — instead, use one of the approaches below.
+
+### Option 1: customize.yaml
+
+Add a device class and unit to the entity directly. This works for the PID output sensor and for number entities such as `Setpoint`.
+
+**`configuration.yaml`**
+```yaml
+homeassistant:
+  customize: !include customize.yaml
+```
+
+**`customize.yaml`**
+```yaml
+sensor.my_pid_controller_pid_output:
+  device_class: temperature
+  unit_of_measurement: "°C"
+
+number.my_pid_controller_setpoint:
+  device_class: temperature
+  unit_of_measurement: "°C"
+```
+
+> **Note:** Only set `device_class` to a value that matches the physical meaning of the output. Using a wrong device class can affect history graphs and unit conversions.
+
+### Option 2: Template sensor
+
+Use a template sensor to wrap the PID output with any unit and label you need. This is useful when you want a clean, named entity without modifying the raw output entity.
+
+**`configuration.yaml`** (or your `template:` block):
+```yaml
+template:
+  - sensor:
+      - name: "Heater setpoint output"
+        unit_of_measurement: "°C"
+        device_class: temperature
+        state_class: measurement
+        state: "{{ states('sensor.my_pid_controller_pid_output') | float(0) | round(2) }}"
+```
 
 ---
 
