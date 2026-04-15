@@ -49,7 +49,7 @@ jobs:
         run: pytest --cov=custom_components --cov-report=xml -q
 
       - name: Upload coverage
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           files: ./coverage.xml
           fail_ci_if_error: false
