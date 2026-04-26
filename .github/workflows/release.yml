@@ -29,14 +29,25 @@ jobs:
         id: changelog
         uses: mikepenz/release-changelog-builder-action@v6
         with:
+          commitMode: true
           configuration: |
             {
-              "categories": [
-                { "title": "## ✨ New features", "labels": ["enhancement", "feature"] },
-                { "title": "## 🐛 Bug fixes", "labels": ["bug", "fix"] },
-                { "title": "## 📚 Documentation", "labels": ["documentation"] },
-                { "title": "## 🔧 Other", "labels": [] }
+              "label_extractor": [
+                { "pattern": "^(feat|feature|add)(\\(.+\\))?!?[:\\s]", "target": "feature" },
+                { "pattern": "^(fix|bug|bugfix|hotfix)(\\(.+\\))?!?[:\\s]", "target": "bug" },
+                { "pattern": "^(docs?|documentation)(\\(.+\\))?[:\\s]", "target": "documentation" },
+                { "pattern": "^(ci|github.?actions?)(\\(.+\\))?[:\\s]", "target": "ci" },
+                { "pattern": "^(chore|refactor|test|perf|style|build|bump)(\\(.+\\))?[:\\s]", "target": "chore" }
               ],
+              "categories": [
+                { "title": "## ✨ New features",   "labels": ["feature", "enhancement"] },
+                { "title": "## 🐛 Bug fixes",      "labels": ["bug", "fix"] },
+                { "title": "## 📚 Documentation",  "labels": ["documentation"] },
+                { "title": "## 🔧 Other",          "labels": ["chore"] },
+                { "title": "## 👷 CI",             "labels": ["ci"] },
+                { "title": "## 📦 Uncategorized",  "labels": [] }
+              ],
+              "ignore_labels": ["dependabot"],
               "template": "#{{CHANGELOG}}\n\n**Full changelog**: #{{RELEASE_DIFF}}"
             }
         env:
@@ -47,13 +58,15 @@ jobs:
         with:
           files: simple_pid_controller.zip
           body: |
+            ${{ steps.changelog.outputs.changelog }}
+
+            ---
+
             ## Installation via HACS
             Install or update via HACS — the new version will be offered automatically.
 
             ## Manual installation
             Download `simple_pid_controller.zip`, extract and copy `simple_pid_controller/` to your `custom_components/` directory.
-
-            ${{ steps.changelog.outputs.changelog }}
           generate_release_notes: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
