@@ -1,0 +1,23 @@
+bug:
+  - changed-files:
+    - any-glob-to-any-file: []  # no file-based bug detection; use issue labels or manual
+
+enhancement:
+  - changed-files:
+    - any-glob-to-any-file:
+      - custom_components/simple_pid_controller/**
+
+documentation:
+  - changed-files:
+    - any-glob-to-any-file:
+      - "*.md"
+      - docs/**
+      - custom_components/simple_pid_controller/translations/**
+      - custom_components/simple_pid_controller/strings.json
+
+dependencies:
+  - changed-files:
+    - any-glob-to-any-file:
+      - requirements*.txt
+      - custom_components/simple_pid_controller/manifest.json
+      - setup.cfg
