@@ -34,7 +34,11 @@
           "input_range_min": "Minimum Input Range",
           "input_range_max": "Maximum Input Range",
           "output_range_min": "Minimum Output Range",
-          "output_range_max": "Maximum Output Range"
+          "output_range_max": "Maximum Output Range",
+          "setpoint_step": "Setpoint Step"
+        },
+        "data_description": {
+          "setpoint_step": "Increment size for the setpoint picker (e.g. 0.5 for half-degree steps)"
         }
       }
     },

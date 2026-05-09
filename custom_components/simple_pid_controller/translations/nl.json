@@ -33,7 +33,11 @@
           "input_range_min": "Minimum Input Bereik",
           "input_range_max": "Maximum Input Bereik",
           "output_range_min": "Minimum Output Bereik",
-          "output_range_max": "Maximum Output Bereik"
+          "output_range_max": "Maximum Output Bereik",
+          "setpoint_step": "Stappgrootte Setpoint"
+        },
+        "data_description": {
+          "setpoint_step": "Stapgrootte voor de setpoint-kiezer (bijv. 0.5 voor halve graden)"
         }
       }
     },

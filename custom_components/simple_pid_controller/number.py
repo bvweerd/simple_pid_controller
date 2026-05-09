@@ -16,10 +16,12 @@ from .const import (
     CONF_INPUT_RANGE_MAX,
     CONF_OUTPUT_RANGE_MIN,
     CONF_OUTPUT_RANGE_MAX,
+    CONF_SETPOINT_STEP,
     DEFAULT_INPUT_RANGE_MIN,
     DEFAULT_INPUT_RANGE_MAX,
     DEFAULT_OUTPUT_RANGE_MIN,
     DEFAULT_OUTPUT_RANGE_MAX,
+    DEFAULT_SETPOINT_STEP,
 )
 
 # Coordinator is used to centralize the data updates
@@ -162,14 +164,20 @@ class ControlParameterNumber(RestoreNumber):
         self._attr_icon = "mdi:ray-vertex"
         self._attr_mode = "box"
         self._attr_native_unit_of_measurement = desc["unit"]
-        self._attr_native_step = desc["step"]
+
         self._attr_native_value = desc["default"]
         self._attr_entity_category = desc["entity_category"]
         self._key = desc["key"]
 
-        # Compute range limits based on key
+        # Compute range limits and setpoint step from options
         opts = entry.options or {}
         data = entry.data or {}
+
+        if desc["key"] == "setpoint":
+            self._attr_native_step = opts.get(CONF_SETPOINT_STEP, DEFAULT_SETPOINT_STEP)
+        else:
+            self._attr_native_step = desc["step"]
+
         input_range_min = opts.get(
             CONF_INPUT_RANGE_MIN,
             data.get(CONF_INPUT_RANGE_MIN, DEFAULT_INPUT_RANGE_MIN),

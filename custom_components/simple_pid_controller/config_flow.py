@@ -25,10 +25,12 @@ from .const import (
     CONF_INPUT_RANGE_MAX,
     CONF_OUTPUT_RANGE_MIN,
     CONF_OUTPUT_RANGE_MAX,
+    CONF_SETPOINT_STEP,
     DEFAULT_INPUT_RANGE_MIN,
     DEFAULT_INPUT_RANGE_MAX,
     DEFAULT_OUTPUT_RANGE_MIN,
     DEFAULT_OUTPUT_RANGE_MAX,
+    DEFAULT_SETPOINT_STEP,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -145,6 +147,9 @@ class PIDControllerOptionsFlowHandler(OptionsFlow):
         current_output_max = self.config_entry.options.get(
             CONF_OUTPUT_RANGE_MAX, DEFAULT_OUTPUT_RANGE_MAX
         )
+        current_setpoint_step = self.config_entry.options.get(
+            CONF_SETPOINT_STEP, DEFAULT_SETPOINT_STEP
+        )
 
         options_schema = vol.Schema(
             {
@@ -168,6 +173,10 @@ class PIDControllerOptionsFlowHandler(OptionsFlow):
                     CONF_OUTPUT_RANGE_MAX,
                     default=current_output_max,
                 ): vol.Coerce(float),
+                vol.Optional(
+                    CONF_SETPOINT_STEP,
+                    default=current_setpoint_step,
+                ): selector({"number": {"min": 0.01, "max": 10.0, "step": 0.01, "mode": "box"}}),
             }
         )
 
