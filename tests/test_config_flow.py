@@ -3,6 +3,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResultType
 
+from custom_components.simple_pid_controller.const import CONF_SETPOINT_STEP
 from custom_components.simple_pid_controller.const import (
     DOMAIN,
     CONF_NAME,
@@ -142,6 +143,7 @@ def test_async_get_options_flow():
                 CONF_INPUT_RANGE_MAX: 10.0,
                 CONF_OUTPUT_RANGE_MIN: 1.0,
                 CONF_OUTPUT_RANGE_MAX: 10.0,
+                CONF_SETPOINT_STEP: 0.5,
             },
             None,
         ),
@@ -152,6 +154,7 @@ def test_async_get_options_flow():
                 CONF_INPUT_RANGE_MAX: 5.0,
                 CONF_OUTPUT_RANGE_MIN: 1.0,
                 CONF_OUTPUT_RANGE_MAX: 10.0,
+                CONF_SETPOINT_STEP: 0.5,
             },
             {"base": "input_range_min_max"},
         ),
@@ -162,6 +165,7 @@ def test_async_get_options_flow():
                 CONF_INPUT_RANGE_MAX: 10.0,
                 CONF_OUTPUT_RANGE_MIN: 10.0,
                 CONF_OUTPUT_RANGE_MAX: 5.0,
+                CONF_SETPOINT_STEP: 0.5,
             },
             {"base": "output_range_min_max"},
         ),

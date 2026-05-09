@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.components.number import RestoreNumber
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .entity import BasePIDEntity
 from .const import (
@@ -16,16 +17,30 @@ from .const import (
     CONF_INPUT_RANGE_MAX,
     CONF_OUTPUT_RANGE_MIN,
     CONF_OUTPUT_RANGE_MAX,
+    CONF_SETPOINT_STEP,
     DEFAULT_INPUT_RANGE_MIN,
     DEFAULT_INPUT_RANGE_MAX,
     DEFAULT_OUTPUT_RANGE_MIN,
     DEFAULT_OUTPUT_RANGE_MAX,
+    DEFAULT_SETPOINT_STEP,
 )
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
+
+
+SETPOINT_STEP_ENTITY = {
+    "name": "Setpoint Step",
+    "key": "setpoint_step",
+    "unit": "",
+    "min": 0.01,
+    "max": 10.0,
+    "step": 0.01,
+    "default": DEFAULT_SETPOINT_STEP,
+    "entity_category": EntityCategory.CONFIG,
+}
 
 
 PID_NUMBER_ENTITIES = [
@@ -116,6 +131,7 @@ async def async_setup_entry(
     entities = [
         ControlParameterNumber(hass, entry, desc) for desc in CONTROL_NUMBER_ENTITIES
     ]
+    entities.append(SetpointStepNumber(hass, entry, SETPOINT_STEP_ENTITY))
     async_add_entities(entities)
 
 
@@ -162,14 +178,19 @@ class ControlParameterNumber(RestoreNumber):
         self._attr_icon = "mdi:ray-vertex"
         self._attr_mode = "box"
         self._attr_native_unit_of_measurement = desc["unit"]
-        self._attr_native_step = desc["step"]
         self._attr_native_value = desc["default"]
         self._attr_entity_category = desc["entity_category"]
         self._key = desc["key"]
 
-        # Compute range limits based on key
+        # Compute range limits based on key.
         opts = entry.options or {}
         data = entry.data or {}
+
+        if self._key == "setpoint":
+            self._attr_native_step = opts.get(CONF_SETPOINT_STEP, DEFAULT_SETPOINT_STEP)
+        else:
+            self._attr_native_step = desc["step"]
+
         input_range_min = opts.get(
             CONF_INPUT_RANGE_MIN,
             data.get(CONF_INPUT_RANGE_MIN, DEFAULT_INPUT_RANGE_MIN),
@@ -208,7 +229,6 @@ class ControlParameterNumber(RestoreNumber):
 
         self._attr_native_min_value = min_val
         self._attr_native_max_value = max_val
-        self._attr_native_step = desc.get("step", 1.0)
 
         # Initialize current value
         if self._key == "setpoint":
@@ -243,3 +263,38 @@ class ControlParameterNumber(RestoreNumber):
     async def async_set_native_value(self, value: float) -> None:
         self._attr_native_value = value
         self.async_write_ha_state()
+
+
+class SetpointStepNumber(RestoreNumber):
+    """Editable number entity for the setpoint step size."""
+
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, desc: dict[str, Any]
+    ) -> None:
+        BasePIDEntity.__init__(self, hass, entry, desc["key"], desc["name"])
+        RestoreNumber.__init__(self)
+
+        opts = entry.options or {}
+
+        self._attr_icon = "mdi:tune-vertical"
+        self._attr_mode = "box"
+        self._attr_native_unit_of_measurement = desc["unit"]
+        self._attr_native_min_value = desc["min"]
+        self._attr_native_max_value = desc["max"]
+        self._attr_native_step = desc["step"]
+        self._attr_native_value = opts.get(CONF_SETPOINT_STEP, desc["default"])
+        self._attr_entity_category = desc["entity_category"]
+
+    @property
+    def native_value(self) -> float:
+        return self._attr_native_value
+
+    async def async_set_native_value(self, value: float) -> None:
+        self._attr_native_value = value
+        updated_options = dict(self._entry.options)
+        updated_options[CONF_SETPOINT_STEP] = value
+        self.hass.config_entries.async_update_entry(
+            self._entry,
+            options=updated_options,
+        )
+        await self.hass.config_entries.async_reload(self._entry.entry_id)

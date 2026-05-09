@@ -1,12 +1,22 @@
-import pytest
 import logging
+from types import SimpleNamespace
+
+import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.simple_pid_controller.number import (
     PID_NUMBER_ENTITIES,
     CONTROL_NUMBER_ENTITIES,
     PIDParameterNumber,
     ControlParameterNumber,
+    SETPOINT_STEP_ENTITY,
+    SetpointStepNumber,
 )
 from custom_components.simple_pid_controller.const import (
+    CONF_NAME,
+    CONF_SENSOR_ENTITY_ID,
+    CONF_SETPOINT_STEP,
+    DEFAULT_SETPOINT_STEP,
+    DOMAIN,
     DEFAULT_INPUT_RANGE_MIN,
     DEFAULT_INPUT_RANGE_MAX,
     DEFAULT_OUTPUT_RANGE_MIN,
@@ -19,7 +29,7 @@ async def test_number_platform(hass, config_entry):
     """Check that all Number entities from PID_NUMBER_ENTITIES are created."""
 
     numbers = hass.states.async_entity_ids("number")
-    assert len(numbers) == len(PID_NUMBER_ENTITIES) + len(CONTROL_NUMBER_ENTITIES)
+    assert len(numbers) == len(PID_NUMBER_ENTITIES) + len(CONTROL_NUMBER_ENTITIES) + 1
 
 
 @pytest.mark.usefixtures("setup_integration")
@@ -163,3 +173,92 @@ async def test_controlparameter_number_unexpected_key(
     assert f"Unknown PID key '{invalid_key}'. Using default values:" in caplog.text
     assert num._attr_native_min_value == expected_min
     assert num._attr_native_max_value == expected_max
+
+
+def test_setpoint_uses_configured_step(hass):
+    """Test that the setpoint control uses the configured step option."""
+    setpoint_desc = next(
+        desc for desc in CONTROL_NUMBER_ENTITIES if desc["key"] == "setpoint"
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="PID3",
+        title="Test PID Controller",
+        data={CONF_SENSOR_ENTITY_ID: "sensor.test_input", CONF_NAME: "PID3"},
+        options={CONF_SETPOINT_STEP: 0.5},
+    )
+    entry.runtime_data = SimpleNamespace(handle=SimpleNamespace(name="PID3"))
+
+    num = ControlParameterNumber(hass, entry, setpoint_desc)
+
+    assert num._attr_native_step == 0.5
+
+
+def test_setpoint_defaults_to_default_step(hass):
+    """Test that the setpoint control falls back to the default step."""
+    setpoint_desc = next(
+        desc for desc in CONTROL_NUMBER_ENTITIES if desc["key"] == "setpoint"
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="PID4",
+        title="Test PID Controller",
+        data={CONF_SENSOR_ENTITY_ID: "sensor.test_input", CONF_NAME: "PID4"},
+    )
+    entry.runtime_data = SimpleNamespace(handle=SimpleNamespace(name="PID4"))
+
+    num = ControlParameterNumber(hass, entry, setpoint_desc)
+
+    assert num._attr_native_step == DEFAULT_SETPOINT_STEP
+
+
+def test_setpoint_step_entity_uses_configured_value(hass):
+    """Test that the setpoint step config entity reflects the saved option."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="PID5",
+        title="Test PID Controller",
+        data={CONF_SENSOR_ENTITY_ID: "sensor.test_input", CONF_NAME: "PID5"},
+        options={CONF_SETPOINT_STEP: 0.25},
+    )
+    entry.runtime_data = SimpleNamespace(handle=SimpleNamespace(name="PID5"))
+
+    num = SetpointStepNumber(hass, entry, SETPOINT_STEP_ENTITY)
+
+    assert num._attr_native_min_value == 0.01
+    assert num._attr_native_max_value == 10.0
+    assert num._attr_native_step == 0.01
+    assert num.native_value == 0.25
+
+
+async def test_setpoint_step_entity_updates_entry_options_and_reloads(
+    hass, monkeypatch
+):
+    """Test that changing setpoint step persists options and reloads the entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="PID6",
+        title="Test PID Controller",
+        data={CONF_SENSOR_ENTITY_ID: "sensor.test_input", CONF_NAME: "PID6"},
+    )
+    entry.runtime_data = SimpleNamespace(handle=SimpleNamespace(name="PID6"))
+    num = SetpointStepNumber(hass, entry, SETPOINT_STEP_ENTITY)
+
+    update_calls = []
+    reload_calls = []
+
+    def fake_update_entry(target_entry, *, options):
+        update_calls.append((target_entry, options))
+
+    async def fake_reload(entry_id):
+        reload_calls.append(entry_id)
+        return True
+
+    monkeypatch.setattr(hass.config_entries, "async_update_entry", fake_update_entry)
+    monkeypatch.setattr(hass.config_entries, "async_reload", fake_reload)
+
+    await num.async_set_native_value(0.25)
+
+    assert num.native_value == 0.25
+    assert update_calls == [(entry, {CONF_SETPOINT_STEP: 0.25})]
+    assert reload_calls == [entry.entry_id]
