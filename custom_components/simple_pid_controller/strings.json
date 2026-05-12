@@ -28,7 +28,25 @@
           "input_range_min": "Minimum Input Range",
           "input_range_max": "Maximum Input Range",
           "output_range_min": "Minimum Output Range",
-          "output_range_max": "Maximum Output Range"
+          "output_range_max": "Maximum Output Range",
+          "step_kp": "Kp Step Size",
+          "step_ki": "Ki Step Size",
+          "step_kd": "Kd Step Size",
+          "step_sample_time": "Sample Time Step Size",
+          "step_setpoint": "Setpoint Step Size",
+          "step_output_min": "Output Min Step Size",
+          "step_output_max": "Output Max Step Size",
+          "step_starting_output": "Startup Value Step Size"
+        },
+        "data_description": {
+          "step_kp": "Increment size for the Kp parameter.",
+          "step_ki": "Increment size for the Ki parameter.",
+          "step_kd": "Increment size for the Kd parameter.",
+          "step_sample_time": "Increment size for the sample time parameter.",
+          "step_setpoint": "Increment size for the setpoint picker.",
+          "step_output_min": "Increment size for the output minimum.",
+          "step_output_max": "Increment size for the output maximum.",
+          "step_starting_output": "Increment size for the startup value."
         }
       }
     }
