@@ -20,6 +20,11 @@ jobs:
           VERSION=${GITHUB_REF_NAME#v}
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
+      - name: Update version in manifest.json
+        run: |
+          sed -i 's/"version": "[^"]*"/"version": "${{ steps.version.outputs.version }}"/' \
+            custom_components/simple_pid_controller/manifest.json
+
       - name: Create release ZIP
         run: |
           cd custom_components/simple_pid_controller/
