@@ -1,7 +1,9 @@
 import pytest
 
+import pytest
+
 from homeassistant import config_entries
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
 from custom_components.simple_pid_controller.const import (
     CONF_STEP_PREFIX,
@@ -212,6 +214,54 @@ async def test_options_flow_with_custom_steps(hass, config_entry):
         assert result2["data"][key] == val
 
 
+_BASE_OPTIONS = {
+    CONF_SENSOR_ENTITY_ID: "sensor.new",
+    CONF_INPUT_RANGE_MIN: 1.0,
+    CONF_INPUT_RANGE_MAX: 10.0,
+    CONF_OUTPUT_RANGE_MIN: 1.0,
+    CONF_OUTPUT_RANGE_MAX: 10.0,
+}
+
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.parametrize("invalid_step", [0.0, -1.0, -0.0001])
+async def test_options_flow_step_below_min_rejected(hass, config_entry, invalid_step):
+    """Test that a step value below the selector minimum raises InvalidData."""
+    init_result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    with pytest.raises(InvalidData):
+        await hass.config_entries.options.async_configure(
+            init_result["flow_id"],
+            user_input={**_BASE_OPTIONS, f"{CONF_STEP_PREFIX}kp": invalid_step},
+        )
+
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.parametrize("invalid_step", [100.001, 200.0, 1000.0])
+async def test_options_flow_step_above_max_rejected(hass, config_entry, invalid_step):
+    """Test that a step value above the selector maximum raises InvalidData."""
+    init_result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    with pytest.raises(InvalidData):
+        await hass.config_entries.options.async_configure(
+            init_result["flow_id"],
+            user_input={**_BASE_OPTIONS, f"{CONF_STEP_PREFIX}setpoint": invalid_step},
+        )
+
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.parametrize(
+    "boundary_step", [0.0001, 100.0]
+)
+async def test_options_flow_step_boundary_values_accepted(hass, config_entry, boundary_step):
+    """Test that step values at the exact selector boundaries are accepted."""
+    init_result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        init_result["flow_id"],
+        user_input={**_BASE_OPTIONS, f"{CONF_STEP_PREFIX}kp": boundary_step},
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"][f"{CONF_STEP_PREFIX}kp"] == boundary_step
+
+
 async def test_user_flow_duplicate_abort(hass):
     """Test that a duplicate config entry aborts the flow."""
     user_input = {
@@ -241,3 +291,5 @@ async def test_user_flow_duplicate_abort(hass):
 
     assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
+
+
