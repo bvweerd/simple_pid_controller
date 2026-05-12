@@ -154,7 +154,9 @@ class PIDControllerOptionsFlowHandler(OptionsFlow):
                 default=self.config_entry.options.get(
                     f"{CONF_STEP_PREFIX}{key}", DEFAULT_STEPS[key]
                 ),
-            ): selector({"number": {"min": 0.0001, "max": 100.0, "step": 0.001, "mode": "box"}})
+            ): selector(
+                {"number": {"min": 0.0001, "max": 100.0, "step": 0.001, "mode": "box"}}
+            )
             for key in DEFAULT_STEPS
         }
 

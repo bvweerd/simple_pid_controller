@@ -1,6 +1,5 @@
 import pytest
 
-import pytest
 
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
@@ -248,10 +247,10 @@ async def test_options_flow_step_above_max_rejected(hass, config_entry, invalid_
 
 
 @pytest.mark.usefixtures("setup_integration")
-@pytest.mark.parametrize(
-    "boundary_step", [0.0001, 100.0]
-)
-async def test_options_flow_step_boundary_values_accepted(hass, config_entry, boundary_step):
+@pytest.mark.parametrize("boundary_step", [0.0001, 100.0])
+async def test_options_flow_step_boundary_values_accepted(
+    hass, config_entry, boundary_step
+):
     """Test that step values at the exact selector boundaries are accepted."""
     init_result = await hass.config_entries.options.async_init(config_entry.entry_id)
     result = await hass.config_entries.options.async_configure(
@@ -291,5 +290,3 @@ async def test_user_flow_duplicate_abort(hass):
 
     assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
-
-
