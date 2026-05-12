@@ -16,10 +16,12 @@ from .const import (
     CONF_INPUT_RANGE_MAX,
     CONF_OUTPUT_RANGE_MIN,
     CONF_OUTPUT_RANGE_MAX,
+    CONF_STEP_PREFIX,
     DEFAULT_INPUT_RANGE_MIN,
     DEFAULT_INPUT_RANGE_MAX,
     DEFAULT_OUTPUT_RANGE_MIN,
     DEFAULT_OUTPUT_RANGE_MAX,
+    DEFAULT_STEPS,
 )
 
 # Coordinator is used to centralize the data updates
@@ -129,7 +131,9 @@ class PIDParameterNumber(RestoreNumber):
         self._attr_native_unit_of_measurement = desc["unit"]
         self._attr_native_min_value = desc["min"]
         self._attr_native_max_value = desc["max"]
-        self._attr_native_step = desc["step"]
+        self._attr_native_step = (entry.options or {}).get(
+            f"{CONF_STEP_PREFIX}{desc['key']}", DEFAULT_STEPS[desc["key"]]
+        )
         self._attr_native_value = desc["default"]
         self._attr_entity_category = desc["entity_category"]
 
@@ -162,7 +166,6 @@ class ControlParameterNumber(RestoreNumber):
         self._attr_icon = "mdi:ray-vertex"
         self._attr_mode = "box"
         self._attr_native_unit_of_measurement = desc["unit"]
-        self._attr_native_step = desc["step"]
         self._attr_native_value = desc["default"]
         self._attr_entity_category = desc["entity_category"]
         self._key = desc["key"]
@@ -208,7 +211,10 @@ class ControlParameterNumber(RestoreNumber):
 
         self._attr_native_min_value = min_val
         self._attr_native_max_value = max_val
-        self._attr_native_step = desc.get("step", 1.0)
+        self._attr_native_step = opts.get(
+            f"{CONF_STEP_PREFIX}{self._key}",
+            DEFAULT_STEPS.get(self._key, desc.get("step", 1.0)),
+        )
 
         # Initialize current value
         if self._key == "setpoint":

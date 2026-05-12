@@ -16,3 +16,16 @@ DEFAULT_INPUT_RANGE_MIN = 0.0
 DEFAULT_INPUT_RANGE_MAX = 100.0
 DEFAULT_OUTPUT_RANGE_MIN = 0.0
 DEFAULT_OUTPUT_RANGE_MAX = 100.0
+
+CONF_STEP_PREFIX = "step_"
+
+DEFAULT_STEPS: dict[str, float] = {
+    "kp": 0.0001,
+    "ki": 0.0001,
+    "kd": 0.0001,
+    "sample_time": 0.01,
+    "setpoint": 0.01,
+    "output_min": 1.0,
+    "output_max": 1.0,
+    "starting_output": 1.0,
+}

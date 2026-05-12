@@ -7,10 +7,13 @@ from custom_components.simple_pid_controller.number import (
     ControlParameterNumber,
 )
 from custom_components.simple_pid_controller.const import (
+    CONF_STEP_PREFIX,
     DEFAULT_INPUT_RANGE_MIN,
     DEFAULT_INPUT_RANGE_MAX,
     DEFAULT_OUTPUT_RANGE_MIN,
     DEFAULT_OUTPUT_RANGE_MAX,
+    DEFAULT_STEPS,
+    DOMAIN,
 )
 
 
@@ -163,3 +166,59 @@ async def test_controlparameter_number_unexpected_key(
     assert f"Unknown PID key '{invalid_key}'. Using default values:" in caplog.text
     assert num._attr_native_min_value == expected_min
     assert num._attr_native_max_value == expected_max
+
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.parametrize("desc", PID_NUMBER_ENTITIES)
+async def test_pid_number_step_from_options(hass, config_entry, desc):
+    """Test that PIDParameterNumber reads step from CONF_STEP_PREFIX+key in options."""
+    from types import SimpleNamespace
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    custom_step = 0.5
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id=f"step_test_{desc['key']}",
+        data=config_entry.data,
+        options={f"{CONF_STEP_PREFIX}{desc['key']}": custom_step},
+    )
+    entry.runtime_data = SimpleNamespace(handle=config_entry.runtime_data.handle)
+
+    num = PIDParameterNumber(hass, entry, desc)
+    assert num._attr_native_step == custom_step
+
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.parametrize("desc", PID_NUMBER_ENTITIES)
+async def test_pid_number_step_defaults(hass, config_entry, desc):
+    """Test that PIDParameterNumber falls back to DEFAULT_STEPS when no option is set."""
+    num = PIDParameterNumber(hass, config_entry, desc)
+    assert num._attr_native_step == DEFAULT_STEPS[desc["key"]]
+
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.parametrize("desc", CONTROL_NUMBER_ENTITIES)
+async def test_control_number_step_from_options(hass, config_entry, desc):
+    """Test that ControlParameterNumber reads step from CONF_STEP_PREFIX+key in options."""
+    from types import SimpleNamespace
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    custom_step = 2.0
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id=f"step_test_{desc['key']}",
+        data=config_entry.data,
+        options={f"{CONF_STEP_PREFIX}{desc['key']}": custom_step},
+    )
+    entry.runtime_data = SimpleNamespace(handle=config_entry.runtime_data.handle)
+
+    num = ControlParameterNumber(hass, entry, desc)
+    assert num._attr_native_step == custom_step
+
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.parametrize("desc", CONTROL_NUMBER_ENTITIES)
+async def test_control_number_step_defaults(hass, config_entry, desc):
+    """Test that ControlParameterNumber falls back to DEFAULT_STEPS when no option is set."""
+    num = ControlParameterNumber(hass, config_entry, desc)
+    assert num._attr_native_step == DEFAULT_STEPS[desc["key"]]
