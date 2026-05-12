@@ -4,6 +4,7 @@ from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResultType
 
 from custom_components.simple_pid_controller.const import (
+    CONF_STEP_PREFIX,
     DOMAIN,
     CONF_NAME,
     CONF_SENSOR_ENTITY_ID,
@@ -15,6 +16,7 @@ from custom_components.simple_pid_controller.const import (
     DEFAULT_INPUT_RANGE_MAX,
     DEFAULT_OUTPUT_RANGE_MIN,
     DEFAULT_OUTPUT_RANGE_MAX,
+    DEFAULT_STEPS,
 )
 from custom_components.simple_pid_controller.config_flow import (
     PIDControllerFlowHandler,
@@ -184,7 +186,30 @@ async def test_options_flow(hass, config_entry, new_options, expected_errors):
         assert result2.get("errors") == expected_errors
     else:
         assert result2["type"] == FlowResultType.CREATE_ENTRY
-        assert result2.get("data") == new_options
+        # Step defaults are added by voluptuous; check submitted fields are present
+        assert new_options.items() <= result2.get("data", {}).items()
+
+
+async def test_options_flow_with_custom_steps(hass, config_entry):
+    """Test that step options round-trip correctly through the options flow."""
+    custom_steps = {f"{CONF_STEP_PREFIX}{key}": 0.5 for key in DEFAULT_STEPS}
+    new_options = {
+        CONF_SENSOR_ENTITY_ID: "sensor.new",
+        CONF_INPUT_RANGE_MIN: 1.0,
+        CONF_INPUT_RANGE_MAX: 10.0,
+        CONF_OUTPUT_RANGE_MIN: 1.0,
+        CONF_OUTPUT_RANGE_MAX: 10.0,
+        **custom_steps,
+    }
+
+    init_result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result2 = await hass.config_entries.options.async_configure(
+        init_result["flow_id"], user_input=new_options
+    )
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    for key, val in custom_steps.items():
+        assert result2["data"][key] == val
 
 
 async def test_user_flow_duplicate_abort(hass):

@@ -33,7 +33,25 @@
           "input_range_min": "Minimum Input Bereik",
           "input_range_max": "Maximum Input Bereik",
           "output_range_min": "Minimum Output Bereik",
-          "output_range_max": "Maximum Output Bereik"
+          "output_range_max": "Maximum Output Bereik",
+          "step_kp": "Kp Stapgrootte",
+          "step_ki": "Ki Stapgrootte",
+          "step_kd": "Kd Stapgrootte",
+          "step_sample_time": "Steektijd Stapgrootte",
+          "step_setpoint": "Stapgrootte doelwaarde",
+          "step_output_min": "Stapgrootte min. uitvoer",
+          "step_output_max": "Stapgrootte max. uitvoer",
+          "step_starting_output": "Stapgrootte startwaarde"
+        },
+        "data_description": {
+          "step_kp": "Stapgrootte voor de Kp-parameter.",
+          "step_ki": "Stapgrootte voor de Ki-parameter.",
+          "step_kd": "Stapgrootte voor de Kd-parameter.",
+          "step_sample_time": "Stapgrootte voor de steektijd.",
+          "step_setpoint": "Stapgrootte voor de setpoint-kiezer.",
+          "step_output_min": "Stapgrootte voor de minimale uitvoer.",
+          "step_output_max": "Stapgrootte voor de maximale uitvoer.",
+          "step_starting_output": "Stapgrootte voor de startwaarde."
         }
       }
     },
