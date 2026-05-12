@@ -1,33 +1,22 @@
-## 📝 What’s Changed?
+## Description
 
-<!-- Briefly describe the main changes in this PR -->
-- ...
+<!-- Briefly describe what this PR does and why -->
 
-## 🔍 Why is this Change Needed?
+## Type of change
 
-<!-- Explain the reason or motivation behind the change -->
-- ...
+- [ ] `fix:` Bug fix (patch version bump)
+- [ ] `feat:` New feature (minor version bump)
+- [ ] `feat!:` / `BREAKING CHANGE:` Breaking change (major version bump)
+- [ ] `chore:` / `docs:` / `ci:` Maintenance or documentation (no version bump)
 
-## 🧪 How Was This Tested?
+## Checklist
 
-<!-- Describe how you tested the changes -->
-- [ ] Added or updated unit tests
-- [ ] Manually tested in development environment
-- [ ] CI/CD pipeline passed successfully
-
-## ✅ Checklist
-
-- [ ] Code follows the style guide
-- [ ] All tests are passing
+- [ ] Commit title follows [Conventional Commits](https://www.conventionalcommits.org/) (`feat:`, `fix:`, `chore:`, etc.)
+- [ ] Tests added or updated where applicable
 - [ ] Documentation updated if needed
-- [ ] No breaking changes (or clearly documented)
+- [ ] CI is green
+- [ ] PR targets the `dev` branch (not `main`, unless this is a hotfix)
 
-## 📸 Screenshots / Logs (Optional)
+## Screenshots / Logs (optional)
 
-<!-- Add any relevant UI screenshots or logs -->
-_(e.g., Home Assistant UI, terminal output, etc.)_
-
-## 📎 Additional Notes
-
-<!-- Add anything else reviewers should know -->
-- ...
+<!-- Add relevant screenshots or log output -->

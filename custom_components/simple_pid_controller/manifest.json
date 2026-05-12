@@ -1,7 +1,9 @@
 {
   "domain": "simple_pid_controller",
   "name": "Simple PID Controller",
-  "codeowners": ["@bvweerd"],
+  "codeowners": [
+    "@bvweerd"
+  ],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://www.github.com/bvweerd/simple_pid_controller",
@@ -9,8 +11,10 @@
   "iot_class": "calculated",
   "issue_tracker": "https://github.com/bvweerd/simple_pid_controller/issues",
   "quality_scale": "silver",
-  "requirements": ["simple-pid==2.0.1"],
+  "requirements": [
+    "simple-pid==2.0.1"
+  ],
   "ssdp": [],
-  "version": "1.4.2",
+  "version": "1.5.2",
   "zeroconf": []
 }

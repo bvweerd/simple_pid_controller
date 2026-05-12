@@ -1,0 +1,68 @@
+name: Bug Report
+description: Report a bug or unexpected behavior
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug! Please fill in the form as completely as possible.
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Which version are you using?
+      placeholder: "e.g. 1.2.3"
+    validations:
+      required: true
+
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home Assistant version (if applicable)
+      placeholder: "e.g. 2025.2.0"
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug description
+      description: What goes wrong? Be as specific as possible.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: How can we reproduce this?
+      placeholder: |
+        1. Go to ...
+        2. Click on ...
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should happen instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / Error messages
+      description: Paste relevant logs or error messages (Home Assistant log, browser console, etc.)
+      render: text
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues and this is not a duplicate
+          required: true
+        - label: I am using the latest version
+          required: false

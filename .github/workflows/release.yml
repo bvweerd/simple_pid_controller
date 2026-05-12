@@ -1,32 +1,77 @@
-name: Create release zip
+name: Create Release
 
 on:
-  release:
-    types: [published]
+  push:
+    tags: ["v*.*.*"]
 
 permissions:
   contents: write
-  
-jobs:
-  build-and-upload:
-    runs-on: ubuntu-latest
 
+jobs:
+  release:
+    name: Build ZIP and create GitHub Release
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
 
-      - name: Get version
+      - name: Get version from tag
         id: version
-        uses: home-assistant/actions/helpers/version@master
-
-      - name: Patch manifest and zip
         run: |
-          sed -i 's/v0.0.0/${{ steps.version.outputs.version }}/' custom_components/simple_pid_controller/manifest.json
+          VERSION=${GITHUB_REF_NAME#v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update version in manifest.json
+        run: |
+          sed -i 's/"version": "[^"]*"/"version": "${{ steps.version.outputs.version }}"/' \
+            custom_components/simple_pid_controller/manifest.json
+
+      - name: Create release ZIP
+        run: |
           cd custom_components/simple_pid_controller/
           zip ../../simple_pid_controller.zip -r ./
-      - uses: svenstaro/upload-release-action@master
+
+      - name: Generate changelog
+        id: changelog
+        uses: mikepenz/release-changelog-builder-action@v6
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./simple_pid_controller.zip
-          asset_name: simple_pid_controller.zip
-          tag: ${{ github.ref }}
-          overwrite: true
+          commitMode: true
+          configuration: |
+            {
+              "label_extractor": [
+                { "pattern": "^(feat|feature|add)(\\(.+\\))?!?[:\\s]", "target": "feature" },
+                { "pattern": "^(fix|bug|bugfix|hotfix)(\\(.+\\))?!?[:\\s]", "target": "bug" },
+                { "pattern": "^(docs?|documentation)(\\(.+\\))?[:\\s]", "target": "documentation" },
+                { "pattern": "^(ci|github.?actions?)(\\(.+\\))?[:\\s]", "target": "ci" },
+                { "pattern": "^(chore|refactor|test|perf|style|build|bump)(\\(.+\\))?[:\\s]", "target": "chore" }
+              ],
+              "categories": [
+                { "title": "## ✨ New features",   "labels": ["feature", "enhancement"] },
+                { "title": "## 🐛 Bug fixes",      "labels": ["bug", "fix"] },
+                { "title": "## 📚 Documentation",  "labels": ["documentation"] },
+                { "title": "## 🔧 Other",          "labels": ["chore"] },
+                { "title": "## 👷 CI",             "labels": ["ci"] },
+                { "title": "## 📦 Uncategorized",  "labels": [] }
+              ],
+              "ignore_labels": ["dependabot"],
+              "template": "#{{CHANGELOG}}\n\n**Full changelog**: #{{RELEASE_DIFF}}"
+            }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          files: simple_pid_controller.zip
+          body: |
+            ${{ steps.changelog.outputs.changelog }}
+
+            ---
+
+            ## Installation via HACS
+            Install or update via HACS — the new version will be offered automatically.
+
+            ## Manual installation
+            Download `simple_pid_controller.zip`, extract and copy `simple_pid_controller/` to your `custom_components/` directory.
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
