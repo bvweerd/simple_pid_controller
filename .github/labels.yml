@@ -1,0 +1,52 @@
+# GitHub Labels — synced via sync-labels.yml workflow
+- name: bug
+  color: "d73a4a"
+  description: "Something isn't working as expected"
+
+- name: enhancement
+  color: "a2eeef"
+  description: "New feature or improvement"
+
+- name: question
+  color: "d876e3"
+  description: "More information needed"
+
+- name: documentation
+  color: "0075ca"
+  description: "Improvement or addition to documentation"
+
+- name: configuration
+  color: "e4e669"
+  description: "Configuration or setup related"
+
+- name: performance
+  color: "f9d0c4"
+  description: "Performance or resource usage"
+
+- name: dependencies
+  color: "0366d6"
+  description: "Update dependencies"
+
+- name: duplicate
+  color: "cfd3d7"
+  description: "This issue already exists"
+
+- name: wontfix
+  color: "ffffff"
+  description: "Will not be fixed"
+
+- name: "good first issue"
+  color: "7057ff"
+  description: "Good for new contributors"
+
+- name: "help wanted"
+  color: "008672"
+  description: "Extra attention or help wanted"
+
+- name: stale
+  color: "ededed"
+  description: "No recent activity"
+
+- name: "breaking change"
+  color: "e11d48"
+  description: "Contains a breaking change"

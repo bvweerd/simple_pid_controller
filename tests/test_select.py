@@ -22,7 +22,7 @@ async def test_pid_start_modes(hass, config_entry):
     for start_mode in ["Zero start", "Startup value", "Last known value"]:
         # reset de PID state per iteratie
         handle = config_entry.runtime_data.handle
-        handle.init_phase = True
+        handle.pid.set_auto_mode(False)
         handle.last_known_output = 80.0
 
         handle.get_input_sensor_value = lambda: base_input
