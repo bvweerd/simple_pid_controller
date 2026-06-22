@@ -14,7 +14,7 @@ jobs:
     name: Sync repository labels
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - uses: EndBug/label-sync@v2
         with:
