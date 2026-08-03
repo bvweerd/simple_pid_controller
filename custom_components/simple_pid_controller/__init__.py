@@ -10,6 +10,7 @@ from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from collections import deque
 from dataclasses import dataclass
+from simple_pid import PID
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
@@ -55,16 +56,21 @@ SET_OUTPUT_SCHEMA = cv.make_entity_service_schema(
 @dataclass
 class MyData:
     handle: PIDDeviceHandle
-    coordinator: PIDDataCoordinator = None
+    # The coordinator is created by the sensor platform, which is set up after
+    # this object exists, so None is a real state rather than a placeholder.
+    coordinator: PIDDataCoordinator | None = None
 
 
 class PIDDeviceHandle:
     """Shared device handle for a PID controller config entry."""
 
+    # Assigned by the sensor platform during async_setup_entry, not here.
+    pid: PID
+
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         self.hass = hass
         self.entry = entry
-        self.name = entry.data.get(CONF_NAME)
+        self.name: str = entry.data[CONF_NAME]
         self.input_range_min = entry.options.get(
             CONF_INPUT_RANGE_MIN,
             entry.data.get(CONF_INPUT_RANGE_MIN, DEFAULT_INPUT_RANGE_MIN),
@@ -81,14 +87,15 @@ class PIDDeviceHandle:
             CONF_OUTPUT_RANGE_MAX,
             entry.data.get(CONF_OUTPUT_RANGE_MAX, DEFAULT_OUTPUT_RANGE_MAX),
         )
-        self.sensor_entity_id = entry.options.get(
+        self.sensor_entity_id: str = entry.options.get(
             CONF_SENSOR_ENTITY_ID, entry.data.get(CONF_SENSOR_ENTITY_ID)
         )
-        self.last_contributions = (None, None, None)  # (P, I, D)
-        self.last_known_output = None
+        # (P, I, D) until the first PID run replaces it with (P, I, D, I delta).
+        self.last_contributions: tuple[float | None, ...] = (None, None, None)
+        self.last_known_output: float | None = None
 
         self.input_history: deque[float] = deque(maxlen=10)
-        self.output_history: deque[float] = deque(maxlen=10)
+        self.output_history: deque[float | None] = deque(maxlen=10)
         self.pid_parameter_history: deque[dict[str, float | None]] = deque(maxlen=10)
         self.pid_contribution_history: deque[dict[str, float | None]] = deque(maxlen=10)
         self.sample_time_history: deque[float | None] = deque(maxlen=10)
@@ -129,7 +136,7 @@ class PIDDeviceHandle:
         _LOGGER.debug("get_select(%s) → %s = %s", key, entity_id, state and state.state)
 
         if state and state.state not in ("unknown", "unavailable"):
-            return state.state  # Selects geven strings terug, geen conversie nodig
+            return str(state.state)  # Selects geven strings terug, geen conversie nodig
 
         return None
 
@@ -141,7 +148,7 @@ class PIDDeviceHandle:
         state = self.hass.states.get(entity_id)
         _LOGGER.debug("get_switch(%s) → %s = %s", key, entity_id, state and state.state)
         if state and state.state not in ("unknown", "unavailable"):
-            return state.state == "on"
+            return bool(state.state == "on")
         return True
 
     def get_input_sensor_value(self) -> float | None:
@@ -186,7 +193,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
             registry = er.async_get(hass)
             ent = registry.async_get(entity_id)
-            if ent is None:
+            if ent is None or ent.config_entry_id is None:
                 raise HomeAssistantError(f"Unknown entity {entity_id}")
             config_entry = hass.config_entries.async_get_entry(ent.config_entry_id)
             if config_entry is None or config_entry.runtime_data is None:
@@ -200,6 +207,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             ):
                 raise HomeAssistantError("Either preset or value required")
 
+            target: float
             if preset is not None:
                 if preset == "zero_start":
                     target = 0.0
@@ -210,16 +218,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 else:
                     raise HomeAssistantError("Invalid preset")
             else:
-                target = value
-                if target is None:
+                if value is None:
                     raise HomeAssistantError("Value required")
+                target = value
                 if target < out_min or target > out_max:
                     raise HomeAssistantError(
                         f"Value {target} out of range {out_min}-{out_max}"
                     )
 
             dev_handle.last_known_output = target
-            coordinator: PIDDataCoordinator = config_entry.runtime_data.coordinator
+            coordinator: PIDDataCoordinator | None = (
+                config_entry.runtime_data.coordinator
+            )
+            if coordinator is None:
+                raise HomeAssistantError("PID controller not loaded")
             if dev_handle.pid.auto_mode:
                 dev_handle.pid.set_auto_mode(False)
                 dev_handle.pid.set_auto_mode(True, target)
@@ -229,7 +241,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 coordinator.async_set_updated_data(target)
                 # Update the internal PID output when in manual mode so that
                 # future calls to the controller return the newly set target.
-                dev_handle.pid._last_output = target
+                # simple_pid exposes no public setter for this, hence the
+                # private attribute.
+                dev_handle.pid._last_output = target  # type: ignore[attr-defined]
 
         hass.services.async_register(
             DOMAIN, SERVICE_SET_OUTPUT, async_set_output, schema=SET_OUTPUT_SCHEMA
