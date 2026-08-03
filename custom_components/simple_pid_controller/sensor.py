@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import logging
 
+from collections.abc import Callable
+
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EntityCategory
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from datetime import timedelta
@@ -42,7 +44,7 @@ async def async_setup_entry(
     handle.last_contributions = (0, 0, 0, 0)
     handle.last_known_output = None
 
-    async def update_pid():
+    async def update_pid() -> float | None:
         """Update the PID output using current sensor and parameter values."""
         input_value = handle.get_input_sensor_value()
         if input_value is None:
@@ -63,6 +65,13 @@ async def async_setup_entry(
         auto_mode = handle.get_switch("auto_mode")
         p_on_m = handle.get_switch("proportional_on_measurement")
         windup_protection = handle.get_switch("windup_protection")
+
+        # A missing number entity, or one whose state is not a float, yields
+        # None here. Feeding that into the controller fails much deeper, with
+        # an error that no longer points at the entity that is actually
+        # missing.
+        if kp is None or ki is None or kd is None or setpoint is None:
+            raise ValueError("PID parameters not available")
 
         # adapt PID settings
         handle.pid.tunings = (kp, ki, kd)
@@ -113,7 +122,7 @@ async def async_setup_entry(
         handle.output_history.append(output)
 
         # save last I contribution
-        last_i = handle.last_contributions[1]
+        last_i = handle.last_contributions[1] or 0.0
 
         # save all latest contributions
         handle.last_contributions = (
@@ -146,9 +155,21 @@ async def async_setup_entry(
             handle.last_contributions[3],
         )
 
-        if coordinator.update_interval.total_seconds() != sample_time:
+        # sample_time is None when the number entity is missing or holds a
+        # non-numeric state; feeding that to timedelta() raises inside the
+        # coordinator instead of simply leaving the interval alone.
+        if sample_time is not None and (
+            coordinator.update_interval is None
+            or coordinator.update_interval.total_seconds() != sample_time
+        ):
             _LOGGER.debug("Updating coordinator interval to %.2f seconds", sample_time)
-            coordinator.update_interval = timedelta(seconds=sample_time)
+            # homeassistant-stubs declares update_interval read-only: a stray
+            # `_update_interval` attribute between the property and its setter
+            # stops mypy from pairing them. Home Assistant itself defines the
+            # setter (helpers/update_coordinator.py).
+            coordinator.update_interval = timedelta(  # type: ignore[misc]
+                seconds=sample_time
+            )
 
         return output
 
@@ -157,7 +178,7 @@ async def async_setup_entry(
         entry.runtime_data.coordinator = PIDDataCoordinator(
             hass, handle.name, update_pid, interval=10
         )
-    coordinator = entry.runtime_data.coordinator
+    coordinator: PIDDataCoordinator = entry.runtime_data.coordinator
 
     # Wait for HA to finish starting
     async def start_refresh(_: Any) -> None:
@@ -189,11 +210,15 @@ async def async_setup_entry(
     )
 
     # Put listeners on inputs
-    def make_listener(entity_id: str):
-        def _listener(event):
+    def make_listener(entity_id: str) -> Callable[[Event[Any]], None]:
+        def _listener(event: Event[Any]) -> None:
             if event.data.get("entity_id") == entity_id:
                 _LOGGER.debug("Update detected on %s", entity_id)
-                coordinator.async_request_refresh()
+                # async_request_refresh is a coroutine: calling it from this
+                # synchronous listener without scheduling it left the refresh
+                # unawaited, so a change to one of the inputs below never
+                # actually reached the controller.
+                hass.async_create_task(coordinator.async_request_refresh())
 
         return _listener
 
@@ -225,14 +250,20 @@ async def async_setup_entry(
 
 
 class PIDOutputSensor(
-    CoordinatorEntity[PIDDataCoordinator], RestoreEntity, SensorEntity
+    BasePIDEntity, CoordinatorEntity[PIDDataCoordinator], RestoreEntity, SensorEntity
 ):
     """Sensor representing the PID output."""
 
+    # homeassistant-stubs types BaseCoordinatorEntity.coordinator as Incomplete,
+    # which erases the generic parameter and makes coordinator.data untyped.
+    coordinator: PIDDataCoordinator
+
     def __init__(
         self, hass: HomeAssistant, entry: ConfigEntry, coordinator: PIDDataCoordinator
-    ):
-        super().__init__(coordinator)
+    ) -> None:
+        # Both bases are initialised explicitly: super() would resolve to
+        # BasePIDEntity, which takes a different signature.
+        CoordinatorEntity.__init__(self, coordinator)
 
         name = "PID Output"
         key = "pid_output"
@@ -242,7 +273,7 @@ class PIDOutputSensor(
         self._attr_native_unit_of_measurement = None
         self._attr_state_class = SensorStateClass.MEASUREMENT
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
         if (state := await self.async_get_last_state()) is not None:
             try:
@@ -258,7 +289,9 @@ class PIDOutputSensor(
         return round(self.coordinator.data, 2)
 
 
-class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
+class PIDContributionSensor(
+    BasePIDEntity, CoordinatorEntity[PIDDataCoordinator], SensorEntity
+):
     """Sensor representing P, I or D contribution."""
 
     def __init__(
@@ -268,8 +301,8 @@ class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity)
         key: str,
         name: str,
         coordinator: PIDDataCoordinator,
-    ):
-        super().__init__(coordinator)
+    ) -> None:
+        CoordinatorEntity.__init__(self, coordinator)
 
         BasePIDEntity.__init__(self, hass, entry, key, name)
 
@@ -279,11 +312,12 @@ class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity)
         self._key = key
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         contributions = self._handle.last_contributions
         input_value = self._handle.get_input_sensor_value()
         setpoint = self._handle.get_number("setpoint")
 
+        error: float
         if input_value is None or setpoint is None:
             error = 0
         else:
@@ -299,7 +333,9 @@ class PIDContributionSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity)
         return round(value, 3) if value is not None else None
 
 
-class PIDSampleTimeSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
+class PIDSampleTimeSensor(
+    BasePIDEntity, CoordinatorEntity[PIDDataCoordinator], SensorEntity
+):
     """Sensor exposing the measured sample time between PID updates."""
 
     def __init__(
@@ -310,7 +346,7 @@ class PIDSampleTimeSensor(CoordinatorEntity[PIDDataCoordinator], SensorEntity):
         name: str,
         coordinator: PIDDataCoordinator,
     ) -> None:
-        super().__init__(coordinator)
+        CoordinatorEntity.__init__(self, coordinator)
 
         BasePIDEntity.__init__(self, hass, entry, key, name)
 

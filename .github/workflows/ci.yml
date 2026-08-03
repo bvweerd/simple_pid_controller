@@ -2,10 +2,21 @@ name: CI
 
 on:
   push:
-    branches: ["dev", "feature/**", "fix/**", "hotfix/**"]
+    # main is included because releases are cut from it: the tag is created on
+    # main through the GitHub UI and release.yml builds the shipped ZIP from
+    # that tag. Without main here, the merge commit that reaches users is
+    # never tested as it ships — only as a pull request, before the merge.
+    branches: ["main", "dev", "feature/**", "fix/**", "hotfix/**"]
     tags-ignore: ["**"]
   pull_request:
     branches: [dev, main]
+  # pytest-homeassistant-custom-component is deliberately unpinned, so the
+  # suite tracks whatever Home Assistant is current. That means a Home
+  # Assistant release can break this integration without anyone touching the
+  # repository — the weekly run surfaces it instead of the next contributor.
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -23,27 +34,60 @@ jobs:
 
       - uses: actions/setup-python@v7
         with:
-          python-version: "3.13"
+          python-version: "3.14"
+          cache: pip
 
-      - name: Install pre-commit
-        run: pip install pre-commit
+      - name: Install dependencies
+        run: pip install pre-commit mypy -r requirements.txt
+
+      - name: Cache pre-commit hooks
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
 
       - name: Run pre-commit
         run: pre-commit run --all-files
 
+      # The pre-commit hook above type checks against homeassistant-stubs; this
+      # run uses the real homeassistant package from requirements.txt, which
+      # catches what the stubs leave as Incomplete.
+      - name: Run mypy
+        run: mypy custom_components/simple_pid_controller/
+
   test:
-    name: Test (Python 3.13)
+    # Home Assistant's supported Python floor decides which Home Assistant
+    # version pip can install. On 3.13 the newest resolvable release is
+    # 2026.2.3, because Home Assistant 2026.3 onwards requires Python 3.14.2.
+    # Testing only on 3.13 therefore validates against a Home Assistant that
+    # is months behind what users run, without saying so anywhere.
+    #
+    # 3.14 is the version that matters; 3.13 is kept so the older supported
+    # Home Assistant line does not silently break.
+    name: Test (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.14", "3.13"]
     steps:
       - uses: actions/checkout@v7
 
       - uses: actions/setup-python@v7
         with:
-          python-version: "3.13"
+          python-version: ${{ matrix.python-version }}
           cache: pip
 
       - name: Install dependencies
         run: pip install -r requirements.txt
+
+      # Which Home Assistant a green run actually proves compatibility with is
+      # otherwise invisible, since the dependency is unpinned by design.
+      - name: Report the resolved Home Assistant version
+        run: |
+          HA_VERSION=$(pip show homeassistant | awk '/^Version:/ {print $2}')
+          echo "Python ${{ matrix.python-version }} resolved Home Assistant $HA_VERSION"
+          echo "- Python \`${{ matrix.python-version }}\` → Home Assistant \`$HA_VERSION\`" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Run pytest
         run: pytest --cov=custom_components --cov-report=xml -q
