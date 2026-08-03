@@ -37,8 +37,8 @@ jobs:
           python-version: "3.14"
           cache: pip
 
-      - name: Install pre-commit
-        run: pip install pre-commit
+      - name: Install dependencies
+        run: pip install pre-commit mypy -r requirements.txt
 
       - name: Cache pre-commit hooks
         uses: actions/cache@v6
@@ -48,6 +48,12 @@ jobs:
 
       - name: Run pre-commit
         run: pre-commit run --all-files
+
+      # The pre-commit hook above type checks against homeassistant-stubs; this
+      # run uses the real homeassistant package from requirements.txt, which
+      # catches what the stubs leave as Incomplete.
+      - name: Run mypy
+        run: mypy custom_components/simple_pid_controller/
 
   test:
     # Home Assistant's supported Python floor decides which Home Assistant

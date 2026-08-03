@@ -1,5 +1,9 @@
 """Switch platform for PID Controller."""
 
+from __future__ import annotations
+
+from typing import Any
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.config_entries import ConfigEntry
@@ -12,7 +16,7 @@ from .entity import BasePIDEntity
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
 
-SWITCH_ENTITIES = [
+SWITCH_ENTITIES: list[dict[str, Any]] = [
     {"key": "auto_mode", "name": "Auto Mode", "default_state": True},
     {
         "key": "proportional_on_measurement",
@@ -33,12 +37,14 @@ async def async_setup_entry(
     async_add_entities([PIDOptionSwitch(hass, entry, desc) for desc in SWITCH_ENTITIES])
 
 
-class PIDOptionSwitch(SwitchEntity, RestoreEntity):
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, desc: dict) -> None:
-        BasePIDEntity.__init__(self, hass, entry, desc["key"], desc["name"])
+class PIDOptionSwitch(BasePIDEntity, SwitchEntity, RestoreEntity):
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, desc: dict[str, Any]
+    ) -> None:
+        super().__init__(hass, entry, desc["key"], desc["name"])
 
         self._attr_entity_category = EntityCategory.CONFIG
-        self._state = desc["default_state"]
+        self._state: bool = desc["default_state"]
 
     async def async_added_to_hass(self) -> None:
         """Restore previous state if available."""
@@ -50,10 +56,10 @@ class PIDOptionSwitch(SwitchEntity, RestoreEntity):
     def is_on(self) -> bool:
         return self._state
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         self._state = True
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         self._state = False
         self.async_write_ha_state()
