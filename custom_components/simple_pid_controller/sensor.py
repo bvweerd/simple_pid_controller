@@ -8,10 +8,10 @@ from collections.abc import Callable
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from datetime import timedelta
@@ -67,9 +67,9 @@ async def async_setup_entry(
         windup_protection = handle.get_switch("windup_protection")
 
         # A missing number entity, or one whose state is not a float, yields
-        # None here. Feeding that
-        # into the controller fails much deeper, with an error that no longer
-        # points at the entity that is actually missing.
+        # None here. Feeding that into the controller fails much deeper, with
+        # an error that no longer points at the entity that is actually
+        # missing.
         if kp is None or ki is None or kd is None or setpoint is None:
             raise ValueError("PID parameters not available")
 
