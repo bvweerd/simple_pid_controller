@@ -59,4 +59,9 @@ repos:
           # Floor, so an environment that cannot satisfy it fails loudly
           # instead of quietly type-checking against two-year-old stubs.
           - homeassistant-stubs>=2025.1.0
+          # Pinned to requirements.txt. Without it simple_pid resolves to Any
+          # here while the standalone mypy step sees the real pid.pyi, and the
+          # two disagree: this hook then reports the PID-related annotations as
+          # unnecessary and the step reports them as missing.
+          - simple-pid==2.0.1
         files: ^custom_components/simple_pid_controller/
