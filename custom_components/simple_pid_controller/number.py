@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
-from homeassistant.components.number import RestoreNumber
+from homeassistant.components.number import NumberMode, RestoreNumber
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -30,7 +31,7 @@ PARALLEL_UPDATES = 0
 _LOGGER = logging.getLogger(__name__)
 
 
-PID_NUMBER_ENTITIES = [
+PID_NUMBER_ENTITIES: list[dict[str, Any]] = [
     {
         "name": "Kp",
         "key": "kp",
@@ -73,7 +74,7 @@ PID_NUMBER_ENTITIES = [
     },
 ]
 
-CONTROL_NUMBER_ENTITIES = [
+CONTROL_NUMBER_ENTITIES: list[dict[str, Any]] = [
     {
         "name": "Setpoint",
         "key": "setpoint",
@@ -112,26 +113,30 @@ CONTROL_NUMBER_ENTITIES = [
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    entities = [PIDParameterNumber(hass, entry, desc) for desc in PID_NUMBER_ENTITIES]
-    async_add_entities(entities)
+    async_add_entities(
+        [PIDParameterNumber(hass, entry, desc) for desc in PID_NUMBER_ENTITIES]
+    )
 
-    entities = [
-        ControlParameterNumber(hass, entry, desc) for desc in CONTROL_NUMBER_ENTITIES
-    ]
-    async_add_entities(entities)
+    async_add_entities(
+        [ControlParameterNumber(hass, entry, desc) for desc in CONTROL_NUMBER_ENTITIES]
+    )
 
 
-class PIDParameterNumber(RestoreNumber):
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, desc: dict) -> None:
-        BasePIDEntity.__init__(self, hass, entry, desc["key"], desc["name"])
+class PIDParameterNumber(BasePIDEntity, RestoreNumber):
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, desc: dict[str, Any]
+    ) -> None:
+        super().__init__(hass, entry, desc["key"], desc["name"])
         RestoreNumber.__init__(self)
 
+        opts: dict[str, Any] = dict(entry.options or {})
+
         self._attr_icon = "mdi:ray-vertex"
-        self._attr_mode = "box"
+        self._attr_mode = NumberMode.BOX
         self._attr_native_unit_of_measurement = desc["unit"]
         self._attr_native_min_value = desc["min"]
         self._attr_native_max_value = desc["max"]
-        self._attr_native_step = (entry.options or {}).get(
+        self._attr_native_step = opts.get(
             f"{CONF_STEP_PREFIX}{desc['key']}", DEFAULT_STEPS[desc["key"]]
         )
         self._attr_native_value = desc["default"]
@@ -139,7 +144,12 @@ class PIDParameterNumber(RestoreNumber):
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
-        if (last := await self.async_get_last_number_data()) is not None:
+        # native_value is optional on the restored data: a previous run that
+        # never produced a value stores None, and comparing that against the
+        # limits raises TypeError.
+        if (
+            last := await self.async_get_last_number_data()
+        ) is not None and last.native_value is not None:
             if last.native_value < self._attr_native_min_value:
                 self._attr_native_value = self._attr_native_min_value
             elif last.native_value > self._attr_native_max_value:
@@ -148,7 +158,7 @@ class PIDParameterNumber(RestoreNumber):
                 self._attr_native_value = last.native_value
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         return self._attr_native_value
 
     async def async_set_native_value(self, value: float) -> None:
@@ -156,23 +166,25 @@ class PIDParameterNumber(RestoreNumber):
         self.async_write_ha_state()
 
 
-class ControlParameterNumber(RestoreNumber):
+class ControlParameterNumber(BasePIDEntity, RestoreNumber):
     """Number entity for PID control parameters."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, desc: dict) -> None:
-        BasePIDEntity.__init__(self, hass, entry, desc["key"], desc["name"])
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, desc: dict[str, Any]
+    ) -> None:
+        super().__init__(hass, entry, desc["key"], desc["name"])
         RestoreNumber.__init__(self)
 
         self._attr_icon = "mdi:ray-vertex"
-        self._attr_mode = "box"
+        self._attr_mode = NumberMode.BOX
         self._attr_native_unit_of_measurement = desc["unit"]
         self._attr_native_value = desc["default"]
         self._attr_entity_category = desc["entity_category"]
         self._key = desc["key"]
 
         # Compute range limits based on key
-        opts = entry.options or {}
-        data = entry.data or {}
+        opts: dict[str, Any] = dict(entry.options or {})
+        data: dict[str, Any] = dict(entry.data or {})
         input_range_min = opts.get(
             CONF_INPUT_RANGE_MIN,
             data.get(CONF_INPUT_RANGE_MIN, DEFAULT_INPUT_RANGE_MIN),
@@ -234,7 +246,11 @@ class ControlParameterNumber(RestoreNumber):
 
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
-        if (last := await self.async_get_last_number_data()) is not None:
+        # See PIDParameterNumber: a restored native_value of None cannot be
+        # compared against the limits.
+        if (
+            last := await self.async_get_last_number_data()
+        ) is not None and last.native_value is not None:
             if last.native_value < self._attr_native_min_value:
                 self._attr_native_value = self._attr_native_min_value
             elif last.native_value > self._attr_native_max_value:
@@ -243,7 +259,7 @@ class ControlParameterNumber(RestoreNumber):
                 self._attr_native_value = last.native_value
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         return self._attr_native_value
 
     async def async_set_native_value(self, value: float) -> None:
