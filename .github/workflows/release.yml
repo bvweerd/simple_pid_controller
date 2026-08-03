@@ -1,8 +1,13 @@
 name: Create Release
 
+# Triggered by publishing the release, not by the tag push, so the workflow
+# can read the release you created and honour the "Previous tag" you picked
+# there. GitHub does not expose that choice as a field — the only durable
+# trace is the compare link in the notes it generates — so it is recovered
+# from the release body below.
 on:
-  push:
-    tags: ["v*.*.*"]
+  release:
+    types: [published]
 
 permissions:
   contents: write
@@ -13,13 +18,43 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.release.tag_name }}
 
       - name: Get version from tag
         id: version
         run: |
-          VERSION=${GITHUB_REF_NAME#v}
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          TAG="${{ github.event.release.tag_name }}"
+          echo "version=${TAG#v}" >> $GITHUB_OUTPUT
 
+      - name: Resolve previous tag from the release notes
+        id: prev
+        env:
+          # Quoted via env rather than inlined, so a body containing quotes or
+          # backticks cannot break out of the script.
+          BODY: ${{ github.event.release.body }}
+        run: |
+          # "Generate release notes" appends a line of the form:
+          #   **Full Changelog**: https://github.com/OWNER/REPO/compare/v1.5.1...v1.5.2
+          # The tag before "..." is exactly the previous release that was
+          # selected in the UI. Take the last occurrence, in case the body
+          # quotes other compare links above it.
+          FROM_TAG=$(printf '%s\n' "$BODY" \
+            | sed -nE 's#.*/compare/([^/[:space:]]+)\.\.\.[^[:space:])]+.*#\1#p' \
+            | tail -1)
+          if [ -n "$FROM_TAG" ]; then
+            echo "Using previous tag from the release notes: $FROM_TAG"
+          else
+            echo "No compare link in the release body; letting the changelog"
+            echo "builder fall back to the most recent tag."
+          fi
+          echo "from_tag=$FROM_TAG" >> $GITHUB_OUTPUT
+
+      # Tags are created by hand in the GitHub UI, so nothing has written the
+      # new version into manifest.json by the time this runs — the tagged
+      # commit still carries the previous one. The ZIP is patched here so the
+      # shipped manifest matches the tag. This edit is local to the runner and
+      # is never committed back.
       - name: Update version in manifest.json
         run: |
           sed -i 's/"version": "[^"]*"/"version": "${{ steps.version.outputs.version }}"/' \
@@ -34,6 +69,9 @@ jobs:
         id: changelog
         uses: mikepenz/release-changelog-builder-action@v6
         with:
+          # Empty fromTag = keep the action's own "most recent tag" detection.
+          fromTag: ${{ steps.prev.outputs.from_tag }}
+          toTag: ${{ github.event.release.tag_name }}
           commitMode: true
           configuration: |
             {
@@ -61,6 +99,9 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
+          # The release already exists (this runs on publish); naming the tag
+          # makes it update that one instead of guessing from the ref.
+          tag_name: ${{ github.event.release.tag_name }}
           files: simple_pid_controller.zip
           body: |
             ${{ steps.changelog.outputs.changelog }}
