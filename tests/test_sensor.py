@@ -420,4 +420,9 @@ async def test_update_pid_adjusts_update_interval(hass, config_entry, monkeypatc
     await coordinator.update_method()
     assert coordinator.update_interval == timedelta(seconds=sample_time)
 
+    # Long sample times for slow (inertial) systems, see issue #155
+    sample_time = 6000
+    await coordinator.update_method()
+    assert coordinator.update_interval == timedelta(seconds=sample_time)
+
     await async_unload_entry(hass, config_entry)

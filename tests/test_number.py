@@ -222,3 +222,15 @@ async def test_control_number_step_defaults(hass, config_entry, desc):
     """Test that ControlParameterNumber falls back to DEFAULT_STEPS when no option is set."""
     num = ControlParameterNumber(hass, config_entry, desc)
     assert num._attr_native_step == DEFAULT_STEPS[desc["key"]]
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_sample_time_allows_long_intervals(hass, config_entry):
+    """Sample time must allow long intervals for slow systems (issue #155)."""
+    desc = next(d for d in PID_NUMBER_ENTITIES if d["key"] == "sample_time")
+    assert desc["max"] >= 6000.0
+
+    num = PIDParameterNumber(hass, config_entry, desc)
+    num.async_write_ha_state = lambda: None
+    await num.async_set_native_value(6000.0)
+    assert num.native_value == 6000.0
