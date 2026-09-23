@@ -67,7 +67,7 @@ PID_NUMBER_ENTITIES: list[dict[str, Any]] = [
         "key": "sample_time",
         "unit": "s",
         "min": 0.01,
-        "max": 600.0,
+        "max": 6000.0,
         "step": 0.01,
         "default": 10.0,
         "entity_category": EntityCategory.CONFIG,
