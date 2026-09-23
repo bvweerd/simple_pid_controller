@@ -9,7 +9,7 @@
 - [Installation](#installation)
   - [HACS (Recommended)](#hacs-recommended)
   - [Manual Installation](#manual-installation)
-  - [Removal Instructions](#removal-instructions) 
+  - [Removal Instructions](#removal-instructions)
 - [Configuration](#configuration)
 - [Customizing the Unit of Measurement](#customizing-the-unit-of-measurement)
 - [Entities Overview](#entities-overview)
@@ -72,7 +72,7 @@
 2. Copy `simple_pid_controller` to `/config/custom_components/`
 3. Restart Home Assistant
 
-### Removal Instructions 
+### Removal Instructions
 To remove the Simple PID Controller, navigate to **Settings > Devices & Services**, select **Simple PID Controller**, and click **Delete**. If installed manually, delete the `custom_components/simple_pid_controller` directory and restart Home Assistant.
 
 ---
@@ -87,7 +87,7 @@ The controller is configured through the UI using the Config Flow {% term config
    - **Sensor Entity**: e.g., `sensor.living_room_temperature`
 4. Submit and finish setup
 
-**Default Range:**  
+**Default Range:**
 The controller’s setpoint range defaults to **0.0 – 100.0**. To customize this range, select the integration in **Settings > Devices & Services**, click **Options**, adjust **Range Min** and **Range Max**, and save.
 
 ---
@@ -206,19 +206,19 @@ These steps help avoid the "integral stuck at minimum" effect while keeping the 
 
 ### How it works in practice
 
-1. **Initialization**  
-   - On startup (or when options change), we set up a single `sample_time` value (in seconds).  
-   - We register a periodic callback with Home Assistant’s scheduler (`async_track_time_interval` or `DataUpdateCoordinator`) using that same `sample_time`.  
+1. **Initialization**
+   - On startup (or when options change), we set up a single `sample_time` value (in seconds).
+   - We register a periodic callback with Home Assistant’s scheduler (`async_track_time_interval` or `DataUpdateCoordinator`) using that same `sample_time`.
 
-2. **Coordinator Tick**  
-   - Every `sample_time` seconds, Home Assistant’s scheduler invokes our update method.  
+2. **Coordinator Tick**
+   - Every `sample_time` seconds, Home Assistant’s scheduler invokes our update method.
    - We immediately read the current process variable (e.g. temperature sensor) and pass it to the PID logic.
 
-3. **PID Logic & Output**  
+3. **PID Logic & Output**
    - The PID algorithm calculates the Proportional, Integral, and Derivative terms and writes the result to your target entity (e.g. a heater or set-point).
 
 4. **Adjusting Sample Time**
-   - Changing `sample_time` in your integration options takes effect at the end of the current interval—no Home Assistant restart is required.  
+   - Changing `sample_time` in your integration options takes effect at the end of the current interval—no Home Assistant restart is required.
    - On the next tick, the coordinator will use the new interval.
 
 ---
@@ -279,6 +279,3 @@ target:
 data:
   value: 200
 ```
-
-
-

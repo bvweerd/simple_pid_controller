@@ -93,9 +93,9 @@ async def test_async_select_option_applies_only_valid_options(
     write_calls.clear()
     await select.async_select_option("not_an_option")
     assert select._attr_current_option == valid_option
-    assert (
-        not write_calls
-    ), "async_write_ha_state should not be called for an invalid option"
+    assert not write_calls, (
+        "async_write_ha_state should not be called for an invalid option"
+    )
 
 
 @pytest.mark.usefixtures("setup_integration")

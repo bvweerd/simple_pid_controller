@@ -127,11 +127,15 @@ async def test_listeners_trigger_refresh_sensor(hass, config_entry, monkeypatch)
     await async_setup_entry(hass, config_entry, lambda ents: entities.extend(ents))
     coordinator = entities[0].coordinator
 
-    # Patch refresh method
+    # Patch refresh method. It has to stay a coroutine function: the listener
+    # schedules it as a task, so a plain lambda would only prove that the
+    # listener fired, not that the refresh was ever awaited.
     called = []
-    monkeypatch.setattr(
-        coordinator, "async_request_refresh", lambda: called.append(True)
-    )
+
+    async def _fake_refresh():
+        called.append(True)
+
+    monkeypatch.setattr(coordinator, "async_request_refresh", _fake_refresh)
 
     # Simulate state change event for kp
     entry_id = config_entry.entry_id
@@ -142,9 +146,10 @@ async def test_listeners_trigger_refresh_sensor(hass, config_entry, monkeypatch)
 
     event = SimpleNamespace(data={"entity_id": test_entity})
     callback(event)
-    assert (
-        called
-    ), "Coordinator.async_request_refresh was not called on sensor state change"
+    await hass.async_block_till_done()
+    assert called, (
+        "Coordinator.async_request_refresh was not called on sensor state change"
+    )
 
     await async_unload_entry(hass, config_entry)
 
@@ -412,6 +417,11 @@ async def test_update_pid_adjusts_update_interval(hass, config_entry, monkeypatc
     assert coordinator.update_interval == timedelta(seconds=sample_time)
 
     sample_time = 15
+    await coordinator.update_method()
+    assert coordinator.update_interval == timedelta(seconds=sample_time)
+
+    # Long sample times for slow (inertial) systems, see issue #155
+    sample_time = 6000
     await coordinator.update_method()
     assert coordinator.update_interval == timedelta(seconds=sample_time)
 

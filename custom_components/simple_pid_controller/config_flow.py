@@ -148,7 +148,7 @@ class PIDControllerOptionsFlowHandler(OptionsFlow):
             CONF_OUTPUT_RANGE_MAX, DEFAULT_OUTPUT_RANGE_MAX
         )
 
-        step_fields = {
+        step_fields: dict[Any, Any] = {
             vol.Optional(
                 f"{CONF_STEP_PREFIX}{key}",
                 default=self.config_entry.options.get(

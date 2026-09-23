@@ -1,53 +1,67 @@
 repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        args: ["--maxkb=500"]
+      - id: debug-statements
+      - id: detect-private-key
+
+  # v3.20.0 and earlier crash on Python 3.14: they call tokenize.cookie_re,
+  # which CPython 3.14 turned into a bytes pattern, giving "cannot use a bytes
+  # pattern on a string-like object". v3.21.2 carries its own string-based
+  # _cookie_re.
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.15.2
+    rev: v3.21.2
     hooks:
       - id: pyupgrade
-        args: [--py37-plus]
-  - repo: https://github.com/psf/black
-    rev: 24.4.2
-    hooks:
-      - id: black
-        args:
-          - --safe
-          - --quiet
-        files: ^((homeassistant|script|tests)/.+)?[^/]+\.py$
+        args: [--py313-plus]
+
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.6
+    rev: v2.4.1
     hooks:
       - id: codespell
         args:
-          - --ignore-words-list=hass,alot,datas,dof,dur,farenheit,hist,iff,ines,ist,lightsensor,mut,nd,pres,referer,ser,serie,te,technik,ue,uint,visability,wan,wanna,withing
+          # thirdparty: the isort section names in setup.cfg, not prose.
+          - --ignore-words-list=hass,alot,datas,dof,dur,farenheit,hist,iff,ines,ist,lightsensor,mut,nd,pres,referer,ser,serie,te,technik,thirdparty,ue,uint,visability,wan,wanna,withing
           - --skip="./.*,*.csv,*.json"
           - --quiet-level=2
         exclude_types: [csv, json]
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.4.8
+
+  # black is deliberately absent: ruff-format below is the formatter, and
+  # running both leaves two tools competing over the same files.
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.4
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix]
       - id: ruff-format
+
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.10.0
+    rev: v1.15.0
     hooks:
       - id: mypy
-        always_run: true
-        pass_filenames: false
-        args:
-          - --strict
-          - --ignore-missing-imports
-          - --namespace-packages
-          - --warn-unused-ignores
-          - --warn-redundant-casts
-          - --warn-unreachable
-          - --warn-return-any
-          - --disallow-untyped-defs
-          - --disallow-untyped-calls
-          - --disallow-incomplete-defs
-          - --no-implicit-optional
-          - --explicit-package-bases
-          - --pretty
-          - --show-error-codes
-          - --show-error-context
-          - custom_components/simple_pid_controller
-        files: ^custom_components/simple_pid_controller/.*\\.py$
+        # Pin the interpreter: without this, pre-commit builds the hook env
+        # with whatever Python it happens to run under, and pip then silently
+        # resolves homeassistant-stubs down to the newest release that old
+        # interpreter allows. On 3.11 that is 2024.3.3, which predates
+        # ConfigEntry.runtime_data and subentries; on 3.13 it is 2026.2.x.
+        # Home Assistant 2026.3 onwards requires Python 3.14.2, so 3.14 is
+        # what types against current Core.
+        language_version: python3.14
+        args: [--ignore-missing-imports]
+        additional_dependencies:
+          # Floor, so an environment that cannot satisfy it fails loudly
+          # instead of quietly type-checking against two-year-old stubs.
+          - homeassistant-stubs>=2025.1.0
+          # Pinned to requirements.txt. Without it simple_pid resolves to Any
+          # here while the standalone mypy step sees the real pid.pyi, and the
+          # two disagree: this hook then reports the PID-related annotations as
+          # unnecessary and the step reports them as missing.
+          - simple-pid==2.0.1
+        files: ^custom_components/simple_pid_controller/
