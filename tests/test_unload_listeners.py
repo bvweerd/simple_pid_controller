@@ -10,7 +10,7 @@ async def test_listeners_removed_after_unload(hass, config_entry, monkeypatch):
     created = []
     called = []
 
-    def fake_listen(self, event, callback):
+    def fake_listen(self, event, callback, event_filter=None, **kwargs):
         def unsub():
             called.append(True)
 
