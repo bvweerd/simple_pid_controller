@@ -149,11 +149,18 @@ async def test_input_change_requests_refresh(
 @pytest.mark.usefixtures("setup_integration")
 async def test_unrelated_state_change_does_not_refresh(hass, config_entry, monkeypatch):
     """State changes of other entities, and of this entry's outputs, are ignored."""
-    called = _count_refreshes(config_entry, monkeypatch)
     output = config_entry.runtime_data.handle._get_entity_id("sensor", "pid_output")
     assert output is not None
 
+    # Give both entities a real value first. A change from no state or from
+    # unknown is already filtered out before the unique_id check, so without
+    # this the test passes even if every entity counted as an input.
     hass.states.async_set("sensor.unrelated", "1")
+    hass.states.async_set(output, "2.0")
+    await hass.async_block_till_done()
+    called = _count_refreshes(config_entry, monkeypatch)
+
+    hass.states.async_set("sensor.unrelated", "2")
     hass.states.async_set(output, "3.0")
     await hass.async_block_till_done()
 
