@@ -4,12 +4,16 @@ from __future__ import annotations
 
 import logging
 
-from collections.abc import Callable
-
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.const import (
+    EVENT_STATE_CHANGED,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    EntityCategory,
+)
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -20,6 +24,7 @@ from simple_pid import PID
 from typing import Any
 
 from . import PIDDeviceHandle
+from .const import DOMAIN
 from .entity import BasePIDEntity
 from .coordinator import PIDDataCoordinator
 
@@ -27,6 +32,8 @@ from .coordinator import PIDDataCoordinator
 PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
+
+_NO_VALUE = (STATE_UNAVAILABLE, STATE_UNKNOWN)
 
 
 async def async_setup_entry(
@@ -209,44 +216,56 @@ async def async_setup_entry(
         ]
     )
 
-    # Put listeners on inputs
-    def make_listener(entity_id: str) -> Callable[[Event[Any]], None]:
-        def _listener(event: Event[Any]) -> None:
-            if event.data.get("entity_id") == entity_id:
-                _LOGGER.debug("Update detected on %s", entity_id)
-                # async_request_refresh is a coroutine: calling it from this
-                # synchronous listener without scheduling it left the refresh
-                # unawaited, so a change to one of the inputs below never
-                # actually reached the controller.
-                hass.async_create_task(coordinator.async_request_refresh())
-
-        return _listener
-
-    for key in [
-        "kp",
-        "ki",
-        "kd",
-        "setpoint",
-        "output_min",
-        "output_max",
-        "sample_time",
-    ]:
-        unsub = hass.bus.async_listen(
-            "state_changed", make_listener(f"number.{entry.entry_id}_{key}")
+    # Refresh when the value of one of this entry's inputs changes. An entity
+    # being added or removed, or passing through unavailable/unknown (restore
+    # at startup, unload), is not a change. The inputs' entity_ids follow the
+    # device name and can be renamed, so they are matched by unique_id.
+    watched = {
+        f"{entry.entry_id}_{key}"
+        for key in (
+            "kp",
+            "ki",
+            "kd",
+            "setpoint",
+            "output_min",
+            "output_max",
+            "sample_time",
+            "auto_mode",
+            "proportional_on_measurement",
+            "windup_protection",
+            "start_mode",
         )
-        entry.async_on_unload(unsub)
+    }
+    registry = er.async_get(hass)
 
-    for key in ["auto_mode", "proportional_on_measurement", "windup_protection"]:
-        unsub = hass.bus.async_listen(
-            "state_changed", make_listener(f"switch.{entry.entry_id}_{key}")
+    @callback
+    def _is_input(event_data: EventStateChangedData) -> bool:
+        old, new = event_data["old_state"], event_data["new_state"]
+        if (
+            old is None
+            or new is None
+            or old.state in _NO_VALUE
+            or new.state in _NO_VALUE
+            or old.state == new.state
+        ):
+            return False
+        entity = registry.async_get(event_data["entity_id"])
+        return (
+            entity is not None
+            and entity.platform == DOMAIN
+            and entity.unique_id in watched
         )
-        entry.async_on_unload(unsub)
 
-    for key in ["start_mode"]:
-        unsub = hass.bus.async_listen(
-            "state_changed", make_listener(f"select.{entry.entry_id}_{key}")
+    @callback
+    def _on_input_change(event: Event[EventStateChangedData]) -> None:
+        _LOGGER.debug("Update detected on %s", event.data["entity_id"])
+        hass.async_create_task(coordinator.async_request_refresh())
+
+    entry.async_on_unload(
+        hass.bus.async_listen(
+            EVENT_STATE_CHANGED, _on_input_change, event_filter=_is_input
         )
-        entry.async_on_unload(unsub)
+    )
 
 
 class PIDOutputSensor(

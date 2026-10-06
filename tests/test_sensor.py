@@ -1,5 +1,8 @@
 import pytest
 from datetime import timedelta
+from homeassistant.const import EVENT_STATE_CHANGED
+from homeassistant.core import is_callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 from pytest_homeassistant_custom_component.common import async_fire_time_changed
 from custom_components.simple_pid_controller.sensor import (
@@ -104,54 +107,124 @@ async def test_pid_contribution_native_value_rounding_and_none(hass, config_entr
     await coordinator.async_shutdown()
 
 
-@pytest.mark.usefixtures("setup_integration")
-@pytest.mark.asyncio
-async def test_listeners_trigger_refresh_sensor(hass, config_entry, monkeypatch):
-    """Lines 131-132: coordinator.async_request_refresh called on sensor state change."""
-    # Prepare handle
-    handle = config_entry.runtime_data.handle
-    handle.get_input_sensor_value = lambda: 0.0
-    handle.get_number = lambda key: 0.0
-    handle.get_switch = lambda key: True
+def _count_refreshes(config_entry, monkeypatch) -> list[bool]:
+    """Replace the coordinator refresh with a coroutine that records each call."""
+    called: list[bool] = []
 
-    # Capture listeners
-    listeners = []
-    monkeypatch.setattr(
-        type(hass.bus),
-        "async_listen",
-        lambda self, event, cb: listeners.append((event, cb)),
-    )
-
-    # Run setup to register listeners
-    entities = []
-    await async_setup_entry(hass, config_entry, lambda ents: entities.extend(ents))
-    coordinator = entities[0].coordinator
-
-    # Patch refresh method. It has to stay a coroutine function: the listener
-    # schedules it as a task, so a plain lambda would only prove that the
-    # listener fired, not that the refresh was ever awaited.
-    called = []
-
+    # A coroutine function, so the test proves the scheduled refresh is awaited.
     async def _fake_refresh():
         called.append(True)
 
-    monkeypatch.setattr(coordinator, "async_request_refresh", _fake_refresh)
-
-    # Simulate state change event for kp
-    entry_id = config_entry.entry_id
-    test_entity = f"number.{entry_id}_kp"
-    callback = next(cb for evt, cb in listeners if evt == "state_changed")
-
-    from types import SimpleNamespace
-
-    event = SimpleNamespace(data={"entity_id": test_entity})
-    callback(event)
-    await hass.async_block_till_done()
-    assert called, (
-        "Coordinator.async_request_refresh was not called on sensor state change"
+    monkeypatch.setattr(
+        config_entry.runtime_data.coordinator, "async_request_refresh", _fake_refresh
     )
+    return called
 
-    await async_unload_entry(hass, config_entry)
+
+@pytest.mark.usefixtures("setup_integration")
+@pytest.mark.parametrize(
+    ("domain", "service", "key", "data"),
+    [
+        ("number", "set_value", "kp", {"value": 2.0}),
+        ("switch", "turn_off", "auto_mode", {}),
+        ("select", "select_option", "start_mode", {"option": "Last known value"}),
+    ],
+)
+async def test_input_change_requests_refresh(
+    hass, config_entry, monkeypatch, domain, service, key, data
+):
+    """Changing one of the controller's own inputs requests a refresh."""
+    called = _count_refreshes(config_entry, monkeypatch)
+    entity_id = config_entry.runtime_data.handle._get_entity_id(domain, key)
+    assert entity_id is not None
+
+    await hass.services.async_call(
+        domain, service, {"entity_id": entity_id, **data}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    assert called
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_unrelated_state_change_does_not_refresh(hass, config_entry, monkeypatch):
+    """State changes of other entities, and of this entry's outputs, are ignored."""
+    output = config_entry.runtime_data.handle._get_entity_id("sensor", "pid_output")
+    assert output is not None
+
+    # Give both entities a real value first. A change from no state or from
+    # unknown is already filtered out before the unique_id check, so without
+    # this the test passes even if every entity counted as an input.
+    hass.states.async_set("sensor.unrelated", "1")
+    hass.states.async_set(output, "2.0")
+    await hass.async_block_till_done()
+    called = _count_refreshes(config_entry, monkeypatch)
+
+    hass.states.async_set("sensor.unrelated", "2")
+    hass.states.async_set(output, "3.0")
+    await hass.async_block_till_done()
+
+    assert not called
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_renamed_input_still_requests_refresh(hass, config_entry, monkeypatch):
+    """Inputs are matched by unique_id, so a renamed entity_id keeps working."""
+    called = _count_refreshes(config_entry, monkeypatch)
+    registry = er.async_get(hass)
+    old = config_entry.runtime_data.handle._get_entity_id("number", "kp")
+    registry.async_update_entity(old, new_entity_id="number.renamed_kp")
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {"entity_id": "number.renamed_kp", "value": 3.0},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    assert called
+
+
+async def test_setup_and_unload_do_not_request_refresh(hass, config_entry, monkeypatch):
+    """Inputs being added, restored or unloaded do not request a refresh."""
+    called = []
+
+    async def _fake_refresh(self):
+        called.append(True)
+
+    monkeypatch.setattr(PIDDataCoordinator, "async_request_refresh", _fake_refresh)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not called
+
+
+async def test_input_listener_runs_in_event_loop(hass, config_entry, monkeypatch):
+    """The state_changed listener and its filter are callbacks, not executor jobs."""
+    captured = []
+    original = type(hass.bus).async_listen
+
+    def _spy(self, event_type, listener, event_filter=None, **kwargs):
+        if event_type == EVENT_STATE_CHANGED and listener.__module__ == (
+            sensor_module.__name__
+        ):
+            captured.append((listener, event_filter))
+        return original(self, event_type, listener, event_filter, **kwargs)
+
+    monkeypatch.setattr(type(hass.bus), "async_listen", _spy)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(captured) == 1
+    listener, event_filter = captured[0]
+    assert is_callback(listener)
+    assert event_filter is not None and is_callback(event_filter)
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 @pytest.mark.usefixtures("setup_integration")

@@ -1,7 +1,14 @@
 name: Label PRs
 
 on:
-  pull_request:
+  # pull_request_target, not pull_request: for a pull request from a fork,
+  # pull_request gets a read-only token whatever the permissions block says,
+  # and adding the labels fails with "Resource not accessible by integration".
+  # This runs the workflow from the base branch with a writable token. That is
+  # safe only because no step checks out or runs the pull request's code: the
+  # labeler reads the changed file names through the API and the script below
+  # reads only the title. Keep it that way.
+  pull_request_target:
     types: [opened, synchronize, reopened]
 
 permissions:
