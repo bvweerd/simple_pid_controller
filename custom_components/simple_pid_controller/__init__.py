@@ -4,15 +4,28 @@ from __future__ import annotations
 
 import logging
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform, ATTR_ENTITY_ID
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    MAJOR_VERSION,
+    MINOR_VERSION,
+    Platform,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from collections import deque
 from dataclasses import dataclass
 from simple_pid import PID
-import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
+
+# Home Assistant 2026.10 replaced voluptuous with probatio, an API-compatible
+# successor, and from then on expects probatio schemas. 2026.9 already ships
+# probatio but still expects voluptuous ones, so the version decides, not
+# whether probatio happens to be importable.
+if (MAJOR_VERSION, MINOR_VERSION) >= (2026, 10):
+    import probatio as vol
+else:
+    import voluptuous as vol  # type: ignore[no-redef]
 
 from .coordinator import PIDDataCoordinator
 

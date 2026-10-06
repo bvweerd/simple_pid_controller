@@ -5,16 +5,24 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import voluptuous as vol
-
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
 )
+from homeassistant.const import MAJOR_VERSION, MINOR_VERSION
 from homeassistant.core import callback
 from homeassistant.helpers.selector import selector
+
+# Home Assistant 2026.10 replaced voluptuous with probatio, an API-compatible
+# successor, and from then on expects probatio schemas. 2026.9 already ships
+# probatio but still expects voluptuous ones, so the version decides, not
+# whether probatio happens to be importable.
+if (MAJOR_VERSION, MINOR_VERSION) >= (2026, 10):
+    import probatio as vol
+else:
+    import voluptuous as vol  # type: ignore[no-redef]
 
 from .const import (
     DOMAIN,
@@ -54,7 +62,10 @@ class PIDControllerFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
 
-        schema = vol.Schema(
+        # Any: whether async_show_form takes a probatio or a voluptuous schema
+        # depends on the Home Assistant version (see the import above), and the
+        # pre-commit hook and the lint job type check against different ones.
+        schema: Any = vol.Schema(
             {
                 vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
                 vol.Required(CONF_SENSOR_ENTITY_ID): selector(
@@ -160,7 +171,8 @@ class PIDControllerOptionsFlowHandler(OptionsFlow):
             for key in DEFAULT_STEPS
         }
 
-        options_schema = vol.Schema(
+        # Any, for the reason given in async_step_user.
+        options_schema: Any = vol.Schema(
             {
                 vol.Required(
                     CONF_SENSOR_ENTITY_ID,
