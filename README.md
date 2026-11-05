@@ -55,6 +55,7 @@
 
 ## 🔧 Installation
 
+<!-- ha-marketplace:exclude-start -->
 ### Marketplace (Recommended)
 
 On Home Assistant 2026.11 or later:
@@ -75,6 +76,8 @@ Installed through HACS before upgrading to 2026.11? Nothing to do: the installat
 1. Download or clone this repository
 2. Copy `simple_pid_controller` to `/config/custom_components/`
 3. Restart Home Assistant
+
+<!-- ha-marketplace:exclude-end -->
 
 ### Removal Instructions
 To remove the Simple PID Controller, navigate to **Settings > Devices & Services**, select **Simple PID Controller**, and click **Delete**. If installed manually, delete the `custom_components/simple_pid_controller` directory and restart Home Assistant.
