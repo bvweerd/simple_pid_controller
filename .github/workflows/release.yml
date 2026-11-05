@@ -108,8 +108,8 @@ jobs:
 
             ---
 
-            ## Installation via HACS
-            Install or update via HACS — the new version will be offered automatically.
+            ## Installation via the Marketplace
+            On Home Assistant 2026.11 or later, install or update through Settings → Marketplace. On 2026.10 and older, use HACS. The new version is offered automatically; it can take a few hours to appear.
 
             ## Manual installation
             Download `simple_pid_controller.zip`, extract and copy `simple_pid_controller/` to your `custom_components/` directory.

@@ -1,6 +1,7 @@
 {
   "domain": "simple_pid_controller",
   "name": "Simple PID Controller",
+  "categories": ["helpers.calculate_value"],
   "codeowners": [
     "@bvweerd"
   ],

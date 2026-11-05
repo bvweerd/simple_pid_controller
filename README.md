@@ -7,7 +7,8 @@
 ## 📚 Table of Contents
 - [Features](#features)
 - [Installation](#installation)
-  - [HACS (Recommended)](#hacs-recommended)
+  - [Marketplace (Recommended)](#marketplace-recommended)
+  - [HACS (2026.10 and older)](#hacs-202610-and-older)
   - [Manual Installation](#manual-installation)
   - [Removal Instructions](#removal-instructions)
 - [Configuration](#configuration)
@@ -54,17 +55,20 @@
 
 ## 🔧 Installation
 
-### HACS (Recommended)
+### Marketplace (Recommended)
+
+On Home Assistant 2026.11 or later:
+
+1. Navigate to **Settings > Marketplace**
+2. Search for **Simple PID Controller** and select **Install**
+
+Installed through HACS before upgrading to 2026.11? Nothing to do: the installation is migrated to the Marketplace automatically.
+
+### HACS (2026.10 and older)
 
 1. In Home Assistant UI, navigate to **HACS > Integrations**
-2. Click the three-dot menu (⋮) and select **Custom repositories**
-3. Add:
-   ```text
-   https://github.com/bvweerd/simple_pid_controller
-   ```
-   Select **Integration** as type
-4. Search for **Simple PID Controller** and install
-5. Restart Home Assistant
+2. Search for **Simple PID Controller** and download it
+3. Restart Home Assistant
 
 ### Manual Installation
 
