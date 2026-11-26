@@ -5,6 +5,13 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-yaml
+        exclude: ^blueprints/
+      # Blueprints use Home Assistant's !input tag, which a plain YAML loader
+      # rejects, so check those for syntax only.
+      - id: check-yaml
+        name: check blueprint yaml (syntax only)
+        args: [--unsafe]
+        files: ^blueprints/
       - id: check-json
       - id: check-merge-conflict
       - id: check-added-large-files

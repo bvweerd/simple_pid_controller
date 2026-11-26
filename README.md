@@ -12,6 +12,8 @@
   - [Manual Installation](#manual-installation)
   - [Removal Instructions](#removal-instructions)
 - [Configuration](#configuration)
+- [Terminology](#terminology)
+- [Sending the Output to a Device](#sending-the-output-to-a-device)
 - [Customizing the Unit of Measurement](#customizing-the-unit-of-measurement)
 - [Entities Overview](#entities-overview)
 - [PID Tuning Guide](#pid-tuning-guide)
@@ -91,11 +93,48 @@ The controller is configured through the UI using the Config Flow {% term config
 2. Click **Add Integration** and choose **Simple PID Controller**
 3. Enter:
    - **Name**: e.g., "Heater Controller"
-   - **Sensor Entity**: e.g., `sensor.living_room_temperature`
+   - **Input entity (PV)**: the measured value to control, e.g. `sensor.living_room_temperature`. A `sensor`, `number` or `input_number` with a numeric state can be used.
 4. Submit and finish setup
 
 **Default Range:**
-The controller’s setpoint range defaults to **0.0 – 100.0**. To customize this range, select the integration in **Settings > Devices & Services**, click **Options**, adjust **Range Min** and **Range Max**, and save.
+The controller’s setpoint range defaults to **0.0 – 100.0**. To customize this range, select the integration in **Settings > Devices & Services**, click **Options**, adjust **Minimum Input Range** and **Maximum Input Range**, and save. **Minimum/Maximum Output Range** set the range of the `Output Min` / `Output Max` sliders in the same way.
+
+---
+
+## 📖 Terminology
+
+The labels in the integration use everyday names. In control engineering the same signals have standard names and symbols:
+
+| In this integration        | Technical term                   | Abbreviation | Symbol |
+|----------------------------|----------------------------------|--------------|--------|
+| `Setpoint`                 | Setpoint / reference             | SP           | *w*    |
+| Input entity               | Process variable / feedback      | PV           | *y*    |
+| `PID Output`               | Control output / manipulated variable | CV / MV | *u*    |
+| Setpoint − input           | Control error                    | e            | *e = w − y* |
+
+---
+
+## 🔌 Sending the Output to a Device
+
+The controller only calculates the control output (`PID Output` sensor); it does not drive a device itself. To pass the output on to a `number`, `input_number` or `climate` entity, use the bundled automation blueprint:
+
+[![Import blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fbvweerd%2Fsimple_pid_controller%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fsimple_pid_controller%2Fpid_output_to_entity.yaml)
+
+Or import it manually under **Settings > Automations & Scenes > Blueprints > Import Blueprint** with this URL:
+
+```
+https://github.com/bvweerd/simple_pid_controller/blob/main/blueprints/automation/simple_pid_controller/pid_output_to_entity.yaml
+```
+
+Then create an automation from it and choose the PID Output sensor and the target entity. The blueprint:
+
+- sends every change of the output to the target (`number.set_value`, `input_number.set_value`, or `climate.set_temperature` for a climate entity);
+- clamps the value to the target's own minimum and maximum;
+- sends nothing while the output is unknown (e.g. Auto Mode off) or the target is unavailable.
+
+> **Note:** With a climate entity the PID output becomes the thermostat's target temperature, so the thermostat's own control loop still runs underneath (cascade control). Tune the PID with that in mind.
+
+Need something else, such as rounding or a deadband? Take control of the automation in the UI and adjust it.
 
 ---
 
@@ -161,7 +200,7 @@ template:
 
 ## 🎯 PID Tuning Guide
 
-A PID controller continuously corrects the difference between a **setpoint** and **measured value** using:
+A PID controller continuously corrects the difference between a **setpoint** (SP, *w*) and **measured value** (PV, *y*) by adjusting its **output** (CV, *u*) using:
 
 - **P (Proportional)**: reacts to present error
 - **I (Integral)**: compensates for past error
@@ -222,7 +261,7 @@ These steps help avoid the "integral stuck at minimum" effect while keeping the 
    - We immediately read the current process variable (e.g. temperature sensor) and pass it to the PID logic.
 
 3. **PID Logic & Output**
-   - The PID algorithm calculates the Proportional, Integral, and Derivative terms and writes the result to your target entity (e.g. a heater or set-point).
+   - The PID algorithm calculates the Proportional, Integral, and Derivative terms and publishes the result in the `PID Output` sensor. An automation (for example the [bundled blueprint](#sending-the-output-to-a-device)) passes it on to your device.
 
 4. **Adjusting Sample Time**
    - Changing `sample_time` in your integration options takes effect at the end of the current interval—no Home Assistant restart is required.

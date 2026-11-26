@@ -72,6 +72,27 @@ SENSOR_ENTITY = "sensor.test_input"
             },
             None,
         ),
+        # An input_number can serve as the process variable too
+        (
+            {
+                CONF_NAME: "My PID 3",
+                CONF_SENSOR_ENTITY_ID: "input_number.test_input",
+                CONF_INPUT_RANGE_MIN: DEFAULT_INPUT_RANGE_MIN,
+                CONF_INPUT_RANGE_MAX: DEFAULT_INPUT_RANGE_MAX,
+                CONF_OUTPUT_RANGE_MIN: DEFAULT_OUTPUT_RANGE_MIN,
+                CONF_OUTPUT_RANGE_MAX: DEFAULT_OUTPUT_RANGE_MAX,
+            },
+            FlowResultType.CREATE_ENTRY,
+            {
+                CONF_NAME: "My PID 3",
+                CONF_SENSOR_ENTITY_ID: "input_number.test_input",
+                CONF_INPUT_RANGE_MIN: DEFAULT_INPUT_RANGE_MIN,
+                CONF_INPUT_RANGE_MAX: DEFAULT_INPUT_RANGE_MAX,
+                CONF_OUTPUT_RANGE_MIN: DEFAULT_OUTPUT_RANGE_MIN,
+                CONF_OUTPUT_RANGE_MAX: DEFAULT_OUTPUT_RANGE_MAX,
+            },
+            None,
+        ),
         # Invalid ranges (min >= max)
         (
             {
@@ -290,3 +311,22 @@ async def test_user_flow_duplicate_abort(hass):
 
     assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
+
+
+async def test_user_flow_rejects_unsupported_input_domain(hass):
+    """Only sensor, number and input_number entities are accepted as input."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with pytest.raises(InvalidData):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_NAME: "Climate PID",
+                CONF_SENSOR_ENTITY_ID: "climate.living",
+                CONF_INPUT_RANGE_MIN: DEFAULT_INPUT_RANGE_MIN,
+                CONF_INPUT_RANGE_MAX: DEFAULT_INPUT_RANGE_MAX,
+                CONF_OUTPUT_RANGE_MIN: DEFAULT_OUTPUT_RANGE_MIN,
+                CONF_OUTPUT_RANGE_MAX: DEFAULT_OUTPUT_RANGE_MAX,
+            },
+        )

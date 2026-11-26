@@ -4,14 +4,23 @@
     "step": {
       "user": {
         "title": "Configureer PID-regelaar",
-        "description": "Voer een naam in en kies de sensor als input voor de PID.",
+        "description": "Voer een naam in en kies de entiteit waarvan de regelaar de waarde regelt (procesgrootheid).",
         "data": {
           "name": "Naam",
-          "sensor_entity_id": "Sensor naam",
+          "sensor_entity_id": "Input-entiteit (PV)",
           "input_range_min": "Minimum Input Bereik",
           "input_range_max": "Maximum Input Bereik",
           "output_range_min": "Minimum Output Bereik",
-          "output_range_max": "Maximum Output Bereik"        }
+          "output_range_max": "Maximum Output Bereik"
+        },
+        "data_description": {
+          "name": "Naam van de regelaar, gebruikt voor het apparaat en de entiteiten.",
+          "sensor_entity_id": "Procesgrootheid (PV, y): de gemeten waarde die de regelaar naar het setpoint probeert te brengen. Een sensor, number of input_number met een numerieke waarde.",
+          "input_range_min": "Laagste waarde van de setpoint-schuif (SP, w).",
+          "input_range_max": "Hoogste waarde van de setpoint-schuif (SP, w).",
+          "output_range_min": "Laagste waarde van de schuiven Output Min / Output Max die de stuuruitgang (CV, u) begrenzen.",
+          "output_range_max": "Hoogste waarde van de schuiven Output Min / Output Max die de stuuruitgang (CV, u) begrenzen."
+        }
       }
     },
     "abort": {
@@ -19,17 +28,17 @@
     },
     "error": {
       "already_configured": "Er bestaat al een configuratie met deze naam.",
-	  "input_range_min_max": "Minimum moet lager zijn dan maximum.",
-	  "output_range_min_max": "Minimum moet lager zijn dan maximum."
+      "input_range_min_max": "Minimum Input Bereik moet lager zijn dan Maximum Input Bereik.",
+      "output_range_min_max": "Minimum Output Bereik moet lager zijn dan Maximum Output Bereik."
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "Bewerk PID-regelaar",
-        "description": "Wijzig de sensor en het bereik dat door de PID-regelaar wordt gebruikt.",
+        "description": "Wijzig de input-entiteit, de bereiken en de stapgroottes van de regelaar.",
         "data": {
-          "sensor_entity_id": "Sensor naam",
+          "sensor_entity_id": "Input-entiteit (PV)",
           "input_range_min": "Minimum Input Bereik",
           "input_range_max": "Maximum Input Bereik",
           "output_range_min": "Minimum Output Bereik",
@@ -38,12 +47,17 @@
           "step_ki": "Ki Stapgrootte",
           "step_kd": "Kd Stapgrootte",
           "step_sample_time": "Steektijd Stapgrootte",
-          "step_setpoint": "Stapgrootte doelwaarde",
+          "step_setpoint": "Stapgrootte setpoint (SP)",
           "step_output_min": "Stapgrootte min. uitvoer",
           "step_output_max": "Stapgrootte max. uitvoer",
           "step_starting_output": "Stapgrootte startwaarde"
         },
         "data_description": {
+          "sensor_entity_id": "Procesgrootheid (PV, y): de gemeten waarde die de regelaar naar het setpoint probeert te brengen. Een sensor, number of input_number met een numerieke waarde.",
+          "input_range_min": "Laagste waarde van de setpoint-schuif (SP, w).",
+          "input_range_max": "Hoogste waarde van de setpoint-schuif (SP, w).",
+          "output_range_min": "Laagste waarde van de schuiven Output Min / Output Max die de stuuruitgang (CV, u) begrenzen.",
+          "output_range_max": "Hoogste waarde van de schuiven Output Min / Output Max die de stuuruitgang (CV, u) begrenzen.",
           "step_kp": "Stapgrootte voor de Kp-parameter.",
           "step_ki": "Stapgrootte voor de Ki-parameter.",
           "step_kd": "Stapgrootte voor de Kd-parameter.",
@@ -56,7 +70,8 @@
       }
     },
     "error": {
-	  "range_min_max": "Minimum moet lager zijn dan maximum."
+      "input_range_min_max": "Minimum Input Bereik moet lager zijn dan Maximum Input Bereik.",
+      "output_range_min_max": "Minimum Output Bereik moet lager zijn dan Maximum Output Bereik."
     }
   },
   "entity": {
@@ -93,8 +108,7 @@
         "name": "Huidige waarde"
       }
     }
-  }
-  ,
+  },
   "services": {
     "set_output": {
       "name": "Stel PID-uitgang in",

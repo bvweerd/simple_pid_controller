@@ -7,6 +7,9 @@ DEFAULT_NAME = "sPID-x"
 
 CONF_SENSOR_ENTITY_ID = "sensor_entity_id"
 
+# Domains whose numeric state can serve as the process variable (PV).
+INPUT_DOMAINS = ["sensor", "number", "input_number"]
+
 CONF_INPUT_RANGE_MIN = "input_range_min"
 CONF_INPUT_RANGE_MAX = "input_range_max"
 CONF_OUTPUT_RANGE_MIN = "output_range_min"

@@ -39,6 +39,7 @@ from .const import (
     DEFAULT_OUTPUT_RANGE_MIN,
     DEFAULT_OUTPUT_RANGE_MAX,
     DEFAULT_STEPS,
+    INPUT_DOMAINS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,7 +70,7 @@ class PIDControllerFlowHandler(ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
                 vol.Required(CONF_SENSOR_ENTITY_ID): selector(
-                    {"entity": {"domain": "sensor"}}
+                    {"entity": {"domain": INPUT_DOMAINS}}
                 ),
                 vol.Optional(
                     CONF_INPUT_RANGE_MIN, default=DEFAULT_INPUT_RANGE_MIN
@@ -177,7 +178,7 @@ class PIDControllerOptionsFlowHandler(OptionsFlow):
                 vol.Required(
                     CONF_SENSOR_ENTITY_ID,
                     default=current_sensor,
-                ): selector({"entity": {"domain": "sensor"}}),
+                ): selector({"entity": {"domain": INPUT_DOMAINS}}),
                 vol.Required(
                     CONF_INPUT_RANGE_MIN,
                     default=current_input_min,
