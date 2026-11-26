@@ -3,15 +3,19 @@ blueprint:
   description: >-
     Copies the PID Output (control output, CV / u) of a Simple PID Controller
     to a number, input_number or climate entity every time it changes.
-    For a climate entity the output is used as its target temperature.
+    For a climate entity the output is used as its target temperature; only
+    thermostats with a single target temperature are supported, so nothing is
+    sent while a thermostat is in heat_cool mode.
     The value is clamped to the min/max of the target entity, and nothing is
     sent while the output is unknown (for example when Auto Mode is off).
   domain: automation
-  source_url: https://github.com/bvweerd/simple_pid_controller/blob/main/blueprints/automation/simple_pid_controller/pid_output_to_entity.yaml
+  source_url: https://github.com/bvweerd/simple_pid_controller/blob/dev/blueprints/automation/simple_pid_controller/pid_output_to_entity.yaml
   input:
     pid_output:
       name: PID Output sensor
-      description: The PID Output sensor of the controller.
+      description: >-
+        The PID Output sensor of the controller (entity ID ending in
+        _pid_output), not one of the P/I/D contribution sensors.
       selector:
         entity:
           filter:
@@ -53,6 +57,14 @@ conditions:
     value_template: "{{ trigger.to_state.state | is_number }}"
   - condition: template
     value_template: "{{ states(target) not in ['unknown', 'unavailable'] }}"
+  # climate.set_temperature with a single temperature needs the
+  # TARGET_TEMPERATURE feature (1) and is rejected in heat_cool mode, which
+  # takes a low and a high setpoint instead.
+  - condition: template
+    value_template: >-
+      {{ domain != 'climate'
+         or ((state_attr(target, 'supported_features') | int(0)) | bitwise_and(1) > 0
+             and states(target) != 'heat_cool') }}
 
 actions:
   - choose:

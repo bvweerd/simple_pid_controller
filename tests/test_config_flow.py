@@ -330,3 +330,66 @@ async def test_user_flow_rejects_unsupported_input_domain(hass):
                 CONF_OUTPUT_RANGE_MAX: DEFAULT_OUTPUT_RANGE_MAX,
             },
         )
+
+
+def _register_pid_number(hass) -> str:
+    """Register a number entity owned by this integration and return its id."""
+    from homeassistant.helpers import entity_registry as er
+
+    return (
+        er.async_get(hass)
+        .async_get_or_create("number", DOMAIN, "other_entry_setpoint")
+        .entity_id
+    )
+
+
+async def test_user_flow_rejects_pid_entity_as_input(hass):
+    """A PID controller's own entity cannot be the process variable."""
+    pid_number = _register_pid_number(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_NAME: "Loop PID",
+            CONF_SENSOR_ENTITY_ID: pid_number,
+            CONF_INPUT_RANGE_MIN: DEFAULT_INPUT_RANGE_MIN,
+            CONF_INPUT_RANGE_MAX: DEFAULT_INPUT_RANGE_MAX,
+            CONF_OUTPUT_RANGE_MIN: DEFAULT_OUTPUT_RANGE_MIN,
+            CONF_OUTPUT_RANGE_MAX: DEFAULT_OUTPUT_RANGE_MAX,
+        },
+    )
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {"base": "input_is_pid_entity"}
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_options_flow_rejects_pid_entity_as_input(hass, config_entry):
+    """The options flow rejects a PID controller's entity as input as well."""
+    pid_number = _register_pid_number(hass)
+    init_result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        init_result["flow_id"],
+        user_input={**_BASE_OPTIONS, CONF_SENSOR_ENTITY_ID: pid_number},
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "input_is_pid_entity"}
+
+
+def test_flow_messages_are_translated():
+    """Every abort reason and error the flows emit has an English text."""
+    import json
+    from pathlib import Path
+
+    root = Path(__file__).parent.parent / "custom_components" / DOMAIN
+    for path in (root / "strings.json", root / "translations" / "en.json"):
+        strings = json.loads(path.read_text())
+        assert "already_configured" in strings["config"]["abort"], path
+        for section in ("config", "options"):
+            for key in (
+                "input_range_min_max",
+                "output_range_min_max",
+                "input_is_pid_entity",
+            ):
+                assert key in strings[section]["error"], (path, section, key)

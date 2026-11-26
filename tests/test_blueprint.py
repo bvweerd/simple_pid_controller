@@ -53,7 +53,7 @@ async def _setup(hass: HomeAssistant, target: str) -> None:
         ),
         (
             "climate.living",
-            {"min_temp": 5, "max_temp": 30},
+            {"min_temp": 5, "max_temp": 30, "supported_features": 1},
             "climate",
             "set_temperature",
             "temperature",
@@ -64,7 +64,9 @@ async def test_output_is_forwarded(
     hass: HomeAssistant, target, attrs, service_domain, service, field
 ):
     """The PID output is sent to the target with the matching action."""
-    hass.states.async_set(target, "10", attrs)
+    hass.states.async_set(
+        target, "heat" if target.startswith("climate") else "10", attrs
+    )
     calls = async_mock_service(hass, service_domain, service)
     await _setup(hass, target)
 
@@ -109,6 +111,31 @@ async def test_nothing_sent_to_unavailable_target(hass: HomeAssistant):
     await _setup(hass, "number.heater")
 
     hass.states.async_set(PID_OUTPUT, "42")
+    await hass.async_block_till_done()
+
+    assert calls == []
+
+
+@pytest.mark.parametrize(
+    "state, features",
+    [
+        ("heat_cool", 1 | 2),  # dual setpoint mode needs target_temp_low/high
+        ("heat", 2),  # only TARGET_TEMPERATURE_RANGE supported
+    ],
+)
+async def test_climate_without_single_setpoint_is_skipped(
+    hass: HomeAssistant, state, features
+):
+    """Nothing is sent to a thermostat that cannot take a single temperature."""
+    hass.states.async_set(
+        "climate.living",
+        state,
+        {"min_temp": 5, "max_temp": 30, "supported_features": features},
+    )
+    calls = async_mock_service(hass, "climate", "set_temperature")
+    await _setup(hass, "climate.living")
+
+    hass.states.async_set(PID_OUTPUT, "21.5")
     await hass.async_block_till_done()
 
     assert calls == []

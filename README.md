@@ -93,11 +93,11 @@ The controller is configured through the UI using the Config Flow {% term config
 2. Click **Add Integration** and choose **Simple PID Controller**
 3. Enter:
    - **Name**: e.g., "Heater Controller"
-   - **Input entity (PV)**: the measured value to control, e.g. `sensor.living_room_temperature`. A `sensor`, `number` or `input_number` with a numeric state can be used.
+   - **Input entity (PV)**: the measured value to control, e.g. `sensor.living_room_temperature`. A `sensor`, `number` or `input_number` with a numeric state can be used; entities of a PID controller itself cannot.
 4. Submit and finish setup
 
 **Default Range:**
-The controller’s setpoint range defaults to **0.0 – 100.0**. To customize this range, select the integration in **Settings > Devices & Services**, click **Options**, adjust **Minimum Input Range** and **Maximum Input Range**, and save. **Minimum/Maximum Output Range** set the range of the `Output Min` / `Output Max` sliders in the same way.
+The controller’s setpoint range defaults to **0.0 – 100.0**. To customize this range, select the integration in **Settings > Devices & Services**, click **Options**, adjust **Minimum Input Range** and **Maximum Input Range**, and save. **Minimum/Maximum Output Range** set the range of the `Output Min`, `Output Max` and `Startup Value` sliders in the same way.
 
 ---
 
@@ -118,21 +118,21 @@ The labels in the integration use everyday names. In control engineering the sam
 
 The controller only calculates the control output (`PID Output` sensor); it does not drive a device itself. To pass the output on to a `number`, `input_number` or `climate` entity, use the bundled automation blueprint:
 
-[![Import blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fbvweerd%2Fsimple_pid_controller%2Fblob%2Fmain%2Fblueprints%2Fautomation%2Fsimple_pid_controller%2Fpid_output_to_entity.yaml)
+[![Import blueprint](https://my.home-assistant.io/badges/blueprint_import.svg)](https://my.home-assistant.io/redirect/blueprint_import/?blueprint_url=https%3A%2F%2Fgithub.com%2Fbvweerd%2Fsimple_pid_controller%2Fblob%2Fdev%2Fblueprints%2Fautomation%2Fsimple_pid_controller%2Fpid_output_to_entity.yaml)
 
 Or import it manually under **Settings > Automations & Scenes > Blueprints > Import Blueprint** with this URL:
 
 ```
-https://github.com/bvweerd/simple_pid_controller/blob/main/blueprints/automation/simple_pid_controller/pid_output_to_entity.yaml
+https://github.com/bvweerd/simple_pid_controller/blob/dev/blueprints/automation/simple_pid_controller/pid_output_to_entity.yaml
 ```
 
-Then create an automation from it and choose the PID Output sensor and the target entity. The blueprint:
+Then create an automation from it and choose the PID Output sensor (the one ending in `_pid_output`, not a P/I/D contribution sensor) and the target entity. The blueprint:
 
 - sends every change of the output to the target (`number.set_value`, `input_number.set_value`, or `climate.set_temperature` for a climate entity);
 - clamps the value to the target's own minimum and maximum;
 - sends nothing while the output is unknown (e.g. Auto Mode off) or the target is unavailable.
 
-> **Note:** With a climate entity the PID output becomes the thermostat's target temperature, so the thermostat's own control loop still runs underneath (cascade control). Tune the PID with that in mind.
+> **Note:** With a climate entity the PID output becomes the thermostat's target temperature, so the thermostat's own control loop still runs underneath (cascade control). Tune the PID with that in mind. Only thermostats with a single target temperature are supported: nothing is sent to a thermostat in `heat_cool` mode, which needs a low and a high setpoint.
 
 Need something else, such as rounding or a deadband? Take control of the automation in the UI and adjust it.
 

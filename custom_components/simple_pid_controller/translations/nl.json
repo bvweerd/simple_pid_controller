@@ -15,21 +15,22 @@
         },
         "data_description": {
           "name": "Naam van de regelaar, gebruikt voor het apparaat en de entiteiten.",
-          "sensor_entity_id": "Procesgrootheid (PV, y): de gemeten waarde die de regelaar naar het setpoint probeert te brengen. Een sensor, number of input_number met een numerieke waarde.",
+          "sensor_entity_id": "Procesgrootheid (PV, y): de gemeten waarde die de regelaar naar het setpoint probeert te brengen. Een sensor, number of input_number met een numerieke waarde; entiteiten van een PID-regelaar kunnen niet.",
           "input_range_min": "Laagste waarde van de setpoint-schuif (SP, w).",
           "input_range_max": "Hoogste waarde van de setpoint-schuif (SP, w).",
-          "output_range_min": "Laagste waarde van de schuiven Output Min / Output Max die de stuuruitgang (CV, u) begrenzen.",
-          "output_range_max": "Hoogste waarde van de schuiven Output Min / Output Max die de stuuruitgang (CV, u) begrenzen."
+          "output_range_min": "Laagste waarde van de schuiven Output Min, Output Max en Startwaarde, die de stuuruitgang (CV, u) begrenzen.",
+          "output_range_max": "Hoogste waarde van de schuiven Output Min, Output Max en Startwaarde, die de stuuruitgang (CV, u) begrenzen."
         }
       }
     },
     "abort": {
-      "single_instance_allowed": "Slechts één instantie van de PID-regelaar met deze naam is toegestaan."
+      "single_instance_allowed": "Slechts één instantie van de PID-regelaar met deze naam is toegestaan.",
+      "already_configured": "Er bestaat al een configuratie met deze naam."
     },
     "error": {
-      "already_configured": "Er bestaat al een configuratie met deze naam.",
       "input_range_min_max": "Minimum Input Bereik moet lager zijn dan Maximum Input Bereik.",
-      "output_range_min_max": "Minimum Output Bereik moet lager zijn dan Maximum Output Bereik."
+      "output_range_min_max": "Minimum Output Bereik moet lager zijn dan Maximum Output Bereik.",
+      "input_is_pid_entity": "De input-entiteit kan geen entiteit van een PID-regelaar zijn. Kies de sensor, number of input_number die het proces meet."
     }
   },
   "options": {
@@ -53,11 +54,11 @@
           "step_starting_output": "Stapgrootte startwaarde"
         },
         "data_description": {
-          "sensor_entity_id": "Procesgrootheid (PV, y): de gemeten waarde die de regelaar naar het setpoint probeert te brengen. Een sensor, number of input_number met een numerieke waarde.",
+          "sensor_entity_id": "Procesgrootheid (PV, y): de gemeten waarde die de regelaar naar het setpoint probeert te brengen. Een sensor, number of input_number met een numerieke waarde; entiteiten van een PID-regelaar kunnen niet.",
           "input_range_min": "Laagste waarde van de setpoint-schuif (SP, w).",
           "input_range_max": "Hoogste waarde van de setpoint-schuif (SP, w).",
-          "output_range_min": "Laagste waarde van de schuiven Output Min / Output Max die de stuuruitgang (CV, u) begrenzen.",
-          "output_range_max": "Hoogste waarde van de schuiven Output Min / Output Max die de stuuruitgang (CV, u) begrenzen.",
+          "output_range_min": "Laagste waarde van de schuiven Output Min, Output Max en Startwaarde, die de stuuruitgang (CV, u) begrenzen.",
+          "output_range_max": "Hoogste waarde van de schuiven Output Min, Output Max en Startwaarde, die de stuuruitgang (CV, u) begrenzen.",
           "step_kp": "Stapgrootte voor de Kp-parameter.",
           "step_ki": "Stapgrootte voor de Ki-parameter.",
           "step_kd": "Stapgrootte voor de Kd-parameter.",
@@ -71,7 +72,8 @@
     },
     "error": {
       "input_range_min_max": "Minimum Input Bereik moet lager zijn dan Maximum Input Bereik.",
-      "output_range_min_max": "Minimum Output Bereik moet lager zijn dan Maximum Output Bereik."
+      "output_range_min_max": "Minimum Output Bereik moet lager zijn dan Maximum Output Bereik.",
+      "input_is_pid_entity": "De input-entiteit kan geen entiteit van een PID-regelaar zijn. Kies de sensor, number of input_number die het proces meet."
     }
   },
   "entity": {

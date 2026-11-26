@@ -15,21 +15,22 @@
         },
         "data_description": {
           "name": "Name of the controller, used for its device and entities.",
-          "sensor_entity_id": "Process variable (PV, y): the measured value the controller tries to bring to the setpoint. A sensor, number or input_number with a numeric state.",
+          "sensor_entity_id": "Process variable (PV, y): the measured value the controller tries to bring to the setpoint. A sensor, number or input_number with a numeric state; entities of a PID controller cannot be used.",
           "input_range_min": "Lowest value of the setpoint (SP, w) slider.",
           "input_range_max": "Highest value of the setpoint (SP, w) slider.",
-          "output_range_min": "Lowest value of the Output Min / Output Max sliders that limit the control output (CV, u).",
-          "output_range_max": "Highest value of the Output Min / Output Max sliders that limit the control output (CV, u)."
+          "output_range_min": "Lowest value of the Output Min, Output Max and Startup Value sliders, which limit the control output (CV, u).",
+          "output_range_max": "Highest value of the Output Min, Output Max and Startup Value sliders, which limit the control output (CV, u)."
         }
       }
     },
     "abort": {
-      "single_instance_allowed": "Only a single instance with this name is allowed."
+      "single_instance_allowed": "Only a single instance with this name is allowed.",
+      "already_configured": "A configuration with this name already exists."
     },
     "error": {
-      "already_configured": "A configuration with this name already exists.",
       "input_range_min_max": "Minimum Input Range must be lower than Maximum Input Range.",
-      "output_range_min_max": "Minimum Output Range must be lower than Maximum Output Range."
+      "output_range_min_max": "Minimum Output Range must be lower than Maximum Output Range.",
+      "input_is_pid_entity": "The input entity cannot be an entity of a PID controller. Choose the sensor, number or input_number that measures the process."
     }
   },
   "options": {
@@ -53,11 +54,11 @@
           "step_starting_output": "Startup Value Step Size"
         },
         "data_description": {
-          "sensor_entity_id": "Process variable (PV, y): the measured value the controller tries to bring to the setpoint. A sensor, number or input_number with a numeric state.",
+          "sensor_entity_id": "Process variable (PV, y): the measured value the controller tries to bring to the setpoint. A sensor, number or input_number with a numeric state; entities of a PID controller cannot be used.",
           "input_range_min": "Lowest value of the setpoint (SP, w) slider.",
           "input_range_max": "Highest value of the setpoint (SP, w) slider.",
-          "output_range_min": "Lowest value of the Output Min / Output Max sliders that limit the control output (CV, u).",
-          "output_range_max": "Highest value of the Output Min / Output Max sliders that limit the control output (CV, u).",
+          "output_range_min": "Lowest value of the Output Min, Output Max and Startup Value sliders, which limit the control output (CV, u).",
+          "output_range_max": "Highest value of the Output Min, Output Max and Startup Value sliders, which limit the control output (CV, u).",
           "step_kp": "Increment size for the Kp parameter.",
           "step_ki": "Increment size for the Ki parameter.",
           "step_kd": "Increment size for the Kd parameter.",
@@ -71,7 +72,8 @@
     },
     "error": {
       "input_range_min_max": "Minimum Input Range must be lower than Maximum Input Range.",
-      "output_range_min_max": "Minimum Output Range must be lower than Maximum Output Range."
+      "output_range_min_max": "Minimum Output Range must be lower than Maximum Output Range.",
+      "input_is_pid_entity": "The input entity cannot be an entity of a PID controller. Choose the sensor, number or input_number that measures the process."
     }
   },
   "entity": {
