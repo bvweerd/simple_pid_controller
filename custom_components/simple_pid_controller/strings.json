@@ -4,27 +4,42 @@
     "step": {
       "user": {
         "title": "Configure Simple PID Controller",
-        "description": "Enter a name and choose the sensor to drive the PID loop.",
+        "description": "Enter a name and choose the entity whose value the controller regulates (process variable).",
         "data": {
           "name": "Name",
-          "sensor_entity_id": "Sensor Entity",
+          "sensor_entity_id": "Input entity (PV)",
           "input_range_min": "Minimum Input Range",
           "input_range_max": "Maximum Input Range",
           "output_range_min": "Minimum Output Range",
-          "output_range_max": "Maximum Output Range"        }
+          "output_range_max": "Maximum Output Range"
+        },
+        "data_description": {
+          "name": "Name of the controller, used for its device and entities.",
+          "sensor_entity_id": "Process variable (PV, y): the measured value the controller tries to bring to the setpoint. A sensor, number or input_number with a numeric state; entities of a PID controller cannot be used.",
+          "input_range_min": "Lowest value of the setpoint (SP, w) slider.",
+          "input_range_max": "Highest value of the setpoint (SP, w) slider.",
+          "output_range_min": "Lowest value of the Output Min, Output Max and Startup Value sliders, which limit the control output (CV, u).",
+          "output_range_max": "Highest value of the Output Min, Output Max and Startup Value sliders, which limit the control output (CV, u)."
+        }
       }
     },
     "abort": {
-      "single_instance_allowed": "Only a single instance of Simple PID Controller is allowed."
+      "single_instance_allowed": "Only a single instance with this name is allowed.",
+      "already_configured": "A configuration with this name already exists."
+    },
+    "error": {
+      "input_range_min_max": "Minimum Input Range must be lower than Maximum Input Range.",
+      "output_range_min_max": "Minimum Output Range must be lower than Maximum Output Range.",
+      "input_is_pid_entity": "The input entity cannot be an entity of a PID controller. Choose the sensor, number or input_number that measures the process."
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "Edit PID Controller Options",
-        "description": "Modify the sensor entity used by the controller.",
+        "description": "Modify the input entity, the ranges and the step sizes used by the controller.",
         "data": {
-          "sensor_entity_id": "Sensor Entity",
+          "sensor_entity_id": "Input entity (PV)",
           "input_range_min": "Minimum Input Range",
           "input_range_max": "Maximum Input Range",
           "output_range_min": "Minimum Output Range",
@@ -33,12 +48,17 @@
           "step_ki": "Ki Step Size",
           "step_kd": "Kd Step Size",
           "step_sample_time": "Sample Time Step Size",
-          "step_setpoint": "Setpoint Step Size",
+          "step_setpoint": "Setpoint (SP) Step Size",
           "step_output_min": "Output Min Step Size",
           "step_output_max": "Output Max Step Size",
           "step_starting_output": "Startup Value Step Size"
         },
         "data_description": {
+          "sensor_entity_id": "Process variable (PV, y): the measured value the controller tries to bring to the setpoint. A sensor, number or input_number with a numeric state; entities of a PID controller cannot be used.",
+          "input_range_min": "Lowest value of the setpoint (SP, w) slider.",
+          "input_range_max": "Highest value of the setpoint (SP, w) slider.",
+          "output_range_min": "Lowest value of the Output Min, Output Max and Startup Value sliders, which limit the control output (CV, u).",
+          "output_range_max": "Highest value of the Output Min, Output Max and Startup Value sliders, which limit the control output (CV, u).",
           "step_kp": "Increment size for the Kp parameter.",
           "step_ki": "Increment size for the Ki parameter.",
           "step_kd": "Increment size for the Kd parameter.",
@@ -47,6 +67,62 @@
           "step_output_min": "Increment size for the output minimum.",
           "step_output_max": "Increment size for the output maximum.",
           "step_starting_output": "Increment size for the startup value."
+        }
+      }
+    },
+    "error": {
+      "input_range_min_max": "Minimum Input Range must be lower than Maximum Input Range.",
+      "output_range_min_max": "Minimum Output Range must be lower than Maximum Output Range.",
+      "input_is_pid_entity": "The input entity cannot be an entity of a PID controller. Choose the sensor, number or input_number that measures the process."
+    }
+  },
+  "entity": {
+    "number": {
+      "kp": {
+        "name": "Kp"
+      },
+      "ki": {
+        "name": "Ki"
+      },
+      "kd": {
+        "name": "Kd"
+      },
+      "setpoint": {
+        "name": "Setpoint"
+      },
+      "output": {
+        "name": "Output"
+      }
+    },
+    "switch": {
+      "auto_mode": {
+        "name": "Auto Mode"
+      },
+      "proportional_on_measurement": {
+        "name": "Proportional on Measurement"
+      },
+      "windup_protection": {
+        "name": "Windup Protection"
+      }
+    },
+    "sensor": {
+      "current_value": {
+        "name": "Current Value"
+      }
+    }
+  },
+  "services": {
+    "set_output": {
+      "name": "Set PID output",
+      "description": "Set or reset the PID controller output.",
+      "fields": {
+        "preset": {
+          "name": "Preset",
+          "description": "Use a preset output: zero_start, last_known_value or startup_value."
+        },
+        "value": {
+          "name": "Value",
+          "description": "Manual output value between output_min and output_max."
         }
       }
     }
